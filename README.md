@@ -124,10 +124,9 @@ akw mod/
          └─ worldgen/          # Uranerz-Weltgenerierung
 ```
 
-> **Texturen & Daten regenerieren:** Reaktor-Typen/Bausteine werden ausschließlich in
-> `tools/akw_data.py` definiert. Nach Änderungen dort:
-> `python3 tools/gen_textures.py && python3 tools/gen_resources.py`. Die Java-Seite
-> (`ModBlocks`) spiegelt dieselben Tier-Werte und muss bei neuen Typen mitgepflegt werden.
+> **Daten regenerieren:** Rezepte, Loot-Tables, Modelle, Tags und Lang-Dateien werden per
+> Fabric Datagen (Java) erzeugt. Nach Änderungen an den Datagen-Klassen:
+> `./gradlew runDatagen` (schreibt direkt nach `src/main/resources/`).
 
 ---
 

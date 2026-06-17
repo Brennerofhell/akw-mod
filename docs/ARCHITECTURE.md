@@ -35,32 +35,37 @@ ModItems → ModBlocks → ModBlockEntities → ModScreenHandlers
 
 ---
 
-## 2. Datengetriebene Asset-Pipeline
+## 2. Fabric Datagen — Asset-Pipeline
 
-Reaktor-Typen und Bausteine sind an **einer** Stelle definiert und werden von dort in
-Texturen und Daten-JSON expandiert:
+Blockstates, Modelle, Loot-Tables, Rezepte, Tags und Lang-Dateien werden per
+**Fabric Datagen** (Java) erzeugt. Die Wahrheitsquelle ist ausschließlich Java.
 
 ```
-tools/akw_data.py   ← EINZIGE Wahrheitsquelle (REACTOR_TYPES, DECOR_BLOCKS)
-      │
-      ├─ tools/gen_textures.py   → assets/akw/textures/{block,item,gui}/*.png + icon.png
-      └─ tools/gen_resources.py  → assets/akw/{blockstates,models}/… + data/akw/{loot_table,recipe}/…
-                                    + data/minecraft/tags/block/mineable/pickaxe.json
-                                    + merge in assets/akw/lang/{de_de,en_us}.json
+src/main/java/ch/danielt/akw/datagen/
+  AkwDataGenerator.java     ← Datagen-Einstiegspunkt (fabric-datagen-Entrypoint)
+  ModRecipeProvider.java    → data/akw/recipe/*.json
+  ModLootTableProvider.java → data/akw/loot_table/blocks/*.json
+  ModModelProvider.java     → assets/akw/blockstates/*.json
+                              assets/akw/models/block/*.json
+                              assets/akw/models/item/*.json
+  ModTagsProvider.java      → data/minecraft/tags/block/mineable/pickaxe.json
+                              data/minecraft/tags/block/needs_iron_tool.json
+  ModLanguageProvider.java  → assets/akw/lang/de_de.json + en_us.json
 ```
 
-Die Generatoren sind **reine Python-stdlib** (eigener PNG-Encoder via `zlib`, kein PIL/
-ImageMagick nötig). Regenerieren:
+Texturen (PNG) werden **manuell** in `assets/akw/textures/` gepflegt — Datagen
+erzeugt keine Bilder.
+
+Datagen ausführen (schreibt direkt nach `src/main/resources/`):
 
 ```bash
-python3 tools/gen_textures.py && python3 tools/gen_resources.py
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
+./gradlew runDatagen
 ```
 
-> ⚠️ **Java spiegelt die Daten manuell.** Die Tier-Werte (Kapazität, FE/Tick, Abgabe,
-> Brenndauer) stehen sowohl in `akw_data.py` (für die Texturfarben/JSON) als auch in
-> `registry/ModBlocks.java` (für die Laufzeit-Logik). Beide müssen übereinstimmen — es
-> gibt keinen automatischen Abgleich. (Eine echte Fabric-Datagen-Lösung wäre der nächste
-> Schritt, falls die Duplizierung stört.)
+> **Tier-Werte** (`capacity`, `genPerTick`, `maxExtract`, `burnTicksPerRod`) leben
+> ausschließlich in `registry/ModBlocks.java` — eine einzige Wahrheitsquelle für
+> Laufzeit und Datagen.
 
 ---
 
@@ -137,17 +142,21 @@ Ordnernamen sind **singular**: `data/akw/recipe/`, `data/akw/loot_table/blocks/`
 
 ## 6. Howto: Neuen Reaktor-Typ hinzufügen
 
-1. **`tools/akw_data.py`** — neuen Eintrag in `REACTOR_TYPES` (id, de/en-Namen,
-   `metal`/`accent`-Farben, `capacity`/`gen`/`extract`/`burn`, `recipe`).
-2. **Generatoren** laufen lassen:
-   `python3 tools/gen_textures.py && python3 tools/gen_resources.py`.
-3. **`registry/ModBlocks.java`** — Feld + `registerReactor("<id>", capacity, gen, extract, burn)`
-   ergänzen (Werte **identisch** zu `akw_data.py`). Der neue Block landet automatisch in
-   `REACTORS`, im BlockEntity-Typ, im Energie-Lookup und im Kreativ-Tab.
-4. **Bauen & prüfen:** `JAVA_HOME=… ./gradlew build`, optional Daten-Check via `runServer`.
+1. **`registry/ModBlocks.java`** — Feld + `registerReactor("<id>", capacity, gen, extract, burn)`.
+   Der neue Block landet automatisch in `REACTORS`, im BlockEntity-Typ, im Energie-Lookup
+   und im Kreativ-Tab.
+2. **`datagen/ModRecipeProvider.java`** — `ShapedRecipeJsonBuilder`-Eintrag ergänzen.
+3. **`datagen/ModLanguageProvider.java`** — DE- und EN-Namen ergänzen.
+4. **Texturen** unter `assets/akw/textures/block/` anlegen:
+   `<id>_top.png`, `<id>_front.png`, `<id>_front_on.png`, `<id>_side.png`.
+5. **`./gradlew runDatagen`** — erzeugt alle JSONs. Danach `./gradlew build`.
 
-Ein neuer **Baustein** (Vollwürfel) ist analog: Eintrag in `DECOR_BLOCKS` +
-`registerDecor("<id>", settings)` in `ModBlocks`.
+`ModModelProvider` und `ModLootTableProvider` iterieren über `ModBlocks.REACTORS`
+und decken neue Einträge automatisch ab — dort ist keine Änderung nötig.
+
+Ein neuer **Baustein** (Vollwürfel): `registerDecor("<id>", settings)` in `ModBlocks`,
+`addDrop` in `ModLootTableProvider`, Namen in `ModLanguageProvider`, Textur anlegen,
+`runDatagen`.
 
 ---
 
@@ -158,6 +167,7 @@ Ein neuer **Baustein** (Vollwürfel) ist analog: Eintrag in `DECOR_BLOCKS` +
 
 ```bash
 export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
+./gradlew runDatagen     # → JSONs in src/main/resources/ (nach Datagen-Änderungen)
 ./gradlew build          # → build/libs/akw-<version>.jar
 ./gradlew runClient      # visuelle Prüfung im Spiel
 ```
