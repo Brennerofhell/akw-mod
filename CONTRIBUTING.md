@@ -114,9 +114,42 @@ Vollwürfel ohne Tick-Logik.
 
 ---
 
+## Branch-Strategie
+
+```
+main
+├─ feature/<name>   ← neue Features (z. B. feature/radiation-mechanic)
+├─ fix/<name>       ← Bugfixes (z. B. fix/energy-overflow)
+└─ docs/<name>      ← reine Dokumentations-Änderungen
+```
+
+**Regeln:**
+
+| Branch | Zweck | Merge-Ziel |
+|---|---|---|
+| `main` | Stabiler Stand — immer releasefähig | — |
+| `feature/<name>` | Ein Feature pro Branch | `main` via PR |
+| `fix/<name>` | Ein Bug pro Branch | `main` via PR |
+| `docs/<name>` | Nur Markdown/JavaDoc, kein Java-Code | `main` via PR |
+
+- Direkte Commits auf `main` sind **nicht** erlaubt — immer PR.
+- Branch-Namen in **Kleinbuchstaben mit Bindestrich** (`feature/cooling-logic`, nicht `Feature_CoolingLogic`).
+- Branch löschen, sobald der PR gemergt ist.
+
+**Wann einen neuen Branch anlegen:**
+
+```bash
+git checkout main && git pull
+git checkout -b feature/mein-feature
+```
+
+**Releases** werden als Git-Tags auf `main` gesetzt (`v0.3.0`, `v1.0.0`, …) — kein eigener Release-Branch nötig, da die Mod nur einen aktiven Entwicklungsstrang hat.
+
+---
+
 ## Pull Requests
 
-1. Branch von `main` erstellen (`feature/<name>` oder `fix/<name>`).
+1. Branch von `main` erstellen (Namensschema siehe oben).
 2. Änderungen klein halten — ein Feature/Fix pro PR.
 3. Beschreibe im PR-Body kurz **warum** (nicht nur was).
 4. Wenn du Reaktor-Werte änderst: gib den Grund für das Balancing an.
