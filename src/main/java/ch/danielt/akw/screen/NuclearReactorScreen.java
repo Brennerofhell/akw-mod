@@ -7,6 +7,17 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
+/**
+ * Client-seitiger GUI-Screen des Reaktors. Zeichnet den Hintergrund
+ * ({@code textures/gui/nuclear_reactor.png}) und legt zwei dynamische Overlays
+ * darüber: den von unten gefüllten grünen Energiebalken und die orange
+ * Brenn-Anzeige. Alle angezeigten Werte stammen aus dem
+ * {@link NuclearReactorScreenHandler} (gespeist vom serverseitig synchronisierten
+ * {@code PropertyDelegate}) — der Screen hält keinen eigenen Zustand.
+ *
+ * <p>Beim Überfahren des Energiebalkens zeigt {@link #render} einen Tooltip
+ * {@code <energie> / <kapazität> FE}.
+ */
 public class NuclearReactorScreen extends HandledScreen<NuclearReactorScreenHandler> {
 
     private static final Identifier TEXTURE =
