@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "CCC",
+    "UNU",
+    "CCC"
+  ],
+  "key": {
+    "C": {
+      "item": "minecraft:copper_ingot"
+    },
+    "U": {
+      "item": "akw:enriched_uranium_block"
+    },
+    "N": {
+      "item": "akw:nuclear_reactor"
+    }
+  },
+  "result": {
+    "id": "akw:breeder_reactor",
+    "count": 1
+  }
+}

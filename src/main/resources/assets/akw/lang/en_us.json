@@ -4,5 +4,17 @@
   "item.akw.uranium_ingot": "Uranium Ingot",
   "item.akw.fuel_rod": "Fuel Rod",
   "block.akw.uranium_ore": "Uranium Ore",
-  "block.akw.deepslate_uranium_ore": "Deepslate Uranium Ore"
+  "block.akw.deepslate_uranium_ore": "Deepslate Uranium Ore",
+  "block.akw.nuclear_reactor": "Nuclear Reactor",
+  "block.akw.advanced_nuclear_reactor": "Advanced Nuclear Reactor",
+  "block.akw.elite_nuclear_reactor": "Elite Nuclear Reactor",
+  "block.akw.breeder_reactor": "Breeder Reactor",
+  "block.akw.thorium_reactor": "Thorium Reactor",
+  "block.akw.fusion_reactor": "Fusion Reactor",
+  "block.akw.reactor_core": "Reactor Core",
+  "block.akw.control_rod_block": "Control Rod Block",
+  "block.akw.cooling_pipe": "Cooling Pipe",
+  "block.akw.lead_block": "Lead Block",
+  "block.akw.waste_container": "Waste Container",
+  "block.akw.enriched_uranium_block": "Enriched Uranium Block"
 }

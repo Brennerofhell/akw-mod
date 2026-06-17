@@ -28,6 +28,8 @@ public class ModItemGroups {
             entries.add(ModItems.FUEL_ROD);
             entries.add(ModBlocks.URANIUM_ORE);
             entries.add(ModBlocks.DEEPSLATE_URANIUM_ORE);
+            ModBlocks.REACTORS.forEach(entries::add);
+            ModBlocks.DECOR.forEach(entries::add);
         });
 
         AkwMod.LOGGER.info("[Atomkraftwerk] Kreativ-Tab registriert.");

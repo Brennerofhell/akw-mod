@@ -8,7 +8,7 @@ betreiben und FE-kompatiblen Strom erzeugen.
 | **Minecraft** | 1.21.1 |
 | **Mod Loader** | Fabric Loader ≥ 0.16.0 |
 | **Java** | 21 |
-| **Version** | 0.1.0 (early development) |
+| **Version** | 0.2.0 (Energiesystem) |
 | **Lizenz** | MIT |
 
 ---
@@ -22,17 +22,49 @@ betreiben und FE-kompatiblen Strom erzeugen.
 | Uran-Barren | `akw:uranium_ingot` | Aus Roh-Uran geschmolzen |
 | Brennstab | `akw:fuel_rod` | Aus Uran-Barren gecraftet (späterer Reaktor-Treibstoff) |
 
-### Blöcke
+### Erz-Blöcke
 | Block | ID | Eigenschaften |
 |---|---|---|
 | Uranerz | `akw:uranium_ore` | Wie Eisenerz; braucht **Eisen-Spitzhacke**; dropt Roh-Uran (Glück wirkt) |
 | Tiefenschiefer-Uranerz | `akw:deepslate_uranium_ore` | Tiefenschiefer-Variante |
 
+### Reaktoren (funktional, FE-Generatoren)
+
+Alle Reaktoren teilen dieselbe Mechanik: Brennstab in den GUI-Slot legen → der
+Reaktor verbrennt ihn über `burn`-Ticks, erzeugt dabei `FE/Tick` und gibt den Strom
+über **alle sechs Seiten** an angrenzende FE-Speicher/Maschinen ab (Team Reborn
+Energy). Bei Betrieb leuchtet die Front (`lit`-Blockstate). Rechtsklick öffnet das GUI.
+
+| Reaktor | ID | Kapazität (FE) | FE/Tick | Abgabe/Tick | Brenndauer/Stab |
+|---|---|--:|--:|--:|--:|
+| Reaktor | `akw:nuclear_reactor` | 100 000 | 40 | 512 | 1600 |
+| Fortgeschrittener Reaktor | `akw:advanced_nuclear_reactor` | 400 000 | 120 | 2 048 | 2000 |
+| Elite-Reaktor | `akw:elite_nuclear_reactor` | 1 600 000 | 360 | 8 192 | 2400 |
+| Brutreaktor | `akw:breeder_reactor` | 800 000 | 240 | 4 096 | 2200 |
+| Thorium-Reaktor | `akw:thorium_reactor` | 600 000 | 180 | 3 072 | 2600 |
+| Fusionsreaktor | `akw:fusion_reactor` | 4 000 000 | 1 000 | 32 768 | 1200 |
+
+### Reaktor-Bausteine
+| Block | ID | Verwendung |
+|---|---|---|
+| Reaktorkern | `akw:reactor_core` | Crafting-Bauteil (leuchtet schwach) |
+| Steuerstab-Block | `akw:control_rod_block` | Bauteil fortgeschr. Reaktoren |
+| Kühlrohr | `akw:cooling_pipe` | Bauteil des Elite-Reaktors |
+| Blei-Block | `akw:lead_block` | Strahlenschutz (Deko/Lager) |
+| Abfallbehälter | `akw:waste_container` | Lager (Deko) |
+| Angereicherter-Uran-Block | `akw:enriched_uranium_block` | Kompaktlager (leuchtet schwach) |
+
 ### Mechaniken
-- **Loot-Tables:** Erze droppen Roh-Uran, mit **Behutsamkeit (Silk Touch)** den Block selbst, **Glück (Fortune)** erhöht den Drop.
-- **Mining-Tags:** Erze sind als `mineable/pickaxe` + `needs_iron_tool` registriert.
-- **Rezepte:** Schmelzen/Schmelzofen (Roh-Uran → Barren) und Crafting (3× Barren → Brennstab).
-- **Energie:** Team Reborn Energy API ist eingebunden (FE-kompatibel) — Reaktor-Logik folgt (Phase 2).
+- **Energie:** Reaktoren sind FE-Generatoren über die **Team Reborn Energy**-API
+  (kompatibel mit Tech-Reborn-/FE-Maschinen & -Kabeln).
+- **GUI:** Brennstoff-Slot, Energiebalken (Tooltip zeigt `FE / Kapazität`) und
+  Brenn-Anzeige; Werte werden serverseitig per `PropertyDelegate` synchronisiert.
+- **Loot-Tables:** Erze droppen Roh-Uran (Silk Touch → Block, Fortune erhöht Drop);
+  alle übrigen Blöcke droppen sich selbst.
+- **Mining-Tags:** Alle AKW-Blöcke sind `mineable/pickaxe`; Erze zusätzlich `needs_iron_tool`.
+- **Rezepte:** Schmelzen (Roh-Uran → Barren), Crafting (Barren → Brennstab),
+  sowie Crafting-Rezepte für alle Reaktoren und Bausteine (gestaffelt: höhere
+  Tiers verbauen den jeweils kleineren Reaktor).
 
 ---
 
@@ -44,29 +76,48 @@ akw mod/
 ├─ gradle.properties           # Versionen (MC, Yarn, Fabric, Energy)
 ├─ settings.gradle
 ├─ LICENSE                     # MIT
-├─ README.md                   # diese Datei
-├─ CHANGELOG.md                # Versions-Historie
-├─ ROADMAP.md                  # Entwicklungsplan
+├─ README.md / CHANGELOG.md / ROADMAP.md
 ├─ briefkasten/                # Austausch-Ordner (nicht Teil des Builds)
+├─ tools/                      # Generatoren (reine Python-stdlib, kein PIL)
+│  ├─ akw_data.py              # ZENTRALE Datenquelle: Reaktor-Typen & Bausteine
+│  ├─ gen_textures.py          # erzeugt alle PNG-Texturen + Mod-Icon + GUI
+│  └─ gen_resources.py         # erzeugt Blockstates/Modelle/Loot/Rezepte/Tags/Lang
 └─ src/main/
    ├─ java/ch/danielt/akw/
-   │  ├─ AkwMod.java           # ModInitializer (Einstiegspunkt)
-   │  ├─ AkwClient.java        # ClientModInitializer
+   │  ├─ AkwMod.java           # ModInitializer (Registry + Energie-Lookup)
+   │  ├─ AkwClient.java        # ClientModInitializer (Screen-Registrierung)
+   │  ├─ block/
+   │  │  ├─ NuclearReactorBlock.java         # FACING/LIT, GUI, Ticker (pro Tier parametr.)
+   │  │  └─ entity/
+   │  │     ├─ NuclearReactorBlockEntity.java # Energie, Brennstab-Logik, FE-Abgabe
+   │  │     └─ ImplementedInventory.java      # Inventory-Helfer
+   │  ├─ screen/
+   │  │  ├─ NuclearReactorScreenHandler.java  # Slots, PropertyDelegate, quickMove
+   │  │  └─ NuclearReactorScreen.java         # GUI-Rendering (Client)
    │  └─ registry/
-   │     ├─ ModItems.java      # Item-Registrierung
-   │     ├─ ModBlocks.java     # Block-Registrierung (+ BlockItems)
-   │     └─ ModItemGroups.java # Kreativ-Tab
+   │     ├─ ModItems.java         # Items
+   │     ├─ ModBlocks.java        # Erze, Reaktoren (Liste REACTORS), Bausteine (DECOR)
+   │     ├─ ModBlockEntities.java # ein gemeinsamer BE-Typ für alle Reaktoren
+   │     ├─ ModScreenHandlers.java# ExtendedScreenHandlerType (BlockPos-Sync)
+   │     └─ ModItemGroups.java    # Kreativ-Tab
    └─ resources/
-      ├─ fabric.mod.json       # Mod-Metadaten
+      ├─ fabric.mod.json       # Mod-Metadaten (inkl. icon)
       ├─ assets/akw/
+      │  ├─ icon.png           # Mod-Logo (512×512)
       │  ├─ lang/              # de_de, en_us
       │  ├─ models/            # Item- & Block-Modelle
-      │  └─ blockstates/       # Blockstates
-      │  └─ textures/          # ⚠️ FEHLT NOCH (siehe unten)
+      │  ├─ blockstates/       # Blockstates
+      │  └─ textures/          # block/, item/, gui/ (alle generiert)
       └─ data/akw/
-         ├─ loot_table/blocks/ # Erz-Drops
-         └─ recipe/            # Schmelz- & Craft-Rezepte
+         ├─ loot_table/blocks/ # Block-Drops
+         ├─ recipe/            # Schmelz- & Craft-Rezepte
+         └─ worldgen/          # Uranerz-Weltgenerierung
 ```
+
+> **Texturen & Daten regenerieren:** Reaktor-Typen/Bausteine werden ausschließlich in
+> `tools/akw_data.py` definiert. Nach Änderungen dort:
+> `python3 tools/gen_textures.py && python3 tools/gen_resources.py`. Die Java-Seite
+> (`ModBlocks`) spiegelt dieselben Tier-Werte und muss bei neuen Typen mitgepflegt werden.
 
 ---
 
@@ -101,15 +152,15 @@ Voraussetzung: **JDK 21**. Der Pfad ist in `gradle.properties` fest hinterlegt
 
 ## ⚠️ Bekannte Lücken / To-do
 
-- **Texturen fehlen komplett** — alle Modelle zeigen auf nicht vorhandene PNGs
-  (im Spiel als fehlende Textur sichtbar). Benötigt:
-  - `assets/akw/textures/item/{raw_uranium,uranium_ingot,fuel_rod}.png` (16×16)
-  - `assets/akw/textures/block/{uranium_ore,deepslate_uranium_ore}.png` (16×16)
-  - `assets/akw/icon.png` (512×512 Mod-Logo) + Eintrag in `fabric.mod.json`
-- **Reaktor & Energiesystem** (Phase 2) noch offen — geplant als volle Variante
-  mit GUI, Brennstab-Slots und Team-Reborn-Energiespeicher (siehe `ROADMAP.md`).
-- **Rezept-Formate** sind auf MC 1.21.1 ausgelegt; nach dem ersten `runClient`
-  das Log auf Recipe-/Loot-Parse-Fehler prüfen.
+- **Texturen** sind generierte Pixel-Art-Platzhalter (`tools/gen_textures.py`) — für
+  ein Release ggf. durch handgemalte ersetzen (Specs: `briefkasten/ausgang/`).
+- **Bausteine sind noch passiv:** Kühlung, Strahlung, Steuerstab-Wirkung und
+  Multiblock-Strukturen sind als spätere Phasen geplant (siehe `ROADMAP.md`).
+- **Balancing** der Reaktor-Werte ist vorläufig; alle Reaktoren nutzen denselben
+  Brennstab (`akw:fuel_rod`).
+- **Validierung:** Build (`./gradlew build`) und ein headless `runServer` laden alle
+  Registries/Rezepte/Loot fehlerfrei; die visuelle In-Game-Prüfung via `runClient`
+  steht als manueller Schritt aus.
 
 Vollständiger Plan: siehe [ROADMAP.md](ROADMAP.md).
 

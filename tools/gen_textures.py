@@ -5,6 +5,7 @@ Schreibt 16x16-RGBA-PNGs fuer Items/Bloecke und ein 512x512-Mod-Icon direkt
 an ihre Zielorte im Ressourcen-Baum. Reiner Python-stdlib PNG-Encoder (zlib).
 """
 import os, zlib, struct, math, random
+from akw_data import REACTOR_TYPES, DECOR_BLOCKS
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ASSETS = os.path.join(ROOT, "src", "main", "resources", "assets", "akw")
@@ -208,6 +209,189 @@ def icon():
     return px, W, H
 
 
+def panel(base, edge_dark, edge_hi, seed):
+    """Metall-Panel mit Rand-Bevel und Eck-Nieten."""
+    rnd = random.Random(seed)
+    px = [jitter(base, 8, rnd) for _ in range(256)]
+    for x in range(16):
+        px[x] = edge_hi + (255,)
+        px[15 * 16 + x] = edge_dark + (255,)
+    for y in range(16):
+        px[y * 16] = edge_hi + (255,)
+        px[y * 16 + 15] = edge_dark + (255,)
+    for (x, y) in [(2, 2), (13, 2), (2, 13), (13, 13)]:
+        px[y * 16 + x] = edge_dark + (255,)
+    return px
+
+
+def _edges(metal):
+    dark = tuple(int(c * 0.58) for c in metal)
+    hi = tuple(min(255, int(c * 1.4)) for c in metal)
+    return dark, hi
+
+
+def reactor_top(metal):
+    dark, hi = _edges(metal)
+    px = panel(metal, dark, hi, 101)
+    cx = cy = 7.5
+    for y in range(16):
+        for x in range(16):
+            d = math.hypot(x - cx, y - cy)
+            if 5 <= d < 6 or 3 <= d < 4:
+                px[y * 16 + x] = dark + (255,)
+    for (x, y) in [(7, 7), (8, 7), (7, 8), (8, 8)]:
+        px[y * 16 + x] = dark + (255,)
+    return px
+
+
+def reactor_side(metal):
+    dark, hi = _edges(metal)
+    px = panel(metal, dark, hi, 102)
+    vent = tuple(int(c * 0.7) for c in metal)
+    for y in (5, 7, 9, 11):
+        for x in range(3, 13):
+            px[y * 16 + x] = vent + (255,)
+    return px
+
+
+def reactor_front(metal, accent, on=False):
+    dark, hi = _edges(metal)
+    px = panel(metal, dark, hi, 103)
+    win = accent if on else (40, 44, 50)
+    win_edge = (30, 33, 38)
+    for y in range(4, 11):
+        for x in range(4, 12):
+            px[y * 16 + x] = win + (255,)
+    for x in range(4, 12):
+        px[3 * 16 + x] = win_edge + (255,)
+        px[11 * 16 + x] = win_edge + (255,)
+    for y in range(4, 11):
+        px[y * 16 + 3] = win_edge + (255,)
+        px[y * 16 + 12] = win_edge + (255,)
+    glow = tuple(min(255, int(c * 1.3) + 30) for c in accent)
+    for x in (5, 8, 11):
+        px[13 * 16 + x] = (accent if on else (70, 30, 30)) + (255,)
+    if on:
+        for (x, y) in [(6, 6), (9, 8), (7, 9)]:
+            px[y * 16 + x] = glow + (255,)
+    return px
+
+
+def reactor_core():
+    px = panel((60, 66, 62), (35, 40, 38), (90, 98, 92), 110)
+    cx = cy = 7.5
+    for y in range(16):
+        for x in range(16):
+            d = math.hypot(x - cx, y - cy)
+            if d < 2.2:
+                px[y * 16 + x] = (170, 255, 150, 255)
+            elif d < 3.5:
+                px[y * 16 + x] = (70, 220, 90, 255)
+            elif d < 4.5:
+                px[y * 16 + x] = (40, 150, 60, 255)
+    return px
+
+
+def cooling_pipe():
+    rnd = random.Random(120)
+    px = []
+    for i in range(256):
+        x = i % 16
+        base = (150, 160, 170)
+        if x in (0, 1):
+            base = (110, 120, 130)
+        if x in (14, 15):
+            base = (100, 110, 120)
+        if 6 <= x <= 9:
+            base = (120, 180, 200)
+        px.append(jitter(base, 6, rnd))
+    for y in (3, 8, 13):
+        for x in range(16):
+            px[y * 16 + x] = (90, 100, 110, 255)
+    return px
+
+
+def control_rod_block():
+    rnd = random.Random(130)
+    px = []
+    for i in range(256):
+        x = i % 16
+        base = (50, 54, 60) if x in (3, 4, 8, 9, 12) else (90, 94, 100)
+        px.append(jitter(base, 6, rnd))
+    return px
+
+
+def lead_block():
+    rnd = random.Random(140)
+    px = [jitter((95, 100, 115), 8, rnd) for _ in range(256)]
+    for x in range(16):
+        px[0 * 16 + x] = (70, 75, 90, 255)
+        px[8 * 16 + x] = (70, 75, 90, 255)
+    for y in range(16):
+        bx = 8 if (y // 8) % 2 == 0 else 0
+        px[y * 16 + bx] = (70, 75, 90, 255)
+    return px
+
+
+def waste_container():
+    rnd = random.Random(150)
+    px = []
+    for i in range(256):
+        y = i // 16
+        base = (210, 180, 40) if (y // 2) % 2 == 0 else (40, 40, 40)
+        px.append(jitter(base, 8, rnd))
+    for (x, y) in [(7, 7), (8, 7), (7, 8), (8, 8),
+                   (7, 4), (8, 4), (4, 10), (5, 10), (10, 10), (11, 10)]:
+        px[y * 16 + x] = (30, 30, 30, 255)
+    return px
+
+
+def enriched_uranium_block():
+    rnd = random.Random(160)
+    px = [jitter((40, 160, 60), 10, rnd) for _ in range(256)]
+    for y in range(16):
+        for x in range(16):
+            if x % 4 == 0 or y % 4 == 0:
+                px[y * 16 + x] = (90, 230, 110, 255)
+            if x % 4 == 2 and y % 4 == 2:
+                px[y * 16 + x] = (180, 255, 170, 255)
+    return px
+
+
+def gui_reactor():
+    """176x166 GUI-Hintergrund im Vanilla-Stil (Brennstoff-Slot, Inventar, Energiebalken)."""
+    W, H = 176, 166
+    px = [(198, 198, 198, 255)] * (W * H)
+
+    def rect(x0, y0, w, h, c):
+        for yy in range(y0, y0 + h):
+            for xx in range(x0, x0 + w):
+                if 0 <= xx < W and 0 <= yy < H:
+                    px[yy * W + xx] = c + (255,)
+
+    rect(0, 0, W, 1, (255, 255, 255))
+    rect(0, 0, 1, H, (255, 255, 255))
+    rect(0, H - 1, W, 1, (85, 85, 85))
+    rect(W - 1, 0, 1, H, (85, 85, 85))
+
+    def slot(x, y):
+        rect(x, y, 18, 1, (85, 85, 85))
+        rect(x, y, 1, 18, (85, 85, 85))
+        rect(x, y + 17, 18, 1, (255, 255, 255))
+        rect(x + 17, y, 1, 18, (255, 255, 255))
+        rect(x + 1, y + 1, 16, 16, (139, 139, 139))
+
+    slot(79, 34)                      # Brennstoff-Slot (Screen 80,35)
+    for r in range(3):
+        for c in range(9):
+            slot(7 + c * 18, 83 + r * 18)
+    for c in range(9):
+        slot(7 + c * 18, 141)         # Hotbar
+    rect(152, 16, 14, 54, (60, 60, 60))   # Energie-Rahmen
+    rect(153, 17, 12, 52, (35, 35, 35))
+    return px, W, H
+
+
 def main():
     print("AKW-Texturen werden generiert...")
     write_png(os.path.join(BLOCK_DIR, "uranium_ore.png"),
@@ -219,6 +403,30 @@ def main():
     write_png(os.path.join(ITEM_DIR, "fuel_rod.png"), fuel_rod(), 16, 16)
     ipx, w, h = icon()
     write_png(os.path.join(ASSETS, "icon.png"), ipx, w, h)
+
+    # Reaktor-Typen (datengetrieben aus akw_data)
+    for r in REACTOR_TYPES:
+        rid, metal, accent = r["id"], tuple(r["metal"]), tuple(r["accent"])
+        write_png(os.path.join(BLOCK_DIR, rid + "_top.png"), reactor_top(metal), 16, 16)
+        write_png(os.path.join(BLOCK_DIR, rid + "_side.png"), reactor_side(metal), 16, 16)
+        write_png(os.path.join(BLOCK_DIR, rid + "_front.png"), reactor_front(metal, accent, False), 16, 16)
+        write_png(os.path.join(BLOCK_DIR, rid + "_front_on.png"), reactor_front(metal, accent, True), 16, 16)
+
+    # Reaktor-Bausteine
+    decor_funcs = {
+        "reactor_core": reactor_core,
+        "control_rod_block": control_rod_block,
+        "cooling_pipe": cooling_pipe,
+        "lead_block": lead_block,
+        "waste_container": waste_container,
+        "enriched_uranium_block": enriched_uranium_block,
+    }
+    for d in DECOR_BLOCKS:
+        write_png(os.path.join(BLOCK_DIR, d["id"] + ".png"), decor_funcs[d["id"]](), 16, 16)
+
+    # GUI
+    gpx, gw, gh = gui_reactor()
+    write_png(os.path.join(ASSETS, "textures", "gui", "nuclear_reactor.png"), gpx, gw, gh)
     print("Fertig.")
 
 

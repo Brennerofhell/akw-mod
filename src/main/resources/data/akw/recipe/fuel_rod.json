@@ -12,7 +12,7 @@
     }
   },
   "result": {
-    "item": "akw:fuel_rod",
+    "id": "akw:fuel_rod",
     "count": 1
   }
 }

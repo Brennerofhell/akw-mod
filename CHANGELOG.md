@@ -7,6 +7,42 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+## [0.2.0] — Energiesystem & Reaktoren
+
+### Hinzugefügt
+- **6 funktionale Reaktor-Typen** als FE-Generatoren (Team Reborn Energy):
+  `nuclear_reactor`, `advanced_nuclear_reactor`, `elite_nuclear_reactor`,
+  `breeder_reactor`, `thorium_reactor`, `fusion_reactor`. Jeder Typ hat eigene
+  Kapazität/Leistung/Brenndauer (siehe `README.md`).
+  - **BlockEntity** (`NuclearReactorBlockEntity`): verbrennt `fuel_rod`, erzeugt
+    FE/Tick, gibt Strom über alle 6 Seiten an angrenzende FE-Speicher ab,
+    speichert Energie/Brennzustand per NBT, droppt Inhalt beim Abbau.
+  - **GUI** (`NuclearReactorScreenHandler` + `NuclearReactorScreen`):
+    Brennstoff-Slot, Energiebalken mit `FE / Kapazität`-Tooltip, Brenn-Anzeige;
+    Synchronisation per `PropertyDelegate`, Öffnen via `ExtendedScreenHandlerType`
+    (BlockPos-Sync).
+  - **Blockstates** `facing` (horizontale Ausrichtung) + `lit` (leuchtende Front
+    im Betrieb), parametrisierte Modelle (orientable, `_on`-Variante).
+- **6 Reaktor-Bausteine:** `reactor_core`, `control_rod_block`, `cooling_pipe`,
+  `lead_block`, `waste_container`, `enriched_uranium_block` (mit Texturen,
+  Modellen, Loot, gestaffelten Crafting-Rezepten, Lokalisierung).
+- **Generatoren** (`tools/`): zentrale Datenquelle `akw_data.py`,
+  `gen_textures.py` (Block-/GUI-Texturen) und `gen_resources.py`
+  (Blockstates/Modelle/Loot/Rezepte/Tags/Lang) — reine Python-stdlib.
+- **Energie-Lookup:** `EnergyStorage.SIDED` für den Reaktor-BlockEntity-Typ.
+
+### Geändert
+- Mod-Version auf `0.2.0` angehoben.
+- Rezept-Result-Format auf MC 1.21.1 korrigiert (`"result": {"id": …}` statt
+  `"item"`/String) — betrifft `fuel_rod` sowie Schmelz-/Schmelzofen-Rezepte.
+- `mineable/pickaxe`-Tag um alle Reaktoren und Bausteine erweitert.
+
+### Verifiziert
+- `./gradlew build` läuft fehlerfrei; headless `runServer` lädt alle Registries,
+  1305 Rezepte und Loot-Tables ohne AKW-bezogene Fehler.
+
+## [0.1.5] — Texturen & Weltgenerierung
+
 ### Hinzugefügt
 - **Texturen:** Pixel-Art-Texturen für alle Items (`raw_uranium`,
   `uranium_ingot`, `fuel_rod`) und Blöcke (`uranium_ore`,
@@ -27,9 +63,6 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 - **Dokumentation:** `README.md`, `CHANGELOG.md`, `ROADMAP.md`.
 - **`LICENSE`** (MIT) — schließt die Referenz in `build.gradle`.
 - **`briefkasten/`** Austausch-Ordner (`eingang/`, `ausgang/`).
-
-### Bekannt / offen
-- Reaktor/Energiesystem (Phase 2) noch nicht umgesetzt.
 
 ## [0.1.0] — Grundgerüst
 

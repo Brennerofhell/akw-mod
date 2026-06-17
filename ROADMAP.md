@@ -2,7 +2,7 @@
 
 Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.1)
 
-## Status: Early Development (v0.1.0)
+## Status: In Entwicklung (v0.2.0 — Energiesystem)
 
 ---
 
@@ -25,33 +25,34 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.1)
 
 ---
 
-## 🎯 Phase 2: Energy System (Geplant)
+## 🎯 Phase 2: Energy System (Großteils umgesetzt)
 
 ### Energie-Infrastruktur
-- [ ] Nuclear Reactor Block mit GUI
-  - [ ] Fuel Rod-System (Verbrauch & Lagerung)
-  - [ ] Energie-Generierung (FE/Joule mit Team Reborn Energy)
-  - [ ] Kühlsystem-Logik
+- [x] Nuclear Reactor Block mit GUI (**6 Typen**: Reaktor, Fortgeschritten,
+      Elite, Brutreaktor, Thorium, Fusion)
+  - [x] Fuel Rod-System (Verbrauch im Brennstoff-Slot)
+  - [x] Energie-Generierung (FE mit Team Reborn Energy, Abgabe an alle Seiten)
+  - [ ] Kühlsystem-Logik (Bausteine vorhanden, Wirkung folgt)
 - [ ] Radiation Mechanic
   - [ ] Strahlungs-Blockeffekte
   - [ ] Spieler-Strahlungsexposition
-  - [ ] Strahlungsschutz-Items
+  - [ ] Strahlungsschutz-Items (Blei-Block bereits vorhanden)
 
-### Zielversion: v0.2.0
+### Zielversion: v0.2.0 ✅ (Reaktoren & Energie ausgeliefert)
 
 ---
 
 ## 🔧 Phase 3: Block Expansion
 
-### Neue Blöcke
-- [ ] Enriched Uranium Block (Dekoration/Lagerung)
-- [ ] Reactor Core
-- [ ] Cooling Pipe System
-- [ ] Control Rod Block
-- [ ] Lead Block (Strahlungsschutz)
-- [ ] Waste Container (Abfallmanagement)
+### Neue Blöcke (Bausteine als Blöcke vorhanden — Funktionslogik folgt)
+- [x] Enriched Uranium Block (Dekoration/Lagerung)
+- [x] Reactor Core
+- [x] Cooling Pipe (Block vorhanden; Rohr-Netzwerk-Logik offen)
+- [x] Control Rod Block
+- [x] Lead Block (Strahlungsschutz-Block vorhanden)
+- [x] Waste Container (Block vorhanden; Abfall-Logik offen)
 
-### Zielversion: v0.3.0
+### Zielversion: v0.3.0 (Funktionslogik der Bausteine)
 
 ---
 

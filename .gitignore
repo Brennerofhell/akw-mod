@@ -24,6 +24,10 @@ bin/
 # VS Code
 .vscode/
 
+# Python (Generatoren in tools/)
+__pycache__/
+*.pyc
+
 # macOS
 .DS_Store
 **/.DS_Store

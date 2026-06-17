@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "akw:block/control_rod_block"
+    }
+  }
+}
