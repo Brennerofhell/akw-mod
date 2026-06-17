@@ -37,6 +37,13 @@ public class NuclearReactorBlockEntity extends BlockEntity
 
     public static final int FUEL_SLOT = 0;
 
+    /** PropertyDelegate-Indizes (gemeinsam von BlockEntity, ScreenHandler, Screen genutzt). */
+    public static final int IDX_ENERGY = 0;
+    public static final int IDX_CAPACITY = 1;
+    public static final int IDX_BURN_TIME = 2;
+    public static final int IDX_BURN_TOTAL = 3;
+    public static final int PROPERTY_COUNT = 4;
+
     private final DefaultedList<ItemStack> inventory = DefaultedList.ofSize(1, ItemStack.EMPTY);
 
     /** Energiespeicher: kein Input (Generator), nur Abgabe. */
@@ -50,11 +57,13 @@ public class NuclearReactorBlockEntity extends BlockEntity
     private final PropertyDelegate propertyDelegate = new PropertyDelegate() {
         @Override
         public int get(int index) {
+            // amount/capacity sind long; auf Integer.MAX_VALUE begrenzen, da der
+            // PropertyDelegate nur int synchronisiert (verhindert Overflow-Anzeige).
             return switch (index) {
-                case 0 -> (int) energyStorage.amount;
-                case 1 -> (int) energyStorage.capacity;
-                case 2 -> burnTime;
-                case 3 -> burnTimeTotal;
+                case IDX_ENERGY -> (int) Math.min(energyStorage.amount, Integer.MAX_VALUE);
+                case IDX_CAPACITY -> (int) Math.min(energyStorage.capacity, Integer.MAX_VALUE);
+                case IDX_BURN_TIME -> burnTime;
+                case IDX_BURN_TOTAL -> burnTimeTotal;
                 default -> 0;
             };
         }
@@ -62,16 +71,16 @@ public class NuclearReactorBlockEntity extends BlockEntity
         @Override
         public void set(int index, int value) {
             switch (index) {
-                case 0 -> energyStorage.amount = value;
-                case 2 -> burnTime = value;
-                case 3 -> burnTimeTotal = value;
+                case IDX_ENERGY -> energyStorage.amount = value;
+                case IDX_BURN_TIME -> burnTime = value;
+                case IDX_BURN_TOTAL -> burnTimeTotal = value;
                 default -> { }
             }
         }
 
         @Override
         public int size() {
-            return 4;
+            return PROPERTY_COUNT;
         }
     };
 

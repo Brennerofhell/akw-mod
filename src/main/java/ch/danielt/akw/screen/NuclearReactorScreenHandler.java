@@ -64,19 +64,19 @@ public class NuclearReactorScreenHandler extends ScreenHandler {
         if (playerInventory.player.getWorld().getBlockEntity(pos) instanceof NuclearReactorBlockEntity be) {
             return be.getPropertyDelegate();
         }
-        return new ArrayPropertyDelegate(4);
+        return new ArrayPropertyDelegate(NuclearReactorBlockEntity.PROPERTY_COUNT);
     }
 
     public int getEnergy() {
-        return propertyDelegate.get(0);
+        return propertyDelegate.get(NuclearReactorBlockEntity.IDX_ENERGY);
     }
 
     public int getCapacity() {
-        return propertyDelegate.get(1);
+        return propertyDelegate.get(NuclearReactorBlockEntity.IDX_CAPACITY);
     }
 
     public boolean isBurning() {
-        return propertyDelegate.get(2) > 0;
+        return propertyDelegate.get(NuclearReactorBlockEntity.IDX_BURN_TIME) > 0;
     }
 
     public float getEnergyFraction() {
@@ -85,8 +85,9 @@ public class NuclearReactorScreenHandler extends ScreenHandler {
     }
 
     public float getBurnFraction() {
-        int total = propertyDelegate.get(3);
-        return total == 0 ? 0f : (float) propertyDelegate.get(2) / total;
+        int total = propertyDelegate.get(NuclearReactorBlockEntity.IDX_BURN_TOTAL);
+        return total == 0 ? 0f
+                : (float) propertyDelegate.get(NuclearReactorBlockEntity.IDX_BURN_TIME) / total;
     }
 
     @Override
