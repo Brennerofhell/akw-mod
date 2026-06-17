@@ -9,6 +9,14 @@ import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 
+/**
+ * Registriert die {@link ScreenHandlerType}s der Mod. Der Reaktor nutzt einen
+ * {@link ExtendedScreenHandlerType}, der beim Öffnen die {@link BlockPos} des
+ * Reaktors zum Client synchronisiert (via {@link BlockPos#PACKET_CODEC}), damit
+ * der Client-Konstruktor des ScreenHandlers die passende BlockEntity auflösen kann.
+ *
+ * <p>Ein gemeinsamer ScreenHandler-Typ bedient alle Reaktor-Tiers.
+ */
 public class ModScreenHandlers {
 
     public static ScreenHandlerType<NuclearReactorScreenHandler> NUCLEAR_REACTOR;

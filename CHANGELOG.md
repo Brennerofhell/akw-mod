@@ -7,6 +7,16 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+### Dokumentation
+- **JavaDoc vervollständigt:** Klassen-Doc für alle bislang undokumentierten Klassen
+  (`AkwMod`, `AkwClient`, `ModItemGroups`, `ModScreenHandlers`, `NuclearReactorScreen`).
+- **Entwickler-Guide** `docs/ARCHITECTURE.md`: Paketstruktur, datengetriebene
+  Asset-Pipeline (`akw_data.py` → Generatoren → Java-Spiegelung), Energiefluss,
+  GUI-Kette, Anleitung „neuen Reaktor-Typ hinzufügen", Build-/Validierungs-Hinweise.
+- **Spieler-Guide** `docs/GUIDE.md`: Progression, Reaktor-Bedienung, Vergleichstabelle
+  aller Reaktor-Typen und sämtliche Rezepte.
+- README um einen Dokumentations-Abschnitt mit Querverweisen erweitert.
+
 ## [0.2.0] — Energiesystem & Reaktoren
 
 ### Hinzugefügt

@@ -11,6 +11,13 @@ import net.minecraft.registry.RegistryKey;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
+/**
+ * Registriert den Kreativ-Tab „Atomkraftwerk" und füllt ihn. Der Tab nutzt
+ * Roh-Uran als Icon und listet Items, Erze sowie — über die Listen
+ * {@link ModBlocks#REACTORS} und {@link ModBlocks#DECOR} — alle Reaktor-Typen
+ * und Bausteine. Neue Reaktoren/Bausteine erscheinen dadurch automatisch im Tab,
+ * sobald sie in {@link ModBlocks} registriert sind.
+ */
 public class ModItemGroups {
     public static final RegistryKey<ItemGroup> AKW_GROUP_KEY =
             RegistryKey.of(Registries.ITEM_GROUP.getKey(), Identifier.of(AkwMod.MOD_ID, "akw"));

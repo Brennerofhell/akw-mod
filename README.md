@@ -13,6 +13,16 @@ betreiben und FE-kompatiblen Strom erzeugen.
 
 ---
 
+## 📚 Dokumentation
+
+- **[docs/GUIDE.md](docs/GUIDE.md)** — Spieler-Guide: Progression, Reaktor-Bedienung,
+  alle Reaktor-Werte und Rezepte.
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — Entwickler-Guide: Paketstruktur,
+  datengetriebene Asset-Pipeline, Energiefluss, GUI-Kette, „neuen Reaktor-Typ hinzufügen".
+- **[CHANGELOG.md](CHANGELOG.md)** · **[ROADMAP.md](ROADMAP.md)**
+
+---
+
 ## ✨ Features (aktueller Stand)
 
 ### Items
