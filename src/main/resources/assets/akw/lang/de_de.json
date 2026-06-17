@@ -1,0 +1,8 @@
+{
+  "itemgroup.akw": "Atomkraftwerk",
+  "item.akw.raw_uranium": "Roh-Uran",
+  "item.akw.uranium_ingot": "Uran-Barren",
+  "item.akw.fuel_rod": "Brennstab",
+  "block.akw.uranium_ore": "Uranerz",
+  "block.akw.deepslate_uranium_ore": "Tiefenschiefer-Uranerz"
+}

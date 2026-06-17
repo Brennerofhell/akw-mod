@@ -1,0 +1,8 @@
+{
+  "itemgroup.akw": "Nuclear Power Plant",
+  "item.akw.raw_uranium": "Raw Uranium",
+  "item.akw.uranium_ingot": "Uranium Ingot",
+  "item.akw.fuel_rod": "Fuel Rod",
+  "block.akw.uranium_ore": "Uranium Ore",
+  "block.akw.deepslate_uranium_ore": "Deepslate Uranium Ore"
+}
