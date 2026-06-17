@@ -7,6 +7,14 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+## [0.3.0] — Kühlsystem
+
+### Hinzugefügt
+- **Cooling-Pipe-Bonus:** Jedes benachbarte `cooling_pipe`-Block erhöht die
+  FE/Tick-Ausgabe des Reaktors um 15 % (max. 6 Rohre = +90 %).
+- **GUI:** Blauer Kühlbalken links im Reaktor-Menü mit Tooltip
+  (Anzahl Rohre + Bonus-Prozent).
+
 ## [0.2.0] — Energiesystem & Reaktoren
 
 ### Hinzugefügt

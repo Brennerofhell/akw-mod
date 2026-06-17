@@ -90,6 +90,10 @@ public class NuclearReactorScreenHandler extends ScreenHandler {
                 : (float) propertyDelegate.get(NuclearReactorBlockEntity.IDX_BURN_TIME) / total;
     }
 
+    public int getCoolingCount() {
+        return propertyDelegate.get(NuclearReactorBlockEntity.IDX_COOLING);
+    }
+
     @Override
     public ItemStack quickMove(PlayerEntity player, int slotIndex) {
         ItemStack newStack = ItemStack.EMPTY;

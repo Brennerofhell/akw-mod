@@ -2,6 +2,7 @@ package ch.danielt.akw.block.entity;
 
 import ch.danielt.akw.block.NuclearReactorBlock;
 import ch.danielt.akw.registry.ModBlockEntities;
+import ch.danielt.akw.registry.ModBlocks;
 import ch.danielt.akw.registry.ModItems;
 import ch.danielt.akw.screen.NuclearReactorScreenHandler;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
@@ -42,7 +43,8 @@ public class NuclearReactorBlockEntity extends BlockEntity
     public static final int IDX_CAPACITY = 1;
     public static final int IDX_BURN_TIME = 2;
     public static final int IDX_BURN_TOTAL = 3;
-    public static final int PROPERTY_COUNT = 4;
+    public static final int IDX_COOLING = 4;
+    public static final int PROPERTY_COUNT = 5;
 
     private final DefaultedList<ItemStack> inventory = DefaultedList.ofSize(1, ItemStack.EMPTY);
 
@@ -53,6 +55,7 @@ public class NuclearReactorBlockEntity extends BlockEntity
 
     private int burnTime;
     private int burnTimeTotal;
+    private int coolingCount;
 
     private final PropertyDelegate propertyDelegate = new PropertyDelegate() {
         @Override
@@ -64,6 +67,7 @@ public class NuclearReactorBlockEntity extends BlockEntity
                 case IDX_CAPACITY -> (int) Math.min(energyStorage.capacity, Integer.MAX_VALUE);
                 case IDX_BURN_TIME -> burnTime;
                 case IDX_BURN_TOTAL -> burnTimeTotal;
+                case IDX_COOLING -> coolingCount;
                 default -> 0;
             };
         }
@@ -108,12 +112,25 @@ public class NuclearReactorBlockEntity extends BlockEntity
         boolean wasBurning = be.burnTime > 0;
         boolean dirty = false;
 
+        // Benachbarte Kuehlrohre zaehlen; +15 % FE/Tick pro Rohr
+        int cooling = 0;
+        for (Direction dir : Direction.values()) {
+            if (world.getBlockState(pos.offset(dir)).isOf(ModBlocks.COOLING_PIPE)) {
+                cooling++;
+            }
+        }
+        if (cooling != be.coolingCount) {
+            be.coolingCount = cooling;
+            dirty = true;
+        }
+
         // Laufenden Brennstab abbrennen und Energie erzeugen
         if (be.burnTime > 0) {
             be.burnTime--;
             if (be.energyStorage.amount < be.energyStorage.capacity) {
+                long effectiveGen = Math.round(be.genPerTick * (1.0 + be.coolingCount * 0.15));
                 be.energyStorage.amount =
-                        Math.min(be.energyStorage.capacity, be.energyStorage.amount + be.genPerTick);
+                        Math.min(be.energyStorage.capacity, be.energyStorage.amount + effectiveGen);
             }
             dirty = true;
         }

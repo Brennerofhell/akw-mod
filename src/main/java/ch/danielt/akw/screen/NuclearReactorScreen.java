@@ -35,6 +35,14 @@ public class NuclearReactorScreen extends HandledScreen<NuclearReactorScreenHand
         context.fill(bx, bTop, bx + 4, bTop + bH, 0xFF202020);
         int bf = (int) (bH * handler.getBurnFraction());
         context.fill(bx, bTop + (bH - bf), bx + 4, bTop + bH, 0xFFE0902C);
+
+        // Kuehlbalken (blau) — 0..6 Kuehlrohre
+        int cx = x + 7;
+        int cBarTop = y + 17;
+        int cBarH = 52;
+        context.fill(cx, cBarTop, cx + 6, cBarTop + cBarH, 0xFF202020);
+        int coolFill = (int) ((double) handler.getCoolingCount() / 6 * cBarH);
+        context.fill(cx, cBarTop + (cBarH - coolFill), cx + 6, cBarTop + cBarH, 0xFF4488FF);
     }
 
     @Override
@@ -47,6 +55,16 @@ public class NuclearReactorScreen extends HandledScreen<NuclearReactorScreenHand
         if (mouseX >= ex && mouseX < ex + 14 && mouseY >= ey && mouseY < ey + 54) {
             context.drawTooltip(textRenderer,
                     Text.literal(handler.getEnergy() + " / " + handler.getCapacity() + " FE"),
+                    mouseX, mouseY);
+        }
+
+        int cx = x + 6;
+        int cy = y + 16;
+        if (mouseX >= cx && mouseX < cx + 8 && mouseY >= cy && mouseY < cy + 54) {
+            int cooling = handler.getCoolingCount();
+            int bonus = cooling * 15;
+            context.drawTooltip(textRenderer,
+                    Text.literal("Kühlung: " + cooling + "/6 Rohre (+" + bonus + "% FE/t)"),
                     mouseX, mouseY);
         }
     }
