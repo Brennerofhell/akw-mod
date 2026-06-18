@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "akw:block/thorium_reactor_front",
+    "side": "akw:block/thorium_reactor_side",
+    "top": "akw:block/thorium_reactor_top"
+  }
+}

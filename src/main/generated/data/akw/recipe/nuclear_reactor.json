@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "F": "minecraft:furnace",
+    "I": "minecraft:iron_ingot",
+    "R": "minecraft:redstone",
+    "U": "akw:uranium_ingot"
+  },
+  "pattern": [
+    "III",
+    "UFU",
+    "IRI"
+  ],
+  "result": {
+    "count": 1,
+    "id": "akw:nuclear_reactor"
+  }
+}

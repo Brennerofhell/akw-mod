@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "U": "akw:uranium_ingot"
+  },
+  "pattern": [
+    "IUI",
+    "UIU",
+    "IUI"
+  ],
+  "result": {
+    "count": 1,
+    "id": "akw:lead_block"
+  }
+}

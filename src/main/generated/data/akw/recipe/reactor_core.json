@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "F": "akw:fuel_rod",
+    "U": "akw:uranium_ingot"
+  },
+  "pattern": [
+    "UUU",
+    "UFU",
+    "UUU"
+  ],
+  "result": {
+    "count": 1,
+    "id": "akw:reactor_core"
+  }
+}

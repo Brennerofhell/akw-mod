@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/orientable",
+  "textures": {
+    "front": "akw:block/elite_nuclear_reactor_front_on",
+    "side": "akw:block/elite_nuclear_reactor_side",
+    "top": "akw:block/elite_nuclear_reactor_top"
+  }
+}

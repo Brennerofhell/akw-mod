@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": "akw:advanced_nuclear_reactor",
+    "C": "akw:cooling_pipe",
+    "D": "minecraft:diamond"
+  },
+  "pattern": [
+    "DCD",
+    "CAC",
+    "DCD"
+  ],
+  "result": {
+    "count": 1,
+    "id": "akw:elite_nuclear_reactor"
+  }
+}

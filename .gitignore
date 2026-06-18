@@ -4,6 +4,12 @@ build/
 out/
 classes/
 
+# Fabric Datagen-Cache (Inhalt von src/main/generated wird committed, der Cache nicht)
+src/main/generated/.cache/
+
+# Versehentlich kompilierte Klassen im Projekt-Root
+/net/
+
 # Fabric Loom / Minecraft Runtime
 run/
 *.log
