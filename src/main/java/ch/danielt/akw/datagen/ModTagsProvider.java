@@ -32,7 +32,9 @@ public class ModTagsProvider extends FabricTagProvider.BlockTagProvider {
                 .add(ModBlocks.COOLING_PIPE)
                 .add(ModBlocks.LEAD_BLOCK)
                 .add(ModBlocks.WASTE_CONTAINER)
-                .add(ModBlocks.ENRICHED_URANIUM_BLOCK);
+                .add(ModBlocks.ENRICHED_URANIUM_BLOCK)
+                .add(ModBlocks.ENERGY_CABLE)
+                .add(ModBlocks.ENERGY_BATTERY);
 
         // Erze erfordern mindestens eine Eisen-Spitzhacke
         valueLookupBuilder(BlockTags.NEEDS_IRON_TOOL)

@@ -1,12 +1,12 @@
 package ch.danielt.akw.block.entity;
 
 import ch.danielt.akw.block.NuclearReactorBlock;
+import ch.danielt.akw.energy.EnergyNet;
 import ch.danielt.akw.registry.ModBlockEntities;
 import ch.danielt.akw.registry.ModBlocks;
 import ch.danielt.akw.registry.ModItems;
 import ch.danielt.akw.screen.NuclearReactorScreenHandler;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
-import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
@@ -24,8 +24,6 @@ import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
-import team.reborn.energy.api.EnergyStorage;
-import team.reborn.energy.api.EnergyStorageUtil;
 import team.reborn.energy.api.base.SimpleEnergyStorage;
 
 /**
@@ -211,16 +209,7 @@ public class NuclearReactorBlockEntity extends BlockEntity
     }
 
     private void pushEnergy(World world, BlockPos pos) {
-        for (Direction dir : Direction.values()) {
-            EnergyStorage target = EnergyStorage.SIDED.find(world, pos.offset(dir), dir.getOpposite());
-            if (target == null) {
-                continue;
-            }
-            try (Transaction tx = Transaction.openOuter()) {
-                EnergyStorageUtil.move(energyStorage, target, energyStorage.maxExtract, tx);
-                tx.commit();
-            }
-        }
+        EnergyNet.pushToNeighbors(energyStorage, world, pos, energyStorage.maxExtract);
     }
 
     @Override

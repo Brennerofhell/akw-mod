@@ -8,6 +8,13 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 ## [Unreleased]
 
 ### Hinzugefügt
+- **Energie-Infrastruktur (v0.3):** **Energie-Kabel** transportiert FE zwischen
+  Blöcken (kleiner Puffer, gibt pro Tick an alle Nachbarn weiter → FE fliesst entlang
+  der Strecke von Erzeugern zu Verbrauchern/Speichern). **Akku-Block** als grosser
+  FE-Puffer (1 Mio FE), der den Füllstand als **Komparator-Signal** (0–15) ausgibt.
+  Beide exponieren `EnergyStorage.SIDED` → automatisch **FE-kompatibel mit Create**
+  (via FE-Brücken). Modularer Kern: gemeinsame Push-Logik in `energy/EnergyNet`
+  herausgezogen, Reaktor darauf umgestellt.
 - **Kühlsystem & Hitze-Mechanik:** Reaktoren bauen im Betrieb Hitze auf
   (`heatPerTick` je Typ). Jedes direkt angrenzende **Kühlrohr** (`cooling_pipe`)
   senkt die Hitze um 8/Tick, dazu 2/Tick Eigenkühlung. Ab 75 % der maxHitze wird

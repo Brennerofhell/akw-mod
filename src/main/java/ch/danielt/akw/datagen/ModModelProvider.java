@@ -27,6 +27,8 @@ public class ModModelProvider extends FabricModelProvider {
         gen.registerSimpleCubeAll(ModBlocks.LEAD_BLOCK);
         gen.registerSimpleCubeAll(ModBlocks.WASTE_CONTAINER);
         gen.registerSimpleCubeAll(ModBlocks.ENRICHED_URANIUM_BLOCK);
+        gen.registerSimpleCubeAll(ModBlocks.ENERGY_CABLE);
+        gen.registerSimpleCubeAll(ModBlocks.ENERGY_BATTERY);
 
         // Reaktoren: orientierbar (FACING) + LIT-Zustand — identisch zum Ofen.
         // registerCooker erzeugt Aus-/An-Modell (_front bzw. _front_on), den

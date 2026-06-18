@@ -13,6 +13,8 @@
     "akw:cooling_pipe",
     "akw:lead_block",
     "akw:waste_container",
-    "akw:enriched_uranium_block"
+    "akw:enriched_uranium_block",
+    "akw:energy_cable",
+    "akw:energy_battery"
   ]
 }

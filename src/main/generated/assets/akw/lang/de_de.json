@@ -5,6 +5,8 @@
   "block.akw.cooling_pipe": "Kühlrohr",
   "block.akw.deepslate_uranium_ore": "Tiefenschiefer-Uranerz",
   "block.akw.elite_nuclear_reactor": "Elite-Reaktor",
+  "block.akw.energy_battery": "Akku-Block",
+  "block.akw.energy_cable": "Energie-Kabel",
   "block.akw.enriched_uranium_block": "Angereicherter-Uran-Block",
   "block.akw.fusion_reactor": "Fusionsreaktor",
   "block.akw.lead_block": "Blei-Block",

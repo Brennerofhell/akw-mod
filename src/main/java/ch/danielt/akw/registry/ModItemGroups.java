@@ -43,6 +43,8 @@ public class ModItemGroups {
             entries.add(ModBlocks.DEEPSLATE_URANIUM_ORE);
             ModBlocks.REACTORS.forEach(entries::add);
             ModBlocks.DECOR.forEach(entries::add);
+            entries.add(ModBlocks.ENERGY_CABLE);
+            entries.add(ModBlocks.ENERGY_BATTERY);
         });
 
         // Zusätzlich in die passenden Vanilla-Tabs (wie andere Mods).
@@ -59,6 +61,10 @@ public class ModItemGroups {
                 ModBlocks.REACTORS.forEach(entries::add));
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.BUILDING_BLOCKS).register(entries ->
                 ModBlocks.DECOR.forEach(entries::add));
+        ItemGroupEvents.modifyEntriesEvent(ItemGroups.REDSTONE).register(entries -> {
+            entries.add(ModBlocks.ENERGY_CABLE);
+            entries.add(ModBlocks.ENERGY_BATTERY);
+        });
 
         AkwMod.LOGGER.info("[Atomkraftwerk] Kreativ-Tab + Vanilla-Tabs registriert.");
     }

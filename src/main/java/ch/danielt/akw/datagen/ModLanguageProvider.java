@@ -42,6 +42,9 @@ public class ModLanguageProvider {
             builder.add(ModBlocks.LEAD_BLOCK,             "Blei-Block");
             builder.add(ModBlocks.WASTE_CONTAINER,        "Abfallbehälter");
             builder.add(ModBlocks.ENRICHED_URANIUM_BLOCK, "Angereicherter-Uran-Block");
+
+            builder.add(ModBlocks.ENERGY_CABLE,           "Energie-Kabel");
+            builder.add(ModBlocks.ENERGY_BATTERY,         "Akku-Block");
         }
     }
 
@@ -77,6 +80,9 @@ public class ModLanguageProvider {
             builder.add(ModBlocks.LEAD_BLOCK,             "Lead Block");
             builder.add(ModBlocks.WASTE_CONTAINER,        "Waste Container");
             builder.add(ModBlocks.ENRICHED_URANIUM_BLOCK, "Enriched Uranium Block");
+
+            builder.add(ModBlocks.ENERGY_CABLE,           "Energy Cable");
+            builder.add(ModBlocks.ENERGY_BATTERY,         "Battery Block");
         }
     }
 }

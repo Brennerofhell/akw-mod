@@ -36,9 +36,13 @@ public class AkwMod implements ModInitializer {
         ModItemGroups.registerAll();
         ModWorldGen.registerAll();
 
-        // Reaktoren geben FE ueber alle Seiten ab (Team Reborn Energy).
+        // FE-Speicher ueber alle Seiten anbieten (Team Reborn Energy).
         EnergyStorage.SIDED.registerForBlockEntity(
                 (be, dir) -> be.energyStorage, ModBlockEntities.NUCLEAR_REACTOR);
+        EnergyStorage.SIDED.registerForBlockEntity(
+                (be, dir) -> be.energyStorage, ModBlockEntities.ENERGY_CABLE);
+        EnergyStorage.SIDED.registerForBlockEntity(
+                (be, dir) -> be.energyStorage, ModBlockEntities.ENERGY_BATTERY);
 
         LOGGER.info("[Atomkraftwerk] Mod initialisiert.");
     }

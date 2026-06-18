@@ -37,5 +37,9 @@ public class ModLootTableProvider extends FabricBlockLootTableProvider {
         addDrop(ModBlocks.LEAD_BLOCK);
         addDrop(ModBlocks.WASTE_CONTAINER);
         addDrop(ModBlocks.ENRICHED_URANIUM_BLOCK);
+
+        // Energie-Infrastruktur
+        addDrop(ModBlocks.ENERGY_CABLE);
+        addDrop(ModBlocks.ENERGY_BATTERY);
     }
 }

@@ -143,6 +143,22 @@ public class ModRecipeProvider extends FabricRecipeProvider {
                         .input('U', ModItems.URANIUM_INGOT)
                         .criterion(hasItem(ModItems.URANIUM_INGOT), conditionsFromItem(ModItems.URANIUM_INGOT))
                         .offerTo(exporter, key("enriched_uranium_block"));
+
+                // Energie-Infrastruktur
+                createShaped(RecipeCategory.REDSTONE, ModBlocks.ENERGY_CABLE, 3)
+                        .pattern("CRC")
+                        .input('C', Items.COPPER_INGOT)
+                        .input('R', Items.REDSTONE)
+                        .criterion(hasItem(Items.COPPER_INGOT), conditionsFromItem(Items.COPPER_INGOT))
+                        .offerTo(exporter, key("energy_cable"));
+
+                createShaped(RecipeCategory.REDSTONE, ModBlocks.ENERGY_BATTERY)
+                        .pattern("ICI").pattern("RRR").pattern("ICI")
+                        .input('I', Items.IRON_INGOT)
+                        .input('C', Items.COPPER_INGOT)
+                        .input('R', Items.REDSTONE)
+                        .criterion(hasItem(Items.REDSTONE), conditionsFromItem(Items.REDSTONE))
+                        .offerTo(exporter, key("energy_battery"));
             }
         };
     }
