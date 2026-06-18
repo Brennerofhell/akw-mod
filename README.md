@@ -8,7 +8,7 @@ betreiben und FE-kompatiblen Strom erzeugen.
 | **Minecraft** | 1.21.10 |
 | **Mod Loader** | Fabric Loader ≥ 0.16.0 |
 | **Java** | 21 |
-| **Version** | 0.3.0 (Energie-Infrastruktur + Kühlsystem) |
+| **Version** | 0.3.5 (Kreativ-Tab stabil + Doku-Update) |
 | **Lizenz** | MIT |
 
 ---
@@ -68,6 +68,16 @@ Eigenkühlung). Das GUI zeigt einen Hitzebalken (orange → rot ab Drosselung).
 | Blei-Block | `akw:lead_block` | Strahlenschutz (Deko/Lager) |
 | Abfallbehälter | `akw:waste_container` | Lager (Deko) |
 | Angereicherter-Uran-Block | `akw:enriched_uranium_block` | Kompaktlager (leuchtet schwach) |
+
+### Kreativ-Tab
+
+Ein eigener Tab **„Atomkraftwerk"** (DE) / **„Nuclear Power Plant"** (EN) bündelt alle
+Mod-Inhalte an einem Ort. Icon: Roh-Uran.
+
+- Alle Items, Erze, Reaktoren, Bausteine und Energie-Blöcke sind automatisch enthalten.
+- Neue Reaktoren / Dekor-Blöcke erscheinen automatisch, sobald sie registriert sind.
+- Zusätzlich in die passenden **Vanilla-Tabs** einsortiert:
+  Zutaten · Naturblöcke · Funktionsblöcke · Baublöcke · Redstone.
 
 ### Energie-Infrastruktur
 | Block | ID | Beschreibung |
@@ -154,7 +164,7 @@ Voraussetzung: **JDK 21**. Der Pfad ist in `gradle.properties` fest hinterlegt
 (`org.gradle.java.home`) — ggf. an dein System anpassen.
 
 ```bash
-# Mod kompilieren und JAR bauen (Ausgabe: build/libs/akw-0.3.0.jar)
+# Mod kompilieren und JAR bauen (Ausgabe: build/libs/akw-0.3.5.jar)
 ./gradlew build
 
 # Minecraft-Client mit Mod zum Testen starten
@@ -183,7 +193,7 @@ Voraussetzung: **JDK 21**. Der Pfad ist in `gradle.properties` fest hinterlegt
   (einfarbige Blöcke) — echte Pixel-Art folgt in v1.0 Politur.
 - **Akku-GUI** fehlt noch; Füllstand ist über den Komparator-Ausgang (0–15) ablesbar.
 - **Hitzebalken-Position** (`x+137`) ist ein Schätzwert — In-Game-Verifizierung steht aus.
-- **Steuerstab-Wirkung und Redstone-SCRAM** folgen in v0.4 (Reaktorsteuerung).
+- **Steuerstab-Wirkung und Redstone-SCRAM** folgen in v0.5 (Reaktorsteuerung).
 - **Dampf & Turbine** (v0.5), **Strahlung** (v0.7), **Meltdown** (v0.8) sind geplant
   (siehe [ROADMAP.md](ROADMAP.md)).
 

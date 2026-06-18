@@ -5,6 +5,22 @@ Alle nennenswerten Änderungen an der AKW-Mod werden hier dokumentiert.
 Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.3.5] — 2026-06-18
+
+### Hinzugefügt
+- **Kreativ-Tab „Atomkraftwerk" stabil & dokumentiert:** Alle Items und Blöcke sind
+  per `ItemGroupEvents.modifyEntriesEvent` im eigenen Tab eingetragen. Neue Reaktoren
+  und Dekor-Blöcke erscheinen automatisch, sobald sie über `registerReactor()` /
+  `registerDecor()` in `ModBlocks` registriert sind (kein manueller Nachpflege-Schritt).
+- **Vanilla-Tab-Einträge:** Items und Blöcke zusätzlich in die passenden Vanilla-Tabs
+  einsortiert (Zutaten, Naturblöcke, Funktionsblöcke, Baublöcke, Redstone).
+
+### Geändert
+- Version in `gradle.properties` und `README.md` auf 0.4.0 angehoben.
+- Bekannte Lücken im README aktualisiert (Steuerstab-Wirkung → v0.5 verschoben).
+
+---
+
 ## [0.3.0] — 2026-06-18
 
 ### Hinzugefügt
