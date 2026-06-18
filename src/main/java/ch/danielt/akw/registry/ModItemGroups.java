@@ -32,20 +32,18 @@ public class ModItemGroups {
                 FabricItemGroup.builder()
                         .icon(() -> new ItemStack(ModItems.RAW_URANIUM))
                         .displayName(Text.translatable("itemgroup.akw"))
+                        .entries((ctx, entries) -> {
+                            entries.add(ModItems.RAW_URANIUM);
+                            entries.add(ModItems.URANIUM_INGOT);
+                            entries.add(ModItems.FUEL_ROD);
+                            entries.add(ModBlocks.URANIUM_ORE);
+                            entries.add(ModBlocks.DEEPSLATE_URANIUM_ORE);
+                            ModBlocks.REACTORS.forEach(entries::add);
+                            ModBlocks.DECOR.forEach(entries::add);
+                            entries.add(ModBlocks.ENERGY_CABLE);
+                            entries.add(ModBlocks.ENERGY_BATTERY);
+                        })
                         .build());
-
-        // Eigener „Atomkraftwerk"-Tab: alles gesammelt.
-        ItemGroupEvents.modifyEntriesEvent(AKW_GROUP_KEY).register(entries -> {
-            entries.add(ModItems.RAW_URANIUM);
-            entries.add(ModItems.URANIUM_INGOT);
-            entries.add(ModItems.FUEL_ROD);
-            entries.add(ModBlocks.URANIUM_ORE);
-            entries.add(ModBlocks.DEEPSLATE_URANIUM_ORE);
-            ModBlocks.REACTORS.forEach(entries::add);
-            ModBlocks.DECOR.forEach(entries::add);
-            entries.add(ModBlocks.ENERGY_CABLE);
-            entries.add(ModBlocks.ENERGY_BATTERY);
-        });
 
         // Zusätzlich in die passenden Vanilla-Tabs (wie andere Mods).
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.INGREDIENTS).register(entries -> {
