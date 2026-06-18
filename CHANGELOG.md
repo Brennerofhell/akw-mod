@@ -7,6 +7,26 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unreleased]
 
+### Hinzugefügt
+- **Kühlsystem & Hitze-Mechanik:** Reaktoren bauen im Betrieb Hitze auf
+  (`heatPerTick` je Typ). Jedes direkt angrenzende **Kühlrohr** (`cooling_pipe`)
+  senkt die Hitze um 8/Tick, dazu 2/Tick Eigenkühlung. Ab 75 % der maxHitze wird
+  die Energie-Erzeugung auf ¼ gedrosselt; bei Erreichen der maxHitze **explodiert**
+  der Reaktor (Stärke skaliert mit dem Typ). Neuer **Hitzebalken** im GUI
+  (orange → rot ab Drosselung) mit `Hitze / maxHitze`-Tooltip; Hitze wird per NBT
+  gespeichert. Tier-Werte (`maxHeat`, `heatPerTick`) in `ModBlocks` gepflegt.
+
+### Geändert
+- **Upgrade auf Minecraft 1.21.10** (von 1.21.1): Loom 1.17, Gradle 9.5,
+  yarn 1.21.10+build.3, loader 0.19.3, fabric-API 0.138.4. Angepasst an die neue
+  Registry- (`Settings.registryKey`), NBT- (`Read-/WriteView`), Modell-
+  (`client.data`, `registerCooker`), Recipe- (`RecipeGenerator`) und
+  Render-API (`drawTexture` mit `RenderPipelines`).
+- **Datagen von Python auf Java (Fabric Datagen)** umgestellt; `tools/akw_data.py`
+  & Co. entfallen. Ausgabe nach `src/main/generated` (eigene, committete
+  Ressourcen-Wurzel), damit der Fabric-Cleanup keine handgepflegten Dateien in
+  `src/main/resources` löscht. Ausführen: `./gradlew runDatagen`.
+
 ### Dokumentation
 - **JavaDoc vervollständigt:** Klassen-Doc für alle bislang undokumentierten Klassen
   (`AkwMod`, `AkwClient`, `ModItemGroups`, `ModScreenHandlers`, `NuclearReactorScreen`).
