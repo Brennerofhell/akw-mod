@@ -54,14 +54,14 @@ public class NuclearReactorScreenHandler extends ScreenHandler {
     }
 
     private static Inventory resolveInventory(PlayerInventory playerInventory, BlockPos pos) {
-        if (playerInventory.player.getWorld().getBlockEntity(pos) instanceof NuclearReactorBlockEntity be) {
+        if (playerInventory.player.getEntityWorld().getBlockEntity(pos) instanceof NuclearReactorBlockEntity be) {
             return be;
         }
         return new net.minecraft.inventory.SimpleInventory(1);
     }
 
     private static PropertyDelegate resolveDelegate(PlayerInventory playerInventory, BlockPos pos) {
-        if (playerInventory.player.getWorld().getBlockEntity(pos) instanceof NuclearReactorBlockEntity be) {
+        if (playerInventory.player.getEntityWorld().getBlockEntity(pos) instanceof NuclearReactorBlockEntity be) {
             return be.getPropertyDelegate();
         }
         return new ArrayPropertyDelegate(NuclearReactorBlockEntity.PROPERTY_COUNT);
@@ -82,6 +82,19 @@ public class NuclearReactorScreenHandler extends ScreenHandler {
     public float getEnergyFraction() {
         int cap = getCapacity();
         return cap == 0 ? 0f : (float) getEnergy() / cap;
+    }
+
+    public int getHeat() {
+        return propertyDelegate.get(NuclearReactorBlockEntity.IDX_HEAT);
+    }
+
+    public int getMaxHeat() {
+        return propertyDelegate.get(NuclearReactorBlockEntity.IDX_MAX_HEAT);
+    }
+
+    public float getHeatFraction() {
+        int max = getMaxHeat();
+        return max == 0 ? 0f : (float) getHeat() / max;
     }
 
     public float getBurnFraction() {

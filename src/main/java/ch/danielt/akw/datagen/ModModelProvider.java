@@ -1,24 +1,14 @@
 package ch.danielt.akw.datagen;
 
-import ch.danielt.akw.block.NuclearReactorBlock;
 import ch.danielt.akw.registry.ModBlocks;
 import ch.danielt.akw.registry.ModItems;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricModelProvider;
+import net.fabricmc.fabric.api.client.datagen.v1.provider.FabricModelProvider;
 import net.minecraft.block.Block;
-import net.minecraft.data.client.BlockStateModelGenerator;
-import net.minecraft.data.client.BlockStateVariant;
-import net.minecraft.data.client.BlockStateVariantMap;
-import net.minecraft.data.client.ItemModelGenerator;
-import net.minecraft.data.client.Model;
-import net.minecraft.data.client.Models;
-import net.minecraft.data.client.TextureKey;
-import net.minecraft.data.client.TextureMap;
-import net.minecraft.data.client.VariantSettings;
-import net.minecraft.data.client.VariantsBlockStateSupplier;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Direction;
+import net.minecraft.client.data.BlockStateModelGenerator;
+import net.minecraft.client.data.ItemModelGenerator;
+import net.minecraft.client.data.Models;
+import net.minecraft.client.data.TexturedModel;
 
 public class ModModelProvider extends FabricModelProvider {
 
@@ -38,60 +28,12 @@ public class ModModelProvider extends FabricModelProvider {
         gen.registerSimpleCubeAll(ModBlocks.WASTE_CONTAINER);
         gen.registerSimpleCubeAll(ModBlocks.ENRICHED_URANIUM_BLOCK);
 
-        // Reaktoren: orientable (FACING) + LIT-Zustand
+        // Reaktoren: orientierbar (FACING) + LIT-Zustand — identisch zum Ofen.
+        // registerCooker erzeugt Aus-/An-Modell (_front bzw. _front_on), den
+        // Blockstate (HORIZONTAL_FACING × LIT) und das Item-Modell.
         for (Block block : ModBlocks.REACTORS) {
-            registerReactor(gen, block);
+            gen.registerCooker(block, TexturedModel.ORIENTABLE);
         }
-    }
-
-    private void registerReactor(BlockStateModelGenerator gen, Block block) {
-        String id = Registries.BLOCK.getId(block).getPath();
-
-        // Modell aus/an
-        Identifier offModel = Models.ORIENTABLE.upload(block,
-                new TextureMap()
-                        .put(TextureKey.TOP,   Identifier.of("akw", "block/" + id + "_top"))
-                        .put(TextureKey.FRONT, Identifier.of("akw", "block/" + id + "_front"))
-                        .put(TextureKey.SIDE,  Identifier.of("akw", "block/" + id + "_side")),
-                gen.modelCollector);
-
-        Identifier onModel = Models.ORIENTABLE.upload(block, "_on",
-                new TextureMap()
-                        .put(TextureKey.TOP,   Identifier.of("akw", "block/" + id + "_top"))
-                        .put(TextureKey.FRONT, Identifier.of("akw", "block/" + id + "_front_on"))
-                        .put(TextureKey.SIDE,  Identifier.of("akw", "block/" + id + "_side")),
-                gen.modelCollector);
-
-        // Blockstate: 4 Richtungen × 2 LIT-Zustände
-        gen.blockStateCollector.accept(
-                VariantsBlockStateSupplier.create(block,
-                        BlockStateVariantMap.create(NuclearReactorBlock.FACING, NuclearReactorBlock.LIT)
-                                .register(Direction.NORTH, false,
-                                        BlockStateVariant.create().put(VariantSettings.MODEL, offModel))
-                                .register(Direction.EAST,  false,
-                                        BlockStateVariant.create().put(VariantSettings.MODEL, offModel)
-                                                .put(VariantSettings.Y, VariantSettings.Rotation.R90))
-                                .register(Direction.SOUTH, false,
-                                        BlockStateVariant.create().put(VariantSettings.MODEL, offModel)
-                                                .put(VariantSettings.Y, VariantSettings.Rotation.R180))
-                                .register(Direction.WEST,  false,
-                                        BlockStateVariant.create().put(VariantSettings.MODEL, offModel)
-                                                .put(VariantSettings.Y, VariantSettings.Rotation.R270))
-                                .register(Direction.NORTH, true,
-                                        BlockStateVariant.create().put(VariantSettings.MODEL, onModel))
-                                .register(Direction.EAST,  true,
-                                        BlockStateVariant.create().put(VariantSettings.MODEL, onModel)
-                                                .put(VariantSettings.Y, VariantSettings.Rotation.R90))
-                                .register(Direction.SOUTH, true,
-                                        BlockStateVariant.create().put(VariantSettings.MODEL, onModel)
-                                                .put(VariantSettings.Y, VariantSettings.Rotation.R180))
-                                .register(Direction.WEST,  true,
-                                        BlockStateVariant.create().put(VariantSettings.MODEL, onModel)
-                                                .put(VariantSettings.Y, VariantSettings.Rotation.R270))
-                ));
-
-        // Item-Modell erbt vom Block-Modell (aus-Zustand)
-        gen.registerParentedItemModel(block, offModel);
     }
 
     @Override

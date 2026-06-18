@@ -9,14 +9,16 @@ import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
-import net.minecraft.state.property.DirectionProperty;
+import net.minecraft.state.property.EnumProperty;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.ItemScatterer;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,23 +29,29 @@ import org.jetbrains.annotations.Nullable;
  */
 public class NuclearReactorBlock extends Block implements BlockEntityProvider {
 
-    public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
+    public static final EnumProperty<Direction> FACING = Properties.HORIZONTAL_FACING;
     public static final BooleanProperty LIT = Properties.LIT;
 
     public final int capacity;
     public final int genPerTick;
     public final int maxExtract;
     public final int burnTicksPerRod;
+    /** Maximale Hitze; bei Erreichen explodiert der Reaktor. */
+    public final int maxHeat;
+    /** Hitzeaufbau pro Tick, solange ein Brennstab aktiv ist. */
+    public final int heatPerTick;
 
     public NuclearReactorBlock(Settings settings, int capacity, int genPerTick,
-                               int maxExtract, int burnTicksPerRod) {
+                               int maxExtract, int burnTicksPerRod, int maxHeat, int heatPerTick) {
         super(settings);
         this.capacity = capacity;
         this.genPerTick = genPerTick;
         this.maxExtract = maxExtract;
         this.burnTicksPerRod = burnTicksPerRod;
+        this.maxHeat = maxHeat;
+        this.heatPerTick = heatPerTick;
         setDefaultState(getDefaultState()
-                .with(FACING, net.minecraft.util.math.Direction.NORTH)
+                .with(FACING, Direction.NORTH)
                 .with(LIT, false));
     }
 
@@ -67,7 +75,7 @@ public class NuclearReactorBlock extends Block implements BlockEntityProvider {
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state,
                                                                   BlockEntityType<T> type) {
-        if (world.isClient) {
+        if (world.isClient()) {
             return null;
         }
         return (w, pos, st, be) -> {
@@ -80,7 +88,7 @@ public class NuclearReactorBlock extends Block implements BlockEntityProvider {
     @Override
     protected ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player,
                                  BlockHitResult hit) {
-        if (!world.isClient) {
+        if (!world.isClient()) {
             BlockEntity be = world.getBlockEntity(pos);
             if (be instanceof NuclearReactorBlockEntity reactor) {
                 player.openHandledScreen(reactor);
@@ -90,14 +98,11 @@ public class NuclearReactorBlock extends Block implements BlockEntityProvider {
     }
 
     @Override
-    protected void onStateReplaced(BlockState state, World world, BlockPos pos, BlockState newState,
-                                   boolean moved) {
-        if (!state.isOf(newState.getBlock())) {
-            BlockEntity be = world.getBlockEntity(pos);
-            if (be instanceof NuclearReactorBlockEntity reactor) {
-                ItemScatterer.spawn(world, pos, reactor);
-            }
-            super.onStateReplaced(state, world, pos, newState, moved);
+    protected void onStateReplaced(BlockState state, ServerWorld world, BlockPos pos, boolean moved) {
+        BlockEntity be = world.getBlockEntity(pos);
+        if (be instanceof NuclearReactorBlockEntity reactor) {
+            ItemScatterer.spawn(world, pos, reactor);
         }
+        super.onStateReplaced(state, world, pos, moved);
     }
 }
