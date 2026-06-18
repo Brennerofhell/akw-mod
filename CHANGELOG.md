@@ -5,6 +5,15 @@ Alle nennenswerten Änderungen an der AKW-Mod werden hier dokumentiert.
 Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.3.6] — 2026-06-18
+
+### Behoben
+- **Kreativ-Tab fehlte im Spiel:** Items wurden über `ItemGroupEvents` in den Tab
+  eingetragen, was für frisch registrierte Custom-Tabs in Fabric API 0.138 nicht
+  zuverlässig feuert. Fix: Items direkt im Builder via `.entries(...)` eingetragen.
+
+---
+
 ## [0.3.5] — 2026-06-18
 
 ### Hinzugefügt

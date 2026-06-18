@@ -8,7 +8,7 @@ betreiben und FE-kompatiblen Strom erzeugen.
 | **Minecraft** | 1.21.10 |
 | **Mod Loader** | Fabric Loader ≥ 0.16.0 |
 | **Java** | 21 |
-| **Version** | 0.3.5 (Kreativ-Tab stabil + Doku-Update) |
+| **Version** | 0.3.6 (Kreativ-Tab-Bugfix) |
 | **Lizenz** | MIT |
 
 ---
@@ -164,7 +164,7 @@ Voraussetzung: **JDK 21**. Der Pfad ist in `gradle.properties` fest hinterlegt
 (`org.gradle.java.home`) — ggf. an dein System anpassen.
 
 ```bash
-# Mod kompilieren und JAR bauen (Ausgabe: build/libs/akw-0.3.5.jar)
+# Mod kompilieren und JAR bauen (Ausgabe: build/libs/akw-0.3.6.jar)
 ./gradlew build
 
 # Minecraft-Client mit Mod zum Testen starten
