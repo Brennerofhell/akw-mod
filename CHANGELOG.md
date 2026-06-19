@@ -5,6 +5,18 @@ Alle nennenswerten Änderungen an der AKW-Mod werden hier dokumentiert.
 Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.4.1] — 2026-06-19
+
+### Hinzugefügt
+- **CI-Pipeline** (`.github/workflows/build.yml`) — GitHub Actions führt bei jedem
+  Push automatisch `./gradlew build` aus; fehlgeschlagene Builds blockieren Merges.
+  Gebaute JARs werden als Artefakt hochgeladen.
+- **Diagnose-Logging** in `ModItemGroups.registerAll()` — im Log erscheint jetzt
+  sowohl der Start als auch etwaige Fehler der Kreativ-Tab-Registration (try/catch
+  mit explizitem `LOGGER.error` vor dem Weiterwerfen der Exception).
+
+---
+
 ## [0.4.0] — 2026-06-19
 
 ### Geändert
