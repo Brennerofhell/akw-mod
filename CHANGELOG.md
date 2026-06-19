@@ -5,6 +5,27 @@ Alle nennenswerten Änderungen an der AKW-Mod werden hier dokumentiert.
 Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.4.0] — 2026-06-19
+
+### Geändert
+- **Kreativ-Tab: idiomatische RegistryKey-Verwendung** — `RegistryKeys.ITEM_GROUP`
+  statt `Registries.ITEM_GROUP.getKey()`, entspricht dem offiziellen Fabric-API-Beispiel
+  (beide liefern denselben Wert, aber `RegistryKeys.*` ist die empfohlene Konstante).
+- **Hinweis zur Tab-Navigation:** Der AKW-Tab erscheint bei mehreren installierten
+  Mods auf Seite 2 des Kreativ-Menüs. Mit dem **„>>"**-Button (oben rechts neben den
+  Tab-Icons, eingeblendet von Fabric API) gelangt man zu Mod-Tabs — dies ist
+  Fabric-Standard-Verhalten (Pagination), kein Bug.
+
+---
+
+## [0.3.7] — 2026-06-18
+
+### Dokumentation
+- **ROADMAP aktualisiert:** Status auf v0.3.7, Energie-Kabel & Akku-Block als
+  abgeschlossen markiert, Phase 3 als ausgeliefert gekennzeichnet.
+
+---
+
 ## [0.3.6] — 2026-06-18
 
 ### Behoben
