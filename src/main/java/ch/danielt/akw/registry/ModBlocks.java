@@ -3,7 +3,9 @@ package ch.danielt.akw.registry;
 import ch.danielt.akw.AkwMod;
 import ch.danielt.akw.block.EnergyBatteryBlock;
 import ch.danielt.akw.block.EnergyCableBlock;
+import ch.danielt.akw.block.MultiblockReactorControllerBlock;
 import ch.danielt.akw.block.NuclearReactorBlock;
+import ch.danielt.akw.block.ReactorCasingBlock;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -56,6 +58,13 @@ public class ModBlocks {
     public static final Block WASTE_CONTAINER = registerDecor("waste_container", metal());
     public static final Block ENRICHED_URANIUM_BLOCK = registerDecor("enriched_uranium_block",
             metal().luminance(s -> 5));
+
+    // --- Multiblock-System ---
+    public static final Block REACTOR_CASING = registerDecor("reactor_casing",
+            AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(5f, 1200f));
+    public static final Block MULTIBLOCK_REACTOR_CONTROLLER = register("multiblock_reactor_controller",
+            MultiblockReactorControllerBlock::new,
+            metal().luminance(s -> s.get(MultiblockReactorControllerBlock.LIT) ? 13 : 0), true);
 
     // --- Energie-Infrastruktur ---
     public static final Block ENERGY_CABLE = register("energy_cable",

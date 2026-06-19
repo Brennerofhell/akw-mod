@@ -42,6 +42,8 @@ public class AkwMod implements ModInitializer {
         EnergyStorage.SIDED.registerForBlockEntity(
                 (be, dir) -> be.energyStorage, ModBlockEntities.NUCLEAR_REACTOR);
         EnergyStorage.SIDED.registerForBlockEntity(
+                (be, dir) -> be.energyStorage, ModBlockEntities.MULTIBLOCK_REACTOR_CONTROLLER);
+        EnergyStorage.SIDED.registerForBlockEntity(
                 (be, dir) -> be.energyStorage, ModBlockEntities.ENERGY_CABLE);
         EnergyStorage.SIDED.registerForBlockEntity(
                 (be, dir) -> be.energyStorage, ModBlockEntities.ENERGY_BATTERY);

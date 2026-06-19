@@ -5,6 +5,29 @@ Alle nennenswerten Änderungen an der AKW-Mod werden hier dokumentiert.
 Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.6.0] — 2026-06-19
+
+### Hinzugefügt
+- **Multiblock-Reaktor-System:** Zwei neue Blöcke ermöglichen Reaktoren, die mehrere
+  Blöcke groß sind.
+  - `Reaktor-Gehäuse` — Wandblock (Eisen + Blei-Block, 4 Stück pro Rezept); hart und
+    explosionsresistent.
+  - `Multiblock-Reaktor-Controller` — Steuerblock mit GUI, FACING-Ausrichtung und
+    ASSEMBLED-Status. Rezept: 8× Reaktor-Gehäuse + 1× Reaktionsblöcke + Redstone.
+- **Reaktor-Schraubenschlüssel** — Werkzeug zum Assemblieren/Disassemblieren.
+  Rezept: 2× Eisen-Barren + 1× Stab.
+- **Automatische Größenerkennung:** 3×3×3, 5×5×5 oder 7×7×7 (Außenmaß). Leistung
+  skaliert mit dem Innenvolumen (outerSize−2)³:
+  - 3×3×3: 50 FE/Tick, 200 000 FE Kapazität
+  - 5×5×5: 1 350 FE/Tick, 5,4 Mio. FE Kapazität
+  - 7×7×7: 6 250 FE/Tick, 25 Mio. FE Kapazität
+- **Struktur-Revalidierung:** Alle 100 Ticks wird die Struktur geprüft — werden
+  Gehäuse-Blöcke entfernt, deaktiviert sich der Reaktor automatisch.
+- Strahlung + Überhitzungsexplosion (bricht alle Gehäuse-Blöcke) auch für Multiblock.
+- I18n-Schlüssel für alle Feedback-Nachrichten (de_de + en_us).
+
+---
+
 ## [0.5.1] — 2026-06-19
 
 ### Hinzugefügt

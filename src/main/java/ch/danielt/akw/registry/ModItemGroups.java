@@ -40,6 +40,9 @@ public class ModItemGroups {
                                 entries.add(ModItems.URANIUM_INGOT);
                                 entries.add(ModItems.ENRICHED_URANIUM);
                                 entries.add(ModItems.FUEL_ROD);
+                                entries.add(ModItems.REACTOR_WRENCH);
+                                entries.add(ModBlocks.REACTOR_CASING);
+                                entries.add(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER);
                                 entries.add(ModBlocks.URANIUM_ORE);
                                 entries.add(ModBlocks.DEEPSLATE_URANIUM_ORE);
                                 ModBlocks.REACTORS.forEach(entries::add);
@@ -59,6 +62,11 @@ public class ModItemGroups {
             entries.add(ModItems.URANIUM_INGOT);
             entries.add(ModItems.ENRICHED_URANIUM);
             entries.add(ModItems.FUEL_ROD);
+            entries.add(ModItems.REACTOR_WRENCH);
+        });
+        ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(entries -> {
+            entries.add(ModBlocks.REACTOR_CASING);
+            entries.add(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER);
         });
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.NATURAL).register(entries -> {
             entries.add(ModBlocks.URANIUM_ORE);

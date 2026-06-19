@@ -1,11 +1,11 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_enriched_uranium": {
+    "has_iron_ingot": {
       "conditions": {
         "items": [
           {
-            "items": "akw:enriched_uranium"
+            "items": "minecraft:iron_ingot"
           }
         ]
       },
@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "akw:fuel_rod"
+        "recipe": "akw:reactor_wrench"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
@@ -21,12 +21,12 @@
   "requirements": [
     [
       "has_the_recipe",
-      "has_enriched_uranium"
+      "has_iron_ingot"
     ]
   ],
   "rewards": {
     "recipes": [
-      "akw:fuel_rod"
+      "akw:reactor_wrench"
     ]
   }
 }

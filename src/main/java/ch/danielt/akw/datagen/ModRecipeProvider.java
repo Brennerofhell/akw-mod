@@ -151,6 +151,29 @@ public class ModRecipeProvider extends FabricRecipeProvider {
                         .criterion(hasItem(ModItems.URANIUM_INGOT), conditionsFromItem(ModItems.URANIUM_INGOT))
                         .offerTo(exporter, key("enriched_uranium_block"));
 
+                // Multiblock-Reaktor-System
+                createShaped(RecipeCategory.MISC, ModItems.REACTOR_WRENCH)
+                        .pattern(" I").pattern("IS")
+                        .input('I', Items.IRON_INGOT)
+                        .input('S', Items.STICK)
+                        .criterion(hasItem(Items.IRON_INGOT), conditionsFromItem(Items.IRON_INGOT))
+                        .offerTo(exporter, key("reactor_wrench"));
+
+                createShaped(RecipeCategory.MISC, ModBlocks.REACTOR_CASING, 4)
+                        .pattern("ILI").pattern("LIL").pattern("ILI")
+                        .input('I', Items.IRON_INGOT)
+                        .input('L', ModBlocks.LEAD_BLOCK)
+                        .criterion(hasItem(ModBlocks.LEAD_BLOCK), conditionsFromItem(ModBlocks.LEAD_BLOCK))
+                        .offerTo(exporter, key("reactor_casing"));
+
+                createShaped(RecipeCategory.MISC, ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER)
+                        .pattern("CRC").pattern("RNR").pattern("CRC")
+                        .input('C', ModBlocks.REACTOR_CASING)
+                        .input('R', Items.REDSTONE_BLOCK)
+                        .input('N', ModBlocks.NUCLEAR_REACTOR)
+                        .criterion(hasItem(ModBlocks.REACTOR_CASING), conditionsFromItem(ModBlocks.REACTOR_CASING))
+                        .offerTo(exporter, key("multiblock_reactor_controller"));
+
                 // Energie-Infrastruktur
                 createShaped(RecipeCategory.REDSTONE, ModBlocks.ENERGY_CABLE, 3)
                         .pattern("CRC")

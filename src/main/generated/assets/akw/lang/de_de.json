@@ -1,4 +1,8 @@
 {
+  "akw.multiblock.assembled": "Reaktor assembliert.",
+  "akw.multiblock.disassembled": "Reaktor deaktiviert.",
+  "akw.multiblock.invalid": "Ungültige Struktur — prüfe Gehäuse-Blöcke.",
+  "akw.multiblock.need_wrench": "Reaktor-Schraubenschlüssel benötigt.",
   "block.akw.advanced_nuclear_reactor": "Fortgeschrittener Reaktor",
   "block.akw.breeder_reactor": "Brutreaktor",
   "block.akw.control_rod_block": "Steuerstab-Block",
@@ -10,7 +14,9 @@
   "block.akw.enriched_uranium_block": "Angereicherter-Uran-Block",
   "block.akw.fusion_reactor": "Fusionsreaktor",
   "block.akw.lead_block": "Blei-Block",
+  "block.akw.multiblock_reactor_controller": "Multiblock-Reaktor",
   "block.akw.nuclear_reactor": "Reaktor",
+  "block.akw.reactor_casing": "Reaktor-Gehäuse",
   "block.akw.reactor_core": "Reaktorkern",
   "block.akw.thorium_reactor": "Thorium-Reaktor",
   "block.akw.uranium_ore": "Uranerz",
@@ -19,6 +25,7 @@
   "item.akw.enriched_uranium": "Angereichertes Uran",
   "item.akw.fuel_rod": "Brennstab",
   "item.akw.raw_uranium": "Roh-Uran",
+  "item.akw.reactor_wrench": "Reaktor-Schraubenschlüssel",
   "item.akw.uranium_ingot": "Uran-Barren",
   "itemgroup.akw": "Atomkraftwerk"
 }

@@ -1,11 +1,11 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_enriched_uranium": {
+    "has_reactor_casing": {
       "conditions": {
         "items": [
           {
-            "items": "akw:enriched_uranium"
+            "items": "akw:reactor_casing"
           }
         ]
       },
@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "akw:fuel_rod"
+        "recipe": "akw:multiblock_reactor_controller"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
@@ -21,12 +21,12 @@
   "requirements": [
     [
       "has_the_recipe",
-      "has_enriched_uranium"
+      "has_reactor_casing"
     ]
   ],
   "rewards": {
     "recipes": [
-      "akw:fuel_rod"
+      "akw:multiblock_reactor_controller"
     ]
   }
 }

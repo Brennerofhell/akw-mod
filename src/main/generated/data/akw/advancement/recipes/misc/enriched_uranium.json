@@ -1,32 +1,32 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_enriched_uranium": {
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "akw:enriched_uranium"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    },
+    "has_uranium_ingot": {
       "conditions": {
         "items": [
           {
-            "items": "akw:enriched_uranium"
+            "items": "akw:uranium_ingot"
           }
         ]
       },
       "trigger": "minecraft:inventory_changed"
-    },
-    "has_the_recipe": {
-      "conditions": {
-        "recipe": "akw:fuel_rod"
-      },
-      "trigger": "minecraft:recipe_unlocked"
     }
   },
   "requirements": [
     [
       "has_the_recipe",
-      "has_enriched_uranium"
+      "has_uranium_ingot"
     ]
   ],
   "rewards": {
     "recipes": [
-      "akw:fuel_rod"
+      "akw:enriched_uranium"
     ]
   }
 }

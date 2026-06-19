@@ -1,4 +1,8 @@
 {
+  "akw.multiblock.assembled": "Reactor assembled.",
+  "akw.multiblock.disassembled": "Reactor deactivated.",
+  "akw.multiblock.invalid": "Invalid structure — check casing blocks.",
+  "akw.multiblock.need_wrench": "Reactor Wrench required.",
   "block.akw.advanced_nuclear_reactor": "Advanced Nuclear Reactor",
   "block.akw.breeder_reactor": "Breeder Reactor",
   "block.akw.control_rod_block": "Control Rod Block",
@@ -10,7 +14,9 @@
   "block.akw.enriched_uranium_block": "Enriched Uranium Block",
   "block.akw.fusion_reactor": "Fusion Reactor",
   "block.akw.lead_block": "Lead Block",
+  "block.akw.multiblock_reactor_controller": "Multiblock Reactor",
   "block.akw.nuclear_reactor": "Nuclear Reactor",
+  "block.akw.reactor_casing": "Reactor Casing",
   "block.akw.reactor_core": "Reactor Core",
   "block.akw.thorium_reactor": "Thorium Reactor",
   "block.akw.uranium_ore": "Uranium Ore",
@@ -19,6 +25,7 @@
   "item.akw.enriched_uranium": "Enriched Uranium",
   "item.akw.fuel_rod": "Fuel Rod",
   "item.akw.raw_uranium": "Raw Uranium",
+  "item.akw.reactor_wrench": "Reactor Wrench",
   "item.akw.uranium_ingot": "Uranium Ingot",
   "itemgroup.akw": "Nuclear Power Plant"
 }

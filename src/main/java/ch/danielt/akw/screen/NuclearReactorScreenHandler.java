@@ -10,6 +10,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.screen.ArrayPropertyDelegate;
 import net.minecraft.screen.PropertyDelegate;
 import net.minecraft.screen.ScreenHandler;
+import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.util.math.BlockPos;
 
@@ -18,18 +19,25 @@ public class NuclearReactorScreenHandler extends ScreenHandler {
     private final Inventory inventory;
     private final PropertyDelegate propertyDelegate;
 
-    /** Client-Konstruktor (vom ExtendedScreenHandlerType mit der BlockPos aufgerufen). */
+    /** Client-Konstruktor für NUCLEAR_REACTOR (aufgerufen vom ExtendedScreenHandlerType). */
     public NuclearReactorScreenHandler(int syncId, PlayerInventory playerInventory, BlockPos pos) {
         this(syncId, playerInventory, resolveInventory(playerInventory, pos), resolveDelegate(playerInventory, pos));
     }
 
     public NuclearReactorScreenHandler(int syncId, PlayerInventory playerInventory,
                                        Inventory inventory, PropertyDelegate propertyDelegate) {
-        super(ModScreenHandlers.NUCLEAR_REACTOR, syncId);
+        this(ModScreenHandlers.NUCLEAR_REACTOR, syncId, playerInventory, inventory, propertyDelegate);
+        inventory.onOpen(playerInventory.player);
+    }
+
+    /** Geschützter Konstruktor für Unterklassen (anderer ScreenHandlerType). */
+    protected NuclearReactorScreenHandler(ScreenHandlerType<? extends NuclearReactorScreenHandler> type,
+                                          int syncId, PlayerInventory playerInventory,
+                                          Inventory inventory, PropertyDelegate propertyDelegate) {
+        super(type, syncId);
         checkSize(inventory, 1);
         this.inventory = inventory;
         this.propertyDelegate = propertyDelegate;
-        inventory.onOpen(playerInventory.player);
 
         // Brennstoff-Slot
         this.addSlot(new Slot(inventory, NuclearReactorBlockEntity.FUEL_SLOT, 80, 35) {

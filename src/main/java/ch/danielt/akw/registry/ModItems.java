@@ -13,6 +13,7 @@ public class ModItems {
     public static final Item URANIUM_INGOT = register("uranium_ingot");
     public static final Item ENRICHED_URANIUM = register("enriched_uranium");
     public static final Item FUEL_ROD = register("fuel_rod");
+    public static final Item REACTOR_WRENCH = register("reactor_wrench");
 
     private static Item register(String name) {
         RegistryKey<Item> key = RegistryKey.of(RegistryKeys.ITEM, Identifier.of(AkwMod.MOD_ID, name));

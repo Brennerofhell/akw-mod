@@ -26,6 +26,7 @@ public class ModLanguageProvider {
             builder.add(ModItems.URANIUM_INGOT,     "Uran-Barren");
             builder.add(ModItems.ENRICHED_URANIUM,  "Angereichertes Uran");
             builder.add(ModItems.FUEL_ROD,          "Brennstab");
+            builder.add(ModItems.REACTOR_WRENCH,    "Reaktor-Schraubenschlüssel");
 
             builder.add(ModBlocks.URANIUM_ORE,           "Uranerz");
             builder.add(ModBlocks.DEEPSLATE_URANIUM_ORE, "Tiefenschiefer-Uranerz");
@@ -47,7 +48,14 @@ public class ModLanguageProvider {
             builder.add(ModBlocks.ENERGY_CABLE,           "Energie-Kabel");
             builder.add(ModBlocks.ENERGY_BATTERY,         "Akku-Block");
 
+            builder.add(ModBlocks.REACTOR_CASING,                  "Reaktor-Gehäuse");
+            builder.add(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER,   "Multiblock-Reaktor");
+
             builder.add("effect.akw.radiation", "Strahlung");
+            builder.add("akw.multiblock.assembled",   "Reaktor assembliert.");
+            builder.add("akw.multiblock.disassembled","Reaktor deaktiviert.");
+            builder.add("akw.multiblock.invalid",     "Ungültige Struktur — prüfe Gehäuse-Blöcke.");
+            builder.add("akw.multiblock.need_wrench", "Reaktor-Schraubenschlüssel benötigt.");
         }
     }
 
@@ -67,6 +75,7 @@ public class ModLanguageProvider {
             builder.add(ModItems.URANIUM_INGOT,     "Uranium Ingot");
             builder.add(ModItems.ENRICHED_URANIUM,  "Enriched Uranium");
             builder.add(ModItems.FUEL_ROD,          "Fuel Rod");
+            builder.add(ModItems.REACTOR_WRENCH,    "Reactor Wrench");
 
             builder.add(ModBlocks.URANIUM_ORE,           "Uranium Ore");
             builder.add(ModBlocks.DEEPSLATE_URANIUM_ORE, "Deepslate Uranium Ore");
@@ -88,7 +97,14 @@ public class ModLanguageProvider {
             builder.add(ModBlocks.ENERGY_CABLE,           "Energy Cable");
             builder.add(ModBlocks.ENERGY_BATTERY,         "Battery Block");
 
+            builder.add(ModBlocks.REACTOR_CASING,                  "Reactor Casing");
+            builder.add(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER,   "Multiblock Reactor");
+
             builder.add("effect.akw.radiation", "Radiation");
+            builder.add("akw.multiblock.assembled",   "Reactor assembled.");
+            builder.add("akw.multiblock.disassembled","Reactor deactivated.");
+            builder.add("akw.multiblock.invalid",     "Invalid structure — check casing blocks.");
+            builder.add("akw.multiblock.need_wrench", "Reactor Wrench required.");
         }
     }
 }
