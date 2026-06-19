@@ -44,11 +44,18 @@ public class ModRecipeProvider extends FabricRecipeProvider {
                         .criterion(hasItem(ModItems.RAW_URANIUM), conditionsFromItem(ModItems.RAW_URANIUM))
                         .offerTo(exporter, key("uranium_ingot_from_blasting"));
 
-                // Brennstab
-                createShaped(RecipeCategory.MISC, ModItems.FUEL_ROD)
-                        .pattern("I").pattern("I").pattern("I")
-                        .input('I', ModItems.URANIUM_INGOT)
+                // Angereichertes Uran: 2 Uran-Barren → 1 Angereichertes Uran
+                createShaped(RecipeCategory.MISC, ModItems.ENRICHED_URANIUM)
+                        .pattern("UU")
+                        .input('U', ModItems.URANIUM_INGOT)
                         .criterion(hasItem(ModItems.URANIUM_INGOT), conditionsFromItem(ModItems.URANIUM_INGOT))
+                        .offerTo(exporter, key("enriched_uranium"));
+
+                // Brennstab: 3 Angereicherte Uran-Einheiten (statt rohe Barren)
+                createShaped(RecipeCategory.MISC, ModItems.FUEL_ROD)
+                        .pattern("E").pattern("E").pattern("E")
+                        .input('E', ModItems.ENRICHED_URANIUM)
+                        .criterion(hasItem(ModItems.ENRICHED_URANIUM), conditionsFromItem(ModItems.ENRICHED_URANIUM))
                         .offerTo(exporter, key("fuel_rod"));
 
                 // Reaktoren

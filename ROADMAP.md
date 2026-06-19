@@ -35,10 +35,10 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
   - [x] Kühlsystem-Logik (Hitzeaufbau, Kühlrohr-Kühlung, Drosselung, Überhitzung→Explosion, Hitzebalken im GUI)
 - [x] Energie-Kabel (FE-Transport zwischen Blöcken, Puffer 8 192 FE)
 - [x] Akku-Block (1 Mio FE Speicher, Komparator-Signal 0–15)
-- [ ] Radiation Mechanic
+- [x] Radiation Mechanic (v0.5.0)
   - [ ] Strahlungs-Blockeffekte
-  - [ ] Spieler-Strahlungsexposition
-  - [ ] Strahlungsschutz-Items (Blei-Block bereits vorhanden)
+  - [x] Spieler-Strahlungsexposition (8-Block-Radius, Stufen I/II je nach Hitze)
+  - [x] Strahlungsschutz-Items (Blei-Block bereits vorhanden)
 
 ### Zielversion: v0.2.0 ✅ (Reaktoren & Energie ausgeliefert)
 
@@ -61,8 +61,8 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 ## ⚙️ Phase 4: Advanced Mechanics
 
 ### Crafting & Processing
-- [ ] Uranium anreichern (mit Rezept-System)
-- [ ] Fuel Rod Crafting
+- [x] Uranium anreichern (2× Uran-Barren → Angereichertes Uran → Brennstab)
+- [x] Fuel Rod Crafting
 - [ ] Reactor Assembly
 - [ ] Abfallverarbeitung
 

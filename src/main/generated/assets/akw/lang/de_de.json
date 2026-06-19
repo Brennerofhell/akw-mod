@@ -16,6 +16,7 @@
   "block.akw.uranium_ore": "Uranerz",
   "block.akw.waste_container": "Abfallbehälter",
   "effect.akw.radiation": "Strahlung",
+  "item.akw.enriched_uranium": "Angereichertes Uran",
   "item.akw.fuel_rod": "Brennstab",
   "item.akw.raw_uranium": "Roh-Uran",
   "item.akw.uranium_ingot": "Uran-Barren",

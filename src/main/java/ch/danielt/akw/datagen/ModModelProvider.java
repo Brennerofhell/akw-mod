@@ -40,8 +40,9 @@ public class ModModelProvider extends FabricModelProvider {
 
     @Override
     public void generateItemModels(ItemModelGenerator gen) {
-        gen.register(ModItems.RAW_URANIUM,   Models.GENERATED);
-        gen.register(ModItems.URANIUM_INGOT, Models.GENERATED);
-        gen.register(ModItems.FUEL_ROD,      Models.GENERATED);
+        gen.register(ModItems.RAW_URANIUM,       Models.GENERATED);
+        gen.register(ModItems.URANIUM_INGOT,     Models.GENERATED);
+        gen.register(ModItems.ENRICHED_URANIUM,  Models.GENERATED);
+        gen.register(ModItems.FUEL_ROD,          Models.GENERATED);
     }
 }

@@ -2,15 +2,13 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "E": "akw:enriched_uranium"
+    "U": "akw:uranium_ingot"
   },
   "pattern": [
-    "E",
-    "E",
-    "E"
+    "UU"
   ],
   "result": {
     "count": 1,
-    "id": "akw:fuel_rod"
+    "id": "akw:enriched_uranium"
   }
 }

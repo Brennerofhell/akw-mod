@@ -38,6 +38,7 @@ public class ModItemGroups {
                             .entries((ctx, entries) -> {
                                 entries.add(ModItems.RAW_URANIUM);
                                 entries.add(ModItems.URANIUM_INGOT);
+                                entries.add(ModItems.ENRICHED_URANIUM);
                                 entries.add(ModItems.FUEL_ROD);
                                 entries.add(ModBlocks.URANIUM_ORE);
                                 entries.add(ModBlocks.DEEPSLATE_URANIUM_ORE);
@@ -56,6 +57,7 @@ public class ModItemGroups {
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.INGREDIENTS).register(entries -> {
             entries.add(ModItems.RAW_URANIUM);
             entries.add(ModItems.URANIUM_INGOT);
+            entries.add(ModItems.ENRICHED_URANIUM);
             entries.add(ModItems.FUEL_ROD);
         });
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.NATURAL).register(entries -> {

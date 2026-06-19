@@ -16,6 +16,7 @@
   "block.akw.uranium_ore": "Uranium Ore",
   "block.akw.waste_container": "Waste Container",
   "effect.akw.radiation": "Radiation",
+  "item.akw.enriched_uranium": "Enriched Uranium",
   "item.akw.fuel_rod": "Fuel Rod",
   "item.akw.raw_uranium": "Raw Uranium",
   "item.akw.uranium_ingot": "Uranium Ingot",

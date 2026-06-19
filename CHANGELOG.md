@@ -5,6 +5,18 @@ Alle nennenswerten Änderungen an der AKW-Mod werden hier dokumentiert.
 Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.5.1] — 2026-06-19
+
+### Hinzugefügt
+- **Angereichertes Uran** (`enriched_uranium`): Neues Zwischenprodukt in der
+  Uran-Verarbeitungskette. Rezept: 2 Uran-Barren → 1 Angereichertes Uran.
+  Brennstab benötigt jetzt 3× Angereichertes Uran statt Uran-Barren (doppelt
+  so teuer, realistischerer Anreicherungsprozess).
+- **Textur** für Angereichertes Uran: leuchtend gelblich-grüner Stil (abgeleitet
+  vom Uran-Barren, mit Energie-Highlights).
+
+---
+
 ## [0.5.0] — 2026-06-19
 
 ### Hinzugefügt

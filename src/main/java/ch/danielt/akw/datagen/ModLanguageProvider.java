@@ -22,9 +22,10 @@ public class ModLanguageProvider {
                                          TranslationBuilder builder) {
             builder.add("itemgroup.akw", "Atomkraftwerk");
 
-            builder.add(ModItems.RAW_URANIUM,   "Roh-Uran");
-            builder.add(ModItems.URANIUM_INGOT, "Uran-Barren");
-            builder.add(ModItems.FUEL_ROD,      "Brennstab");
+            builder.add(ModItems.RAW_URANIUM,       "Roh-Uran");
+            builder.add(ModItems.URANIUM_INGOT,     "Uran-Barren");
+            builder.add(ModItems.ENRICHED_URANIUM,  "Angereichertes Uran");
+            builder.add(ModItems.FUEL_ROD,          "Brennstab");
 
             builder.add(ModBlocks.URANIUM_ORE,           "Uranerz");
             builder.add(ModBlocks.DEEPSLATE_URANIUM_ORE, "Tiefenschiefer-Uranerz");
@@ -62,9 +63,10 @@ public class ModLanguageProvider {
                                          TranslationBuilder builder) {
             builder.add("itemgroup.akw", "Nuclear Power Plant");
 
-            builder.add(ModItems.RAW_URANIUM,   "Raw Uranium");
-            builder.add(ModItems.URANIUM_INGOT, "Uranium Ingot");
-            builder.add(ModItems.FUEL_ROD,      "Fuel Rod");
+            builder.add(ModItems.RAW_URANIUM,       "Raw Uranium");
+            builder.add(ModItems.URANIUM_INGOT,     "Uranium Ingot");
+            builder.add(ModItems.ENRICHED_URANIUM,  "Enriched Uranium");
+            builder.add(ModItems.FUEL_ROD,          "Fuel Rod");
 
             builder.add(ModBlocks.URANIUM_ORE,           "Uranium Ore");
             builder.add(ModBlocks.DEEPSLATE_URANIUM_ORE, "Deepslate Uranium Ore");
