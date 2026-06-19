@@ -5,6 +5,22 @@ Alle nennenswerten Änderungen an der AKW-Mod werden hier dokumentiert.
 Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.5.0] — 2026-06-19
+
+### Hinzugefügt
+- **Steuerstab-Logik:** Jeder direkt angrenzende `Steuerstab-Block` reduziert den
+  Hitzeaufbau des Reaktors um 4 Wärme/Tick (bis zu 6 Stäbe = 24 Reduktion).
+  Beispiel: Basis-Reaktor (6 Hitze/Tick) + 2 Steuerstäbe = nur noch 0 Aufbau netto
+  (vor Kühlung).
+- **Strahlung (Radiation):** Laufende Reaktoren bestrahlen Spieler im Radius von
+  8 Blöcken. Strahlung I bei niedrigem Hitze-Level, Strahlung II ab 50% der
+  Maximaltemperatur. Schaden: 0,5 HP/s bzw. 1,5 HP/s. **Blei-Block** direkt neben
+  dem Spieler blockiert die Strahlung vollständig.
+- **Status-Effekt „Strahlung"** (`effect.akw.radiation`) — grünes Effekt-Icon im
+  Spieler-HUD, sichtbare Partikel.
+
+---
+
 ## [0.4.1] — 2026-06-19
 
 ### Hinzugefügt

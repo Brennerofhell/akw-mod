@@ -15,6 +15,7 @@
   "block.akw.thorium_reactor": "Thorium-Reaktor",
   "block.akw.uranium_ore": "Uranerz",
   "block.akw.waste_container": "Abfallbehälter",
+  "effect.akw.radiation": "Strahlung",
   "item.akw.fuel_rod": "Brennstab",
   "item.akw.raw_uranium": "Roh-Uran",
   "item.akw.uranium_ingot": "Uran-Barren",

@@ -2,6 +2,7 @@ package ch.danielt.akw;
 
 import ch.danielt.akw.registry.ModBlockEntities;
 import ch.danielt.akw.registry.ModBlocks;
+import ch.danielt.akw.registry.ModEffects;
 import ch.danielt.akw.registry.ModItemGroups;
 import ch.danielt.akw.registry.ModItems;
 import ch.danielt.akw.registry.ModScreenHandlers;
@@ -31,6 +32,7 @@ public class AkwMod implements ModInitializer {
     public void onInitialize() {
         ModItems.registerAll();
         ModBlocks.registerAll();
+        ModEffects.registerAll();
         ModBlockEntities.registerAll();
         ModScreenHandlers.registerAll();
         ModItemGroups.registerAll();

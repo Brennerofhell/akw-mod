@@ -45,6 +45,8 @@ public class ModLanguageProvider {
 
             builder.add(ModBlocks.ENERGY_CABLE,           "Energie-Kabel");
             builder.add(ModBlocks.ENERGY_BATTERY,         "Akku-Block");
+
+            builder.add("effect.akw.radiation", "Strahlung");
         }
     }
 
@@ -83,6 +85,8 @@ public class ModLanguageProvider {
 
             builder.add(ModBlocks.ENERGY_CABLE,           "Energy Cable");
             builder.add(ModBlocks.ENERGY_BATTERY,         "Battery Block");
+
+            builder.add("effect.akw.radiation", "Radiation");
         }
     }
 }

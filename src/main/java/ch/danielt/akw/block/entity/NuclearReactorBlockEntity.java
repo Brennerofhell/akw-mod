@@ -4,12 +4,14 @@ import ch.danielt.akw.block.NuclearReactorBlock;
 import ch.danielt.akw.energy.EnergyNet;
 import ch.danielt.akw.registry.ModBlockEntities;
 import ch.danielt.akw.registry.ModBlocks;
+import ch.danielt.akw.registry.ModEffects;
 import ch.danielt.akw.registry.ModItems;
 import ch.danielt.akw.screen.NuclearReactorScreenHandler;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventories;
@@ -17,12 +19,15 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.screen.PropertyDelegate;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.storage.ReadView;
 import net.minecraft.storage.WriteView;
 import net.minecraft.text.Text;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import team.reborn.energy.api.base.SimpleEnergyStorage;
 
@@ -58,6 +63,10 @@ public class NuclearReactorBlockEntity extends BlockEntity
     public static final int PASSIVE_COOL = 2;
     /** Ab diesem Anteil (Zaehler/4) der maxHitze wird die Erzeugung gedrosselt. */
     public static final int THROTTLE_NUMERATOR = 3;
+    /** Hitze-Reduktion pro Tick je angrenzendem Steuerstab-Block. */
+    public static final int HEAT_REDUCTION_PER_ROD = 4;
+    /** Strahlungs-Radius (Blöcke) eines laufenden Reaktors. */
+    private static final int RADIATION_RADIUS = 8;
 
     private final DefaultedList<ItemStack> inventory = DefaultedList.ofSize(1, ItemStack.EMPTY);
 
@@ -158,11 +167,13 @@ public class NuclearReactorBlockEntity extends BlockEntity
             }
         }
 
-        // Hitze-Dynamik: Aufbau beim Brennen, Abbau durch Eigenkuehlung + Kuehlrohre
+        // Hitze-Dynamik: Aufbau (reduziert durch Steuerstäbe), Abbau durch Kühlung
+        int heatPerTickEffective = Math.max(0, be.heatPerTick
+                - be.countControlRods(world, pos) * HEAT_REDUCTION_PER_ROD);
         int cooling = PASSIVE_COOL + be.countCoolingPipes(world, pos) * COOL_PER_PIPE;
         int oldHeat = be.heat;
         if (wasBurning) {
-            be.heat += be.heatPerTick;
+            be.heat += heatPerTickEffective;
         }
         be.heat = Math.max(0, be.heat - cooling);
         if (be.heat != oldHeat) {
@@ -180,6 +191,26 @@ public class NuclearReactorBlockEntity extends BlockEntity
             be.pushEnergy(world, pos);
         }
 
+        // Strahlung: laufender Reaktor bestrahlt Spieler in der Naehe
+        if (be.burnTime > 0 && world instanceof ServerWorld serverWorld) {
+            int level = be.heat >= be.maxHeat / 2 ? 1 : 0;
+            Vec3d center = Vec3d.ofCenter(pos);
+            Box searchBox = new Box(pos).expand(RADIATION_RADIUS);
+            serverWorld.getEntitiesByClass(PlayerEntity.class, searchBox,
+                    p -> p.squaredDistanceTo(center) <= (double) RADIATION_RADIUS * RADIATION_RADIUS)
+                    .forEach(player -> {
+                        if (!hasLeadProtection(serverWorld, player.getBlockPos())) {
+                            player.addStatusEffect(new StatusEffectInstance(
+                                    ModEffects.RADIATION, 60, level, false, true));
+                            if (serverWorld.getTime() % 20 == 0) {
+                                player.damage(serverWorld,
+                                        serverWorld.getDamageSources().magic(),
+                                        level == 0 ? 0.5f : 1.5f);
+                            }
+                        }
+                    });
+        }
+
         boolean nowBurning = be.burnTime > 0;
         if (nowBurning != wasBurning) {
             world.setBlockState(pos, state.with(NuclearReactorBlock.LIT, nowBurning), Block.NOTIFY_ALL);
@@ -194,11 +225,26 @@ public class NuclearReactorBlockEntity extends BlockEntity
     private int countCoolingPipes(World world, BlockPos pos) {
         int count = 0;
         for (Direction dir : Direction.values()) {
-            if (world.getBlockState(pos.offset(dir)).isOf(ModBlocks.COOLING_PIPE)) {
-                count++;
-            }
+            if (world.getBlockState(pos.offset(dir)).isOf(ModBlocks.COOLING_PIPE)) count++;
         }
         return count;
+    }
+
+    /** Zaehlt direkt angrenzende Steuerstab-Bloecke (max. 6). */
+    private int countControlRods(World world, BlockPos pos) {
+        int count = 0;
+        for (Direction dir : Direction.values()) {
+            if (world.getBlockState(pos.offset(dir)).isOf(ModBlocks.CONTROL_ROD_BLOCK)) count++;
+        }
+        return count;
+    }
+
+    /** Prueft ob mind. 1 Blei-Block direkt neben dem Spieler liegt (Strahlungsschutz). */
+    private static boolean hasLeadProtection(World world, BlockPos playerPos) {
+        for (Direction dir : Direction.values()) {
+            if (world.getBlockState(playerPos.offset(dir)).isOf(ModBlocks.LEAD_BLOCK)) return true;
+        }
+        return false;
     }
 
     /** Reaktor entfernen (Inhalt wird ausgeworfen) und Explosion ausloesen. */
