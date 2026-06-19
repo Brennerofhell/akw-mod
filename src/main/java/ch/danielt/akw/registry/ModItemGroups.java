@@ -9,6 +9,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
@@ -25,7 +26,7 @@ import net.minecraft.util.Identifier;
  */
 public class ModItemGroups {
     public static final RegistryKey<ItemGroup> AKW_GROUP_KEY =
-            RegistryKey.of(Registries.ITEM_GROUP.getKey(), Identifier.of(AkwMod.MOD_ID, "akw"));
+            RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier.of(AkwMod.MOD_ID, "akw"));
 
     public static void registerAll() {
         Registry.register(Registries.ITEM_GROUP, AKW_GROUP_KEY,
