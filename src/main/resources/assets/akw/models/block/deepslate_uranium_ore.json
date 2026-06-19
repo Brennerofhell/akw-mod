@@ -1,6 +1,0 @@
-{
-  "parent": "block/cube_all",
-  "textures": {
-    "all": "akw:block/deepslate_uranium_ore"
-  }
-}

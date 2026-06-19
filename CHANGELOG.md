@@ -5,7 +5,59 @@ Alle nennenswerten Änderungen an der AKW-Mod werden hier dokumentiert.
 Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
-## [Unreleased]
+## [0.3.6] — 2026-06-18
+
+### Behoben
+- **Kreativ-Tab fehlte im Spiel:** Items wurden über `ItemGroupEvents` in den Tab
+  eingetragen, was für frisch registrierte Custom-Tabs in Fabric API 0.138 nicht
+  zuverlässig feuert. Fix: Items direkt im Builder via `.entries(...)` eingetragen.
+
+---
+
+## [0.3.5] — 2026-06-18
+
+### Hinzugefügt
+- **Kreativ-Tab „Atomkraftwerk" stabil & dokumentiert:** Alle Items und Blöcke sind
+  per `ItemGroupEvents.modifyEntriesEvent` im eigenen Tab eingetragen. Neue Reaktoren
+  und Dekor-Blöcke erscheinen automatisch, sobald sie über `registerReactor()` /
+  `registerDecor()` in `ModBlocks` registriert sind (kein manueller Nachpflege-Schritt).
+- **Vanilla-Tab-Einträge:** Items und Blöcke zusätzlich in die passenden Vanilla-Tabs
+  einsortiert (Zutaten, Naturblöcke, Funktionsblöcke, Baublöcke, Redstone).
+
+### Geändert
+- Version in `gradle.properties` und `README.md` auf 0.4.0 angehoben.
+- Bekannte Lücken im README aktualisiert (Steuerstab-Wirkung → v0.5 verschoben).
+
+---
+
+## [0.3.0] — 2026-06-18
+
+### Hinzugefügt
+- **Energie-Infrastruktur (v0.3):** **Energie-Kabel** transportiert FE zwischen
+  Blöcken (kleiner Puffer, gibt pro Tick an alle Nachbarn weiter → FE fliesst entlang
+  der Strecke von Erzeugern zu Verbrauchern/Speichern). **Akku-Block** als grosser
+  FE-Puffer (1 Mio FE), der den Füllstand als **Komparator-Signal** (0–15) ausgibt.
+  Beide exponieren `EnergyStorage.SIDED` → automatisch **FE-kompatibel mit Create**
+  (via FE-Brücken). Modularer Kern: gemeinsame Push-Logik in `energy/EnergyNet`
+  herausgezogen, Reaktor darauf umgestellt.
+- **Kühlsystem & Hitze-Mechanik:** Reaktoren bauen im Betrieb Hitze auf
+  (`heatPerTick` je Typ). Jedes direkt angrenzende **Kühlrohr** (`cooling_pipe`)
+  senkt die Hitze um 8/Tick, dazu 2/Tick Eigenkühlung. Ab 75 % der maxHitze wird
+  die Energie-Erzeugung auf ¼ gedrosselt; bei Erreichen der maxHitze **explodiert**
+  der Reaktor (Stärke skaliert mit dem Typ). Neuer **Hitzebalken** im GUI
+  (orange → rot ab Drosselung) mit `Hitze / maxHitze`-Tooltip; Hitze wird per NBT
+  gespeichert. Tier-Werte (`maxHeat`, `heatPerTick`) in `ModBlocks` gepflegt.
+
+### Geändert
+- **Upgrade auf Minecraft 1.21.10** (von 1.21.1): Loom 1.17, Gradle 9.5,
+  yarn 1.21.10+build.3, loader 0.19.3, fabric-API 0.138.4. Angepasst an die neue
+  Registry- (`Settings.registryKey`), NBT- (`Read-/WriteView`), Modell-
+  (`client.data`, `registerCooker`), Recipe- (`RecipeGenerator`) und
+  Render-API (`drawTexture` mit `RenderPipelines`).
+- **Datagen von Python auf Java (Fabric Datagen)** umgestellt; `tools/akw_data.py`
+  & Co. entfallen. Ausgabe nach `src/main/generated` (eigene, committete
+  Ressourcen-Wurzel), damit der Fabric-Cleanup keine handgepflegten Dateien in
+  `src/main/resources` löscht. Ausführen: `./gradlew runDatagen`.
 
 ### Dokumentation
 - **JavaDoc vervollständigt:** Klassen-Doc für alle bislang undokumentierten Klassen

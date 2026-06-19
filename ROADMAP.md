@@ -1,8 +1,8 @@
 # AKW Mod - Roadmap
 
-Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.1)
+Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 
-## Status: In Entwicklung (v0.2.0 — Energiesystem)
+## Status: In Entwicklung (v0.3.0 — Funktionslogik der Bausteine)
 
 ---
 
@@ -32,7 +32,7 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.1)
       Elite, Brutreaktor, Thorium, Fusion)
   - [x] Fuel Rod-System (Verbrauch im Brennstoff-Slot)
   - [x] Energie-Generierung (FE mit Team Reborn Energy, Abgabe an alle Seiten)
-  - [ ] Kühlsystem-Logik (Bausteine vorhanden, Wirkung folgt)
+  - [x] Kühlsystem-Logik (Hitzeaufbau, Kühlrohr-Kühlung, Drosselung, Überhitzung→Explosion, Hitzebalken im GUI)
 - [ ] Radiation Mechanic
   - [ ] Strahlungs-Blockeffekte
   - [ ] Spieler-Strahlungsexposition
@@ -47,7 +47,7 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.1)
 ### Neue Blöcke (Bausteine als Blöcke vorhanden — Funktionslogik folgt)
 - [x] Enriched Uranium Block (Dekoration/Lagerung)
 - [x] Reactor Core
-- [x] Cooling Pipe (Block vorhanden; Rohr-Netzwerk-Logik offen)
+- [x] Cooling Pipe (kühlt angrenzende Reaktoren; Rohr-Netzwerk-Logik weiterhin offen)
 - [x] Control Rod Block
 - [x] Lead Block (Strahlungsschutz-Block vorhanden)
 - [x] Waste Container (Block vorhanden; Abfall-Logik offen)
@@ -119,7 +119,7 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.1)
 
 - **Team Reborn Energy** ist bereits integriert → Energiesystem kann direkt in Phase 2 starten
 - **Resourcen-Resourcen** (Texturen/Sounds) sind aktuell nicht vorhanden → müssen für v1.0.0 erstellt werden
-- **Modversion-Kompatibilität**: Dieses Mod fokussiert auf Minecraft 1.21.1 - Rückwärts-Kompatibilität wird später evaluiert
+- **Modversion-Kompatibilität**: Dieses Mod fokussiert auf Minecraft 1.21.10 - Rückwärts-Kompatibilität wird später evaluiert
 
 ---
 

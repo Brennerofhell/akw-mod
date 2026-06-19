@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "E": "akw:enriched_uranium_block",
+    "M": "minecraft:emerald",
+    "N": "akw:nuclear_reactor"
+  },
+  "pattern": [
+    "MEM",
+    "ENE",
+    "MEM"
+  ],
+  "result": {
+    "count": 1,
+    "id": "akw:thorium_reactor"
+  }
+}

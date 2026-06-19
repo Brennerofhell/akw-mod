@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_fuel_rod": {
+      "conditions": {
+        "items": [
+          {
+            "items": "akw:fuel_rod"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "akw:waste_container"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_fuel_rod"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "akw:waste_container"
+    ]
+  }
+}

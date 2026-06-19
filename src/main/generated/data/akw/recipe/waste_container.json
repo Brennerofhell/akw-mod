@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "F": "akw:fuel_rod",
+    "I": "minecraft:iron_ingot"
+  },
+  "pattern": [
+    "IFI",
+    "IFI",
+    "III"
+  ],
+  "result": {
+    "count": 1,
+    "id": "akw:waste_container"
+  }
+}

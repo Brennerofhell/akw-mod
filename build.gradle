@@ -1,6 +1,30 @@
 plugins {
-    id 'fabric-loom' version '1.8-SNAPSHOT'
+    id 'fabric-loom' version '1.17-SNAPSHOT'
     id 'maven-publish'
+}
+
+loom {
+    runs {
+        datagen {
+            inherit client
+            name "Data Generation"
+            vmArg "-Dfabric-api.datagen"
+            vmArg "-Dfabric-api.datagen.output-dir=${file("src/main/generated")}"
+            vmArg "-Dfabric-api.datagen.modid=akw"
+            runDir "build/datagen"
+        }
+    }
+}
+
+// Datagen schreibt ausschliesslich nach src/main/generated (committed), damit der
+// Aufraeum-Schritt von Fabric niemals handgepflegte Dateien in src/main/resources
+// (Texturen, fabric.mod.json, icon.png, worldgen) loescht.
+sourceSets {
+    main {
+        resources {
+            srcDir 'src/main/generated'
+        }
+    }
 }
 
 version = project.mod_version

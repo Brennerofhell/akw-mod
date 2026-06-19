@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "D": "minecraft:diamond_block",
+    "E": "akw:elite_nuclear_reactor",
+    "N": "minecraft:netherite_ingot"
+  },
+  "pattern": [
+    "NDN",
+    "DED",
+    "NDN"
+  ],
+  "result": {
+    "count": 1,
+    "id": "akw:fusion_reactor"
+  }
+}

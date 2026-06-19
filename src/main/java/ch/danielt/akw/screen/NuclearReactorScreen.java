@@ -1,6 +1,7 @@
 package ch.danielt.akw.screen;
 
 import ch.danielt.akw.AkwMod;
+import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.entity.player.PlayerInventory;
@@ -29,8 +30,8 @@ public class NuclearReactorScreen extends HandledScreen<NuclearReactorScreenHand
 
     @Override
     protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY) {
-        context.drawTexture(TEXTURE, x, y, 0f, 0f, backgroundWidth, backgroundHeight,
-                backgroundWidth, backgroundHeight);
+        context.drawTexture(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0f, 0f,
+                backgroundWidth, backgroundHeight, backgroundWidth, backgroundHeight);
 
         // Energiebalken (gruen, von unten gefuellt)
         int barX = x + 153;
@@ -38,6 +39,15 @@ public class NuclearReactorScreen extends HandledScreen<NuclearReactorScreenHand
         int barH = 52;
         int fillH = (int) (barH * handler.getEnergyFraction());
         context.fill(barX, barTop + (barH - fillH), barX + 12, barTop + barH, 0xFF3CC850);
+
+        // Hitzebalken (links neben dem Energiebalken, von unten gefuellt)
+        int heatX = x + 137;
+        context.fill(heatX, barTop, heatX + 12, barTop + barH, 0xFF202020);
+        float heatFrac = handler.getHeatFraction();
+        int heatFill = (int) (barH * heatFrac);
+        // Orange im Normalbetrieb, Rot ab Drosselschwelle (75 %).
+        int heatColor = heatFrac >= 0.75f ? 0xFFE03030 : 0xFFE0902C;
+        context.fill(heatX, barTop + (barH - heatFill), heatX + 12, barTop + barH, heatColor);
 
         // Brenn-Anzeige (orange) links neben dem Brennstoff-Slot
         int bx = x + 72;
@@ -58,6 +68,13 @@ public class NuclearReactorScreen extends HandledScreen<NuclearReactorScreenHand
         if (mouseX >= ex && mouseX < ex + 14 && mouseY >= ey && mouseY < ey + 54) {
             context.drawTooltip(textRenderer,
                     Text.literal(handler.getEnergy() + " / " + handler.getCapacity() + " FE"),
+                    mouseX, mouseY);
+        }
+
+        int hx = x + 136;
+        if (mouseX >= hx && mouseX < hx + 14 && mouseY >= ey && mouseY < ey + 54) {
+            context.drawTooltip(textRenderer,
+                    Text.literal(handler.getHeat() + " / " + handler.getMaxHeat() + " Hitze"),
                     mouseX, mouseY);
         }
     }

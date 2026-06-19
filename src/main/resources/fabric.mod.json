@@ -11,11 +11,12 @@
   "environment": "*",
   "entrypoints": {
     "main": ["ch.danielt.akw.AkwMod"],
-    "client": ["ch.danielt.akw.AkwClient"]
+    "client": ["ch.danielt.akw.AkwClient"],
+    "fabric-datagen": ["ch.danielt.akw.datagen.AkwDataGenerator"]
   },
   "depends": {
     "fabricloader": ">=0.16.0",
-    "minecraft": "~1.21.1",
+    "minecraft": "~1.21.10",
     "java": ">=21",
     "fabric-api": "*",
     "team_reborn_energy": "*"

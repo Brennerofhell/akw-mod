@@ -1,6 +1,6 @@
 # Architektur & Entwickler-Guide
 
-Technische Dokumentation der AKW-Mod (Atomkraftwerk, Minecraft 1.21.1 / Fabric).
+Technische Dokumentation der AKW-Mod (Atomkraftwerk, Minecraft 1.21.10 / Fabric).
 Für die Spieler-Perspektive siehe [GUIDE.md](GUIDE.md), für den Überblick die
 [README](../README.md).
 
@@ -13,9 +13,11 @@ Alle Java-Klassen liegen unter `src/main/java/ch/danielt/akw/`:
 | Paket | Inhalt |
 |---|---|
 | *(root)* | `AkwMod` (gemeinsamer Einstiegspunkt), `AkwClient` (Client-Einstiegspunkt) |
-| `block` | `NuclearReactorBlock` — der Reaktor-Block (FACING/LIT, GUI-Öffnung, Ticker) |
-| `block.entity` | `NuclearReactorBlockEntity` (Logik & Energie), `ImplementedInventory` (Inventory-Helfer) |
-| `screen` | `NuclearReactorScreenHandler` (Slots/Sync), `NuclearReactorScreen` (Client-GUI) |
+| `energy` | `EnergyNet` — gemeinsame FE-Push-Logik (Reaktor, Kabel, Akku) |
+| `block` | `NuclearReactorBlock`, `EnergyCableBlock`, `EnergyBatteryBlock` |
+| `block.entity` | `NuclearReactorBlockEntity`, `EnergyCableBlockEntity`, `EnergyBatteryBlockEntity`, `ImplementedInventory` |
+| `datagen` | `AkwDataGenerator` + 5 Provider (Modelle, Rezepte, Loot, Tags, Lang) |
+| `screen` | `NuclearReactorScreenHandler`, `NuclearReactorScreen` |
 | `registry` | `ModItems`, `ModBlocks`, `ModBlockEntities`, `ModScreenHandlers`, `ModItemGroups` |
 | `worldgen` | `ModWorldGen` — Uranerz-Weltgenerierung |
 
@@ -26,67 +28,101 @@ Alle Java-Klassen liegen unter `src/main/java/ch/danielt/akw/`:
 ### Initialisierungs-Reihenfolge (`AkwMod.onInitialize`)
 ```
 ModItems → ModBlocks → ModBlockEntities → ModScreenHandlers
-        → ModItemGroups → ModWorldGen → EnergyStorage.SIDED-Lookup
+        → ModItemGroups → ModWorldGen → EnergyStorage.SIDED-Lookups
 ```
 - `ModBlockEntities` braucht die fertige Liste `ModBlocks.REACTORS`.
-- Der Energie-Lookup braucht den registrierten `ModBlockEntities.NUCLEAR_REACTOR`-Typ.
-- `ModBlocks` initialisiert die Listen `REACTORS`/`DECOR` **vor** den Block-Feldern
-  (Feld-Reihenfolge in der Klasse), damit `registerReactor`/`registerDecor` einfügen können.
+- Die Energie-Lookups registrieren `EnergyStorage.SIDED` für `NUCLEAR_REACTOR`,
+  `ENERGY_CABLE` und `ENERGY_BATTERY` — alle drei nach `ModBlockEntities`.
 
 ---
 
-## 2. Datengetriebene Asset-Pipeline
+## 2. Fabric Datagen — Asset-Pipeline
 
-Reaktor-Typen und Bausteine sind an **einer** Stelle definiert und werden von dort in
-Texturen und Daten-JSON expandiert:
+Blockstates, Modelle, Loot-Tables, Rezepte, Tags und Lang-Dateien werden per
+**Fabric Datagen** (Java) erzeugt. Die Wahrheitsquelle ist ausschließlich Java.
 
 ```
-tools/akw_data.py   ← EINZIGE Wahrheitsquelle (REACTOR_TYPES, DECOR_BLOCKS)
-      │
-      ├─ tools/gen_textures.py   → assets/akw/textures/{block,item,gui}/*.png + icon.png
-      └─ tools/gen_resources.py  → assets/akw/{blockstates,models}/… + data/akw/{loot_table,recipe}/…
-                                    + data/minecraft/tags/block/mineable/pickaxe.json
-                                    + merge in assets/akw/lang/{de_de,en_us}.json
+src/main/java/ch/danielt/akw/datagen/
+  AkwDataGenerator.java     ← Datagen-Einstiegspunkt (fabric-datagen-Entrypoint)
+  ModRecipeProvider.java    → data/akw/recipe/*.json
+  ModLootTableProvider.java → data/akw/loot_table/blocks/*.json
+  ModModelProvider.java     → assets/akw/blockstates/*.json
+                              assets/akw/models/block/*.json
+                              assets/akw/models/item/*.json
+  ModTagsProvider.java      → data/minecraft/tags/block/mineable/pickaxe.json
+                              data/minecraft/tags/block/needs_iron_tool.json
+  ModLanguageProvider.java  → assets/akw/lang/de_de.json + en_us.json
 ```
 
-Die Generatoren sind **reine Python-stdlib** (eigener PNG-Encoder via `zlib`, kein PIL/
-ImageMagick nötig). Regenerieren:
+Ausgabe geht nach **`src/main/generated/`** (als eigene Ressourcen-Wurzel eingebunden,
+committed). `src/main/resources/` bleibt für handgepflegte Dateien (Texturen, Icon,
+`fabric.mod.json`, Weltgenerierung) — der Fabric-Cleanup löscht dort nichts.
+
+Texturen (PNG) werden **manuell** in `src/main/resources/assets/akw/textures/` gepflegt.
 
 ```bash
-python3 tools/gen_textures.py && python3 tools/gen_resources.py
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
+./gradlew runDatagen   # schreibt nach src/main/generated/
 ```
 
-> ⚠️ **Java spiegelt die Daten manuell.** Die Tier-Werte (Kapazität, FE/Tick, Abgabe,
-> Brenndauer) stehen sowohl in `akw_data.py` (für die Texturfarben/JSON) als auch in
-> `registry/ModBlocks.java` (für die Laufzeit-Logik). Beide müssen übereinstimmen — es
-> gibt keinen automatischen Abgleich. (Eine echte Fabric-Datagen-Lösung wäre der nächste
-> Schritt, falls die Duplizierung stört.)
+> **Tier-Werte** (`capacity`, `genPerTick`, `maxExtract`, `burnTicksPerRod`,
+> `maxHeat`, `heatPerTick`) leben ausschließlich in `registry/ModBlocks.java`.
 
 ---
 
-## 3. Energiefluss (Reaktor)
+## 3. Energiefluss & Hitze-Mechanik
 
-Kern ist `NuclearReactorBlockEntity` mit einem `SimpleEnergyStorage` aus der
-**Team Reborn Energy**-API (`SimpleEnergyStorage(capacity, maxInsert=0, maxExtract)` —
-reiner Generator, keine Aufnahme).
+### 3.1 Gemeinsame Push-Logik (`EnergyNet`)
+
+```java
+// energy/EnergyNet.java
+public static void pushToNeighbors(SimpleEnergyStorage source,
+                                   World world, BlockPos pos, long maxPerSide) {
+    if (source.amount <= 0) return;
+    for (Direction dir : Direction.values()) {
+        EnergyStorage target = EnergyStorage.SIDED.find(world, pos.offset(dir), dir.getOpposite());
+        if (target == null) continue;
+        try (Transaction tx = Transaction.openOuter()) {
+            EnergyStorageUtil.move(source, target, maxPerSide, tx);
+            tx.commit();
+        }
+    }
+}
+```
+
+`EnergyNet.pushToNeighbors()` wird von `NuclearReactorBlockEntity`,
+`EnergyCableBlockEntity` und `EnergyBatteryBlockEntity` genutzt.
+
+### 3.2 Reaktor-Tick-Logik (`NuclearReactorBlockEntity`)
 
 **`tick(world, pos, state, be)` pro Server-Tick:**
-1. **Brennen:** wenn `burnTime > 0` → `burnTime--` und `amount += genPerTick` (auf
-   `capacity` gedeckelt).
-2. **Zünden:** wenn `burnTime <= 0` und Energie nicht voll und ein `fuel_rod` im Slot →
-   Stab um 1 verringern, `burnTime = burnTicksPerRod`.
-3. **Abgeben:** `pushEnergy(...)` schiebt FE an alle 6 Nachbarn, die einen
-   `EnergyStorage` anbieten — über eine `Transaction` und `EnergyStorageUtil.move(...)`.
-4. **Zustand:** wechselt `burning`, wird der `LIT`-Blockstate gesetzt (Front leuchtet).
-5. `markDirty()` bei Änderungen → NBT wird persistiert (`Energy`, `BurnTime`, `BurnTimeTotal`).
+1. **Brennen:** wenn `burnTime > 0` → `burnTime--`, `amount += genPerTick` (gedeckelt),
+   `heat += heatPerTick` (gedeckelt auf `maxHeat`).
+2. **Kühlen:** `heat -= (countCoolingPipes() * COOL_PER_PIPE + PASSIVE_COOL)`.
+3. **Drosselung:** ab 75 % der `maxHeat` wird nur `genPerTick / 4` erzeugt.
+4. **Explosion:** bei `heat >= maxHeat` → Block entfernen + `world.createExplosion(...)`.
+5. **Zünden:** wenn `burnTime <= 0` und Energie nicht voll und `fuel_rod` im Slot →
+   Stab verringern, `burnTime = burnTicksPerRod`.
+6. **Abgeben:** `EnergyNet.pushToNeighbors(energyStorage, world, pos, maxExtract)`.
+7. **Zustand:** `LIT`-Blockstate setzen/löschen, `markDirty()`.
 
-**Bereitstellung nach außen:** `AkwMod` registriert
-`EnergyStorage.SIDED.registerForBlockEntity((be, dir) -> be.energyStorage, NUCLEAR_REACTOR)`.
-Dadurch finden FE-Kabel/-Maschinen (Tech Reborn & Co.) den Speicher über jede Seite.
+**Cooling-Pipes zählen:** `countCoolingPipes()` prüft alle 6 Nachbarblöcke per
+`world.getBlockState(pos.offset(dir)).isOf(ModBlocks.COOLING_PIPE)`.
 
-**Tier-Parameter** kommen aus dem `NuclearReactorBlock` und werden im BlockEntity-Konstruktor
-gelesen (`(NuclearReactorBlock) state.getBlock()`), sodass ein einziger BlockEntity-Typ alle
-Reaktor-Tiers bedient.
+**Tier-Parameter** kommen aus dem `NuclearReactorBlock` im Konstruktor
+(`(NuclearReactorBlock) state.getBlock()`), sodass ein einziger BE-Typ alle Tiers bedient.
+
+### 3.3 Kabel & Akku
+
+- **`EnergyCableBlockEntity`:** CAPACITY=8 192, TRANSFER=2 048. Nimmt FE von beliebiger
+  Seite auf und gibt es pro Tick weiter (EnergyNet).
+- **`EnergyBatteryBlockEntity`:** CAPACITY=1 000 000, TRANSFER=4 096. Gibt Füllstand
+  als Komparator-Signal (0–15) aus; `lastComparator`-Feld verhindert redundante
+  `world.updateComparators()`-Aufrufe.
+
+**Bereitstellung nach außen:** `EnergyStorage.SIDED` wird in `AkwMod` für alle drei
+BE-Typen registriert. Dadurch sind die Blöcke automatisch mit Create-FE-Brücken und
+anderen FE-kompatiblen Mods kompatibel (kein hard dependency auf Create).
 
 ---
 
@@ -107,8 +143,7 @@ NuclearReactorScreen (Client)  ← liest Werte über die Handler-Getter
 ```
 
 **Sync der Live-Werte** läuft über das `PropertyDelegate` (vanilla-Mechanik, automatisch
-synchronisiert). Indizes sind als Konstanten in `NuclearReactorBlockEntity` zentralisiert,
-um Desync zwischen den drei Klassen zu vermeiden:
+synchronisiert). Indizes sind als Konstanten in `NuclearReactorBlockEntity` zentralisiert:
 
 | Index | Konstante | Bedeutung |
 |--:|---|---|
@@ -116,59 +151,76 @@ um Desync zwischen den drei Klassen zu vermeiden:
 | 1 | `IDX_CAPACITY` | Kapazität |
 | 2 | `IDX_BURN_TIME` | verbleibende Brenndauer |
 | 3 | `IDX_BURN_TOTAL` | Brenndauer des aktuellen Stabs |
+| 4 | `IDX_HEAT` | aktuelle Hitze |
+| 5 | `IDX_MAX_HEAT` | maximale Hitze (tier-abhängig) |
+
+**Hitzebalken** wird in `NuclearReactorScreen` bei `heatX = x + 137` gezeichnet;
+Farbe orange (`0xFFE0902C`), bei ≥ 75 % rot (`0xFFE03030`). Tooltip zeigt `Hitze / maxHitze`.
 
 ---
 
-## 5. Rezept-Format (1.21.1)
+## 5. MC 1.21.10 — wichtige API-Änderungen
 
-Wichtige Eigenheit: das **Result** nutzt `"id"` (nicht `"item"` oder einen String):
-
-```json
-{ "type": "minecraft:crafting_shaped", "category": "misc",
-  "pattern": ["III","UFU","IRI"],
-  "key": { "I": {"item":"minecraft:iron_ingot"}, "U": {"item":"akw:uranium_ingot"},
-           "F": {"item":"minecraft:furnace"}, "R": {"item":"minecraft:redstone"} },
-  "result": { "id": "akw:nuclear_reactor", "count": 1 } }
-```
-
-Ordnernamen sind **singular**: `data/akw/recipe/`, `data/akw/loot_table/blocks/`.
+| Bereich | Alte API (1.21.1) | Neue API (1.21.10) |
+|---|---|---|
+| NBT schreiben | `NbtCompound` + `RegistryWrapper` | `WriteView`/`ReadView` |
+| NBT lesen | `nbt.getLong("k")` | `view.getLong("k", 0L)` |
+| Block-Settings | `new Block.Settings()` | `Block.Settings.create().registryKey(key)` |
+| Datagen-Modelle | `net.minecraft.data.client.*` | `net.minecraft.client.data.*` |
+| Datagen-Rezepte | `FabricRecipeProvider.generate()` | `getRecipeGenerator()` mit `RecipeGenerator`-Unterklasse |
+| Datagen-Tags | `getOrCreateTagBuilder()` | `valueLookupBuilder(TagKey)` |
+| FabricModelProvider | `net.fabricmc.fabric.api.datagen.v1.provider.*` | `net.fabricmc.fabric.api.client.datagen.v1.provider.*` |
+| Datagen Run | `inherit server` | `inherit client` |
+| onStateReplaced | 5 Parameter (inkl. `newState`, `moved`) | 4 Parameter: `(BlockState, ServerWorld, BlockPos, boolean)` |
+| Komparator-Output | 3 Parameter | `getComparatorOutput(BlockState, World, BlockPos, Direction)` |
+| GUI zeichnen | `drawTexture(id, ...)` | `drawTexture(RenderPipeline, id, ...)` mit `RenderPipelines.GUI_TEXTURED` |
+| Welt-Methode | `world.isClient` | `world.isClient()` |
+| Entity-Welt | `player.getWorld()` | `player.getEntityWorld()` |
 
 ---
 
 ## 6. Howto: Neuen Reaktor-Typ hinzufügen
 
-1. **`tools/akw_data.py`** — neuen Eintrag in `REACTOR_TYPES` (id, de/en-Namen,
-   `metal`/`accent`-Farben, `capacity`/`gen`/`extract`/`burn`, `recipe`).
-2. **Generatoren** laufen lassen:
-   `python3 tools/gen_textures.py && python3 tools/gen_resources.py`.
-3. **`registry/ModBlocks.java`** — Feld + `registerReactor("<id>", capacity, gen, extract, burn)`
-   ergänzen (Werte **identisch** zu `akw_data.py`). Der neue Block landet automatisch in
-   `REACTORS`, im BlockEntity-Typ, im Energie-Lookup und im Kreativ-Tab.
-4. **Bauen & prüfen:** `JAVA_HOME=… ./gradlew build`, optional Daten-Check via `runServer`.
+1. **`registry/ModBlocks.java`** — Feld + `registerReactor("<id>", capacity, gen, extract, burn, maxHeat, heatPerTick)`.
+   Der neue Block landet automatisch in `REACTORS`, im BlockEntity-Typ, im Energie-Lookup
+   und im Kreativ-Tab.
+2. **`datagen/ModRecipeProvider.java`** — `createShaped(...)`-Eintrag ergänzen.
+3. **`datagen/ModLanguageProvider.java`** — DE- und EN-Namen ergänzen.
+4. **Texturen** unter `src/main/resources/assets/akw/textures/block/` anlegen:
+   `<id>_top.png`, `<id>_front.png`, `<id>_front_on.png`, `<id>_side.png`.
+5. **`./gradlew runDatagen`** — erzeugt alle JSONs. Danach `./gradlew build`.
 
-Ein neuer **Baustein** (Vollwürfel) ist analog: Eintrag in `DECOR_BLOCKS` +
-`registerDecor("<id>", settings)` in `ModBlocks`.
+`ModModelProvider` und `ModLootTableProvider` iterieren über `ModBlocks.REACTORS`
+und decken neue Einträge automatisch ab.
+
+### Neuen Infrastruktur-Block hinzufügen (Kabel/Akku-Typ)
+
+1. Neue Block-Klasse in `block/`, neues BlockEntity in `block/entity/`.
+2. Feld in `ModBlocks` (analog `ENERGY_CABLE`), BE-Typ in `ModBlockEntities`.
+3. `EnergyStorage.SIDED`-Registrierung in `AkwMod.onInitialize()`.
+4. `addDrop` in `ModLootTableProvider`, `gen.registerSimpleCubeAll` in `ModModelProvider`,
+   Tags in `ModTagsProvider`, Namen in `ModLanguageProvider`, Rezept in `ModRecipeProvider`.
+5. `runDatagen` → `build`.
 
 ---
 
 ## 7. Build & lokale Validierung
 
-`gradlew` benötigt zwingend ein gesetztes `JAVA_HOME` (trotz `org.gradle.java.home` in
-`gradle.properties`):
+`gradlew` benötigt zwingend ein gesetztes `JAVA_HOME`:
 
 ```bash
 export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
-./gradlew build          # → build/libs/akw-<version>.jar
+./gradlew runDatagen     # → JSONs in src/main/generated/
+./gradlew build          # → build/libs/akw-0.3.0.jar
 ./gradlew runClient      # visuelle Prüfung im Spiel
 ```
 
-**Headless-Daten-Validierung** (lädt alle Registries/Rezepte/Loot, meldet JSON-Fehler ohne
-GUI). `timeout` fehlt auf macOS → `perl alarm` nutzen:
+**Headless-Daten-Validierung** (lädt alle Registries/Rezepte/Loot):
 
 ```bash
 ( printf 'stop\n' | perl -e 'alarm shift; exec @ARGV' 300 \
     ./gradlew runServer --console=plain > /tmp/akw_server.log 2>&1 )
-grep -iE "error|exception|fail|registriert|Done \(" /tmp/akw_server.log
+grep -iE "error|exception|fail|Done \(" /tmp/akw_server.log
 ```
 
 > Die Log-Zeile `No key layers in MapLike[{}]` ist ein **harmloser Vanilla-Fehler** bei der
