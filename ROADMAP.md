@@ -2,7 +2,7 @@
 
 Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 
-## Status: In Entwicklung (v0.3.0 — Funktionslogik der Bausteine)
+## Status: In Entwicklung (v0.3.7 — Energie-Infrastruktur, Kühlsystem, Kreativ-Tab-Fix)
 
 ---
 
@@ -33,6 +33,8 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
   - [x] Fuel Rod-System (Verbrauch im Brennstoff-Slot)
   - [x] Energie-Generierung (FE mit Team Reborn Energy, Abgabe an alle Seiten)
   - [x] Kühlsystem-Logik (Hitzeaufbau, Kühlrohr-Kühlung, Drosselung, Überhitzung→Explosion, Hitzebalken im GUI)
+- [x] Energie-Kabel (FE-Transport zwischen Blöcken, Puffer 8 192 FE)
+- [x] Akku-Block (1 Mio FE Speicher, Komparator-Signal 0–15)
 - [ ] Radiation Mechanic
   - [ ] Strahlungs-Blockeffekte
   - [ ] Spieler-Strahlungsexposition
@@ -52,7 +54,7 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 - [x] Lead Block (Strahlungsschutz-Block vorhanden)
 - [x] Waste Container (Block vorhanden; Abfall-Logik offen)
 
-### Zielversion: v0.3.0 (Funktionslogik der Bausteine)
+### Zielversion: v0.3.7 ✅ (ausgeliefert)
 
 ---
 
