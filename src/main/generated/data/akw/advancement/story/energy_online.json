@@ -1,0 +1,34 @@
+{
+  "parent": "akw:story/first_reactor",
+  "criteria": {
+    "has_cable": {
+      "conditions": {
+        "items": [
+          {
+            "items": "akw:energy_cable"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.akw.energy_online.desc"
+    },
+    "frame": "goal",
+    "icon": {
+      "count": 1,
+      "id": "akw:energy_cable"
+    },
+    "title": {
+      "translate": "advancements.akw.energy_online.title"
+    }
+  },
+  "requirements": [
+    [
+      "has_cable"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

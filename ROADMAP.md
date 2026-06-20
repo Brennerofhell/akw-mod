@@ -81,7 +81,7 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 - [ ] Vollständige Texturen (alle Blöcke & Items)
 - [ ] Sounds & Effekte
 - [ ] Partikel für Radioaktivität
-- [ ] Advancement/Achievement System
+- [x] Advancement/Achievement System (v0.9.5: 9-stufige Kette von Uranabbau bis Multiblock)
 
 ### Dokumentation
 - [ ] In-Game-Wiki / Manual

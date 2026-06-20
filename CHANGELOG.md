@@ -5,6 +5,23 @@ Alle nennenswerten Änderungen an der AKW-Mod werden hier dokumentiert.
 Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.9.5] — 2026-06-20
+
+### Hinzugefügt
+- **Advancement-Kette (9 Stufen):** Vollständige In-Game-Progression von Uranabbau bis
+  zum Multiblock-Reaktor. Kette: Uranabbau → Schmelzen → Anreicherung → Brennstab →
+  Erster Reaktor (GOAL) → Energie online (GOAL) → Elite/Fusion/Multiblock (je CHALLENGE).
+- **`ModAdvancementProvider`:** Neuer Datagen-Provider erzeugt 9 Advancement-JSONs
+  unter `src/main/generated/data/akw/advancement/akw/story/`.
+- **Lokalisierungen:** Alle 9 Advancements mit Titel und Beschreibung auf Deutsch und
+  Englisch (18 neue Übersetzungsschlüssel je Sprache).
+
+### Geändert
+- `AkwDataGenerator`: `ModAdvancementProvider` als weiterer Provider eingebunden.
+- `gradle.properties`: Version auf `0.9.5` angehoben.
+
+---
+
 ## [0.4.0] — 2026-06-19
 
 ### Geändert

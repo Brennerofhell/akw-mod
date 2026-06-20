@@ -1,0 +1,33 @@
+{
+  "criteria": {
+    "has_raw_uranium": {
+      "conditions": {
+        "items": [
+          {
+            "items": "akw:raw_uranium"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "background": "minecraft:textures/gui/advancements/backgrounds/stone.png",
+    "description": {
+      "translate": "advancements.akw.mine_uranium.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "akw:raw_uranium"
+    },
+    "title": {
+      "translate": "advancements.akw.mine_uranium.title"
+    }
+  },
+  "requirements": [
+    [
+      "has_raw_uranium"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

@@ -14,5 +14,6 @@ public class AkwDataGenerator implements DataGeneratorEntrypoint {
         pack.addProvider(ModTagsProvider::new);
         pack.addProvider(ModLanguageProvider.German::new);
         pack.addProvider(ModLanguageProvider.English::new);
+        pack.addProvider(ModAdvancementProvider::new);
     }
 }
