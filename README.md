@@ -1,216 +1,172 @@
 # Atomkraftwerk (AKW) — Minecraft Fabric Mod
 
-Baue dein eigenes Atomkraftwerk: Uran abbauen, Brennstäbe herstellen, Reaktor
-betreiben und FE-kompatiblen Strom erzeugen.
+Baue dein eigenes Atomkraftwerk: Uran abbauen, anreichern, Brennstäbe herstellen,
+Reaktor betreiben und FE-kompatiblen Strom erzeugen. Mit Radioaktivitätsmechanik,
+Automation über Hopper und Redstone sowie einem Multiblock-Reaktorsystem.
 
 | | |
 |---|---|
 | **Minecraft** | 1.21.10 |
-| **Mod Loader** | Fabric Loader ≥ 0.16.0 |
+| **Fabric Loader** | ≥ 0.19.3 |
+| **Fabric API** | 0.138.4+1.21.10 |
+| **Team Reborn Energy** | 4.1.0 |
 | **Java** | 21 |
-| **Version** | 0.4.0 (Kreativ-Tab idiomatisch + Navigations-Hinweis) |
+| **Version** | 0.9.5 |
 | **Lizenz** | MIT |
 
 ---
 
-## 📚 Dokumentation
-
-- **[docs/GUIDE.md](docs/GUIDE.md)** — Spieler-Guide: Progression, Reaktor-Bedienung,
-  alle Reaktor-Werte und Rezepte.
-- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — Entwickler-Guide: Paketstruktur,
-  datengetriebene Asset-Pipeline, Energiefluss, GUI-Kette, „neuen Reaktor-Typ hinzufügen".
-- **[CHANGELOG.md](CHANGELOG.md)** · **[ROADMAP.md](ROADMAP.md)**
-
----
-
-## ✨ Features (aktueller Stand)
+## Features
 
 ### Items
+
 | Item | ID | Beschreibung |
 |---|---|---|
-| Roh-Uran | `akw:raw_uranium` | Dropt beim Abbau von Uranerz |
+| Roh-Uran | `akw:raw_uranium` | Dropt beim Abbau von Uranerz (Fortune wirkt) |
 | Uran-Barren | `akw:uranium_ingot` | Aus Roh-Uran geschmolzen |
-| Brennstab | `akw:fuel_rod` | Aus Uran-Barren gecraftet (späterer Reaktor-Treibstoff) |
+| Angereichertes Uran | `akw:enriched_uranium` | 2× Uran-Barren craften |
+| Brennstab | `akw:fuel_rod` | Reaktor-Treibstoff |
+| Verbrauchter Brennstab | `akw:spent_fuel_rod` | Abfall nach Verbrennung; in Abfallbehälter lagern |
+| Reaktor-Schraubenschlüssel | `akw:reactor_wrench` | Multiblock-Reaktor assemblieren/deaktivieren |
 
 ### Erz-Blöcke
+
 | Block | ID | Eigenschaften |
 |---|---|---|
-| Uranerz | `akw:uranium_ore` | Wie Eisenerz; braucht **Eisen-Spitzhacke**; dropt Roh-Uran (Glück wirkt) |
+| Uranerz | `akw:uranium_ore` | Braucht Eisen-Spitzhacke; spawnt y: −64 bis 32 |
 | Tiefenschiefer-Uranerz | `akw:deepslate_uranium_ore` | Tiefenschiefer-Variante |
 
-### Reaktoren (funktional, FE-Generatoren)
+### Reaktoren (FE-Generatoren)
 
-Alle Reaktoren teilen dieselbe Mechanik: Brennstab in den GUI-Slot legen → der
-Reaktor verbrennt ihn über `burn`-Ticks, erzeugt dabei `FE/Tick` und gibt den Strom
-über **alle sechs Seiten** an angrenzende FE-Speicher/Maschinen ab (Team Reborn
-Energy). Bei Betrieb leuchtet die Front (`lit`-Blockstate). Rechtsklick öffnet das GUI.
+Brennstab in den GUI-Slot legen → Reaktor verbrennt ihn und gibt FE über alle
+sechs Seiten ab. Rechtsklick öffnet das GUI mit Energie- und Hitzebalken.
 
-**Hitze-Mechanik:** Reaktoren bauen im Betrieb Hitze auf. Ohne Kühlung drosselt der
-Reaktor bei 75 % der maximalen Hitze die Leistung auf 25 %, bei 100 % explodiert er.
-Platziere **Kühlrohre** direkt neben dem Reaktor (je 1 Rohr = −8 Hitze/Tick, dazu 2
-Eigenkühlung). Das GUI zeigt einen Hitzebalken (orange → rot ab Drosselung).
-
-| Reaktor | ID | Kapazität | FE/Tick | Brenndauer | maxHitze | Hitze/Tick |
+| Reaktor | ID | FE/Tick | Kapazität | Brenndauer | maxHitze | Hitze/Tick |
 |---|---|--:|--:|--:|--:|--:|
-| Reaktor | `akw:nuclear_reactor` | 100 000 | 40 | 1600 t | 1200 | 6 |
-| Fortgeschrittener Reaktor | `akw:advanced_nuclear_reactor` | 400 000 | 120 | 2000 t | 2000 | 14 |
-| Brutreaktor | `akw:breeder_reactor` | 800 000 | 240 | 2200 t | 2400 | 18 |
-| Thorium-Reaktor | `akw:thorium_reactor` | 600 000 | 180 | 2600 t | 2200 | 16 |
-| Elite-Reaktor | `akw:elite_nuclear_reactor` | 1 600 000 | 360 | 2400 t | 3200 | 28 |
-| Fusionsreaktor | `akw:fusion_reactor` | 4 000 000 | 1 000 | 1200 t | 4000 | 44 |
+| Reaktor | `akw:nuclear_reactor` | 40 | 100 000 | 1600 t | 1200 | 6 |
+| Fortgeschrittener Reaktor | `akw:advanced_nuclear_reactor` | 120 | 400 000 | 2000 t | 2000 | 14 |
+| Brutreaktor | `akw:breeder_reactor` | 240 | 800 000 | 2200 t | 2400 | 18 |
+| Thorium-Reaktor | `akw:thorium_reactor` | 180 | 600 000 | 2600 t | 2200 | 16 |
+| Elite-Reaktor | `akw:elite_nuclear_reactor` | 360 | 1 600 000 | 2400 t | 3200 | 28 |
+| Fusionsreaktor | `akw:fusion_reactor` | 1 000 | 4 000 000 | 1200 t | 4000 | 44 |
+
+**Hitze-Mechanik:** Kühlrohre direkt neben dem Reaktor platzieren (−8 Hitze/Tick je
+Rohr + 2 Eigenkühlung). Drosselung bei 75 % maxHitze; Explosion bei 100 %.
+
+### Multiblock-Reaktor
+
+Reaktor-Gehäuse-Blöcke in 3×3×3, 5×5×5 oder 7×7×7 um einen Multiblock-Controller
+platzieren, dann mit dem Reaktor-Schraubenschlüssel assemblieren. Leistung skaliert
+mit der Multiblock-Größe.
 
 ### Reaktor-Bausteine
+
 | Block | ID | Verwendung |
 |---|---|---|
-| Reaktorkern | `akw:reactor_core` | Crafting-Bauteil (leuchtet schwach) |
-| Steuerstab-Block | `akw:control_rod_block` | Bauteil fortgeschr. Reaktoren |
-| Kühlrohr | `akw:cooling_pipe` | Kühlung (−8 Hitze/Tick je angrenzendem Rohr) |
-| Blei-Block | `akw:lead_block` | Strahlenschutz (Deko/Lager) |
-| Abfallbehälter | `akw:waste_container` | Lager (Deko) |
+| Reaktorkern | `akw:reactor_core` | Crafting-Bauteil |
+| Steuerstab-Block | `akw:control_rod_block` | Reduziert Hitze/Tick im Reaktor |
+| Kühlrohr | `akw:cooling_pipe` | −8 Hitze/Tick je angrenzendem Rohr |
+| Blei-Block | `akw:lead_block` | Strahlenschutz (Blei auf dem Pfad Reaktor→Spieler blockt Strahlung) |
+| Abfallbehälter | `akw:waste_container` | 9-Slot-GUI für Verbrauchte Brennstäbe; Komparator-Ausgang 0–15; Hopper-Support; passive Strahlung bei > 50 % Füllstand |
 | Angereicherter-Uran-Block | `akw:enriched_uranium_block` | Kompaktlager (leuchtet schwach) |
-
-### Kreativ-Tab
-
-Ein eigener Tab **„Atomkraftwerk"** (DE) / **„Nuclear Power Plant"** (EN) bündelt alle
-Mod-Inhalte an einem Ort. Icon: Roh-Uran.
-
-- Alle Items, Erze, Reaktoren, Bausteine und Energie-Blöcke sind automatisch enthalten.
-- Neue Reaktoren / Dekor-Blöcke erscheinen automatisch, sobald sie registriert sind.
-- Zusätzlich in die passenden **Vanilla-Tabs** einsortiert:
-  Zutaten · Naturblöcke · Funktionsblöcke · Baublöcke · Redstone.
-
-> **Navigation:** Fabric API legt Mod-Tabs auf Seite 2 des Kreativ-Menüs.
-> Den **„>>"**-Button oben rechts neben den Tab-Icons klicken, um dorthin zu gelangen.
+| Reaktor-Gehäuse | `akw:reactor_casing` | Multiblock-Wand |
+| Multiblock-Reaktor | `akw:multiblock_reactor_controller` | Controller für Multiblock-Reaktor |
 
 ### Energie-Infrastruktur
+
 | Block | ID | Beschreibung |
 |---|---|---|
-| Energie-Kabel | `akw:energy_cable` | FE-Transport zwischen Blöcken (Puffer 8 192 FE, Transfer 2 048 FE/Tick) |
-| Akku-Block | `akw:energy_battery` | Großer FE-Speicher (1 Mio FE); Komparator-Ausgang zeigt Füllstand 0–15 |
+| Energie-Kabel | `akw:energy_cable` | FE-Transport (Puffer 8 192 FE, Transfer 2 048 FE/Tick) |
+| Akku-Block | `akw:energy_battery` | 1 Mio FE Speicher; Komparator-Ausgang 0–15 |
 
-Beide Blöcke exponieren `EnergyStorage.SIDED` → automatisch **FE-kompatibel mit
-Create** (via FE-Brücken) und anderen Tech-Mods.
+### Automation & Redstone
 
-### Mechaniken
-- **Energie:** Reaktoren sind FE-Generatoren (Team Reborn Energy-API); Kabel & Akku
-  transportieren/speichern FE; kompatibel mit allen FE-Maschinen.
-- **Hitze & Kühlung:** Reaktor baut Hitze auf → Kühlrohre senken sie; Drosselung bei
-  75 %, Explosion bei 100 % maxHitze (tier-abhängige Stärke).
-- **GUI:** Brennstoff-Slot, Energiebalken, Hitzebalken (orange/rot) mit Tooltips;
-  serverseitige Synchronisation per `PropertyDelegate` (6 Indizes).
-- **Loot-Tables:** Erze droppen Roh-Uran (Silk Touch → Block, Fortune erhöht Drop);
-  alle übrigen Blöcke droppen sich selbst.
-- **Mining-Tags:** Alle AKW-Blöcke sind `mineable/pickaxe`; Erze zusätzlich `needs_iron_tool`.
+- **Hopper-Support:** Hopper von oben/seitig → Brennstoff einlegen; Hopper von unten → Abfall (Verbrauchter Brennstab) entnehmen. Gilt auch für den Abfallbehälter.
+- **Komparator-Output:** Reaktoren und Abfallbehälter geben Füllstand 0–15 aus — verwendbar für automatische Lastverteilung.
+- **Redstone-Pause:** Redstone-Signal am Reaktor-Block stoppt das Zünden neuer Brennstäbe. Laufender Stab brennt noch ab, dann Standby.
+
+**Beispiel-Automation:** Komparator am Reaktor A → Signal wenn voll → Redstone → Reaktor B mit Redstone-Signal belegen → Reaktor B geht in Standby.
+
+### Radioaktivität
+
+Laufende Reaktoren bestrahlen Spieler im 8-Block-Radius (Stufe I/II je nach Hitze).
+Ein **Blei-Block** auf dem direkten Pfad zwischen Reaktor und Spieler schützt vollständig.
+Der Abfallbehälter strahlt bei Füllstand > 50 % (Stufe 0, 5-Block-Radius).
+
+Visuelle Hinweise: `ELECTRIC_SPARK`-Partikel über aktiven Reaktoren; `GLOW_SQUID_INK`-Partikel bei vollem Abfallbehälter.
+
+### Advancements
+
+9-stufige Kette vom ersten Uranabbau bis zum Multiblock-Meister:
+
+```
+Uranabbau beginnt → Erstes Metall → Anreicherung → Brennstab bereit
+  → Erster Reaktor → Energie online
+       → Elite-Klasse (Challenge)
+       → Kernfusion (Challenge)
+       → Multiblock-Meister (Challenge)
+```
 
 ---
 
-## 📁 Projektstruktur
+## Installation
 
-```
-akw mod/
-├─ build.gradle                # Fabric Loom Build-Konfiguration
-├─ gradle.properties           # Versionen (MC, Yarn, Fabric, Energy)
-├─ settings.gradle
-├─ LICENSE                     # MIT
-├─ README.md / CHANGELOG.md / ROADMAP.md
-├─ briefkasten/                # Austausch-Ordner (nicht Teil des Builds)
-└─ src/main/
-   ├─ generated/               # Datagen-Ausgabe (committed; NICHT von Hand bearbeiten)
-   ├─ java/ch/danielt/akw/
-   │  ├─ AkwMod.java           # ModInitializer (Registry + Energie-Lookup)
-   │  ├─ AkwClient.java        # ClientModInitializer (Screen-Registrierung)
-   │  ├─ energy/
-   │  │  └─ EnergyNet.java     # Gemeinsame FE-Push-Logik (Reaktor, Kabel, Akku)
-   │  ├─ block/
-   │  │  ├─ NuclearReactorBlock.java         # FACING/LIT, GUI, Ticker (pro Tier parametr.)
-   │  │  ├─ EnergyCableBlock.java            # FE-Kabel (Puffer + Ticker)
-   │  │  ├─ EnergyBatteryBlock.java          # FE-Akku (Komparator-Ausgang)
-   │  │  └─ entity/
-   │  │     ├─ NuclearReactorBlockEntity.java # Energie, Hitze, Brennstab-Logik
-   │  │     ├─ EnergyCableBlockEntity.java    # FE-Puffer + Push
-   │  │     ├─ EnergyBatteryBlockEntity.java  # FE-Speicher + Komparator
-   │  │     └─ ImplementedInventory.java      # Inventory-Helfer
-   │  ├─ datagen/
-   │  │  ├─ AkwDataGenerator.java     # Datagen-Einstiegspunkt
-   │  │  ├─ ModModelProvider.java     # Blockstates + Modelle
-   │  │  ├─ ModRecipeProvider.java    # Rezepte
-   │  │  ├─ ModLootTableProvider.java # Loot-Tables
-   │  │  ├─ ModTagsProvider.java      # Block-Tags
-   │  │  └─ ModLanguageProvider.java  # de_de + en_us
-   │  ├─ screen/
-   │  │  ├─ NuclearReactorScreenHandler.java  # Slots, PropertyDelegate (6 Indizes)
-   │  │  └─ NuclearReactorScreen.java         # GUI (Energie- + Hitzebalken)
-   │  └─ registry/
-   │     ├─ ModItems.java         # Items
-   │     ├─ ModBlocks.java        # Reaktoren (REACTORS), Bausteine (DECOR), Infrastruktur
-   │     ├─ ModBlockEntities.java # BE-Typen (Reaktor, Kabel, Akku)
-   │     ├─ ModScreenHandlers.java# ExtendedScreenHandlerType (BlockPos-Sync)
-   │     └─ ModItemGroups.java    # Kreativ-Tab + Vanilla-Tab-Einträge
-   └─ resources/
-      ├─ fabric.mod.json       # Mod-Metadaten (inkl. icon)
-      ├─ assets/akw/
-      │  ├─ icon.png           # Mod-Logo (512×512)
-      │  └─ textures/          # Manuelle Texturen (block/, item/, gui/)
-      └─ data/akw/
-         └─ worldgen/          # Uranerz-Weltgenerierung
-```
-
-> **Daten regenerieren:** Rezepte, Loot-Tables, Modelle, Tags und Lang-Dateien werden per
-> Fabric Datagen (Java) erzeugt. Ausgabe geht nach `src/main/generated/` (committed).
-> Nach Änderungen an Datagen-Klassen: `./gradlew runDatagen`.
+1. Minecraft 1.21.10 + Fabric Loader ≥ 0.19.3 installieren
+2. In den `mods/`-Ordner legen:
+   - [Fabric API 0.138.4+1.21.10](https://modrinth.com/mod/fabric-api)
+   - [Team Reborn Energy 4.1.0](https://github.com/TechReborn/Energy)
+   - `akw-0.9.5.jar`
+3. Minecraft starten
 
 ---
 
-## 🔨 Build
+## Build (Entwickler)
 
-Voraussetzung: **JDK 21**. Der Pfad ist in `gradle.properties` fest hinterlegt
-(`org.gradle.java.home`) — ggf. an dein System anpassen.
+Voraussetzung: **JDK 21**. Der Pfad ist in `gradle.properties` hinterlegt.
 
 ```bash
-# Mod kompilieren und JAR bauen (Ausgabe: build/libs/akw-0.4.0.jar)
-./gradlew build
+# Mod bauen (JAR unter build/libs/)
+JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home ./gradlew build
 
-# Minecraft-Client mit Mod zum Testen starten
-./gradlew runClient
+# Assets/Daten regenerieren
+JAVA_HOME=... ./gradlew runDatagen
 
-# Dedizierten Server starten
-./gradlew runServer
+# Minecraft-Client zum Testen starten
+JAVA_HOME=... ./gradlew runClient
 ```
 
 ---
 
-## 🧱 Code-Konventionen
+## Projektstruktur
 
-- **Registrierungs-Pattern:** Statische Felder in den `Mod*`-Klassen werden über
-  `register(...)`-Helfer angemeldet. `registerAll()` erzwingt das Klassen-Laden
-  (und damit die Feld-Initialisierung) aus `AkwMod.onInitialize()`.
-- **Mod-ID:** `akw` (Konstante `AkwMod.MOD_ID`).
-- **Identifier:** immer via `Identifier.of(AkwMod.MOD_ID, name)`.
-- **Sprache im Code/Logs:** Deutsch.
+```
+src/main/java/ch/danielt/akw/
+├─ AkwMod.java              — ModInitializer (Registry + Energie-Lookup)
+├─ AkwClient.java           — ClientModInitializer (Screen-Registrierung)
+├─ block/                   — Block-Klassen + BlockEntityProvider
+├─ block/entity/            — BlockEntity-Klassen (Reaktor, Kabel, Akku, Abfall)
+├─ datagen/                 — Datagen-Provider (Rezept, Loot, Modell, Tag, Lang, Advancement)
+├─ screen/                  — ScreenHandler + Screen (GUI)
+├─ registry/                — ModItems, ModBlocks, ModBlockEntities, ModSounds, …
+└─ worldgen/                — Uranerz-Weltgenerierung
 
----
-
-## ⚠️ Bekannte Lücken / To-do
-
-- **Texturen** für `energy_cable` und `energy_battery` sind vorläufige Platzhalter
-  (einfarbige Blöcke) — echte Pixel-Art folgt in v1.0 Politur.
-- **Akku-GUI** fehlt noch; Füllstand ist über den Komparator-Ausgang (0–15) ablesbar.
-- **Hitzebalken-Position** (`x+137`) ist ein Schätzwert — In-Game-Verifizierung steht aus.
-- **Steuerstab-Wirkung und Redstone-SCRAM** folgen in v0.5 (Reaktorsteuerung).
-- **Dampf & Turbine** (v0.5), **Strahlung** (v0.7), **Meltdown** (v0.8) sind geplant
-  (siehe [ROADMAP.md](ROADMAP.md)).
-
-Vollständiger Plan: siehe [ROADMAP.md](ROADMAP.md).
+src/main/generated/         — Datagen-Ausgabe (committed; nicht von Hand bearbeiten)
+src/main/resources/         — fabric.mod.json, Texturen, sounds.json, Weltgen-JSON
+```
 
 ---
 
-## 📦 Abhängigkeiten
+## Bekannte Lücken
 
-- [Fabric API](https://modrinth.com/mod/fabric-api)
-- [Team Reborn Energy](https://maven.fabricmc.net/) — wird per *Jar-in-Jar* (`include`) mitgebündelt
+- **Sounds:** Infrastruktur vorhanden, `.ogg`-Dateien fehlen noch → Sounds stumm.
+- **Texturen:** Verbrauchter Brennstab und einige Blöcke sind Platzhalter.
+- **Akku-GUI:** kein GUI; Füllstand per Komparator-Ausgang ablesbar.
+
+Vollständiger Plan: [ROADMAP.md](ROADMAP.md) · [CHANGELOG.md](CHANGELOG.md)
 
 ---
 
-## 📜 Lizenz
+## Lizenz
 
-MIT — siehe [LICENSE](LICENSE).
+MIT — siehe [LICENSE](LICENSE).  
+Bugs & Feedback: [GitHub Issues](https://github.com/Brennerofhell/akw-mod/issues)

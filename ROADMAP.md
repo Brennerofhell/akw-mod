@@ -2,7 +2,7 @@
 
 Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 
-## Status: In Entwicklung (v0.9.5 — Sounds, Partikel, Advancement-Kette)
+## Status: v1.0.0 — Erster stabiler Release
 
 ---
 
