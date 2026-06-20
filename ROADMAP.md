@@ -2,7 +2,7 @@
 
 Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 
-## Status: In Entwicklung (v0.8.0 — Redstone-Integration, Komparator-Output, Abfallbehälter)
+## Status: In Entwicklung (v0.9.5 — Sounds, Partikel, Advancement-Kette)
 
 ---
 
@@ -80,9 +80,9 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 
 ### Content
 - [ ] Vollständige Texturen (alle Blöcke & Items)
-- [ ] Sounds & Effekte
-- [ ] Partikel für Radioaktivität
-- [ ] Advancement/Achievement System
+- [x] Sounds & Effekte (v0.9.5 — Infrastruktur + Partikel; .ogg-Dateien ausstehend)
+- [x] Partikel für Radioaktivität (v0.9.5 — vanilla ELECTRIC_SPARK)
+- [x] Advancement/Achievement System (v0.9.5 — 9-stufige Kette)
 
 ### Dokumentation
 - [ ] In-Game-Wiki / Manual

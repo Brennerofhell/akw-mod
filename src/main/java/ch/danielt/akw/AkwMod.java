@@ -6,6 +6,7 @@ import ch.danielt.akw.registry.ModEffects;
 import ch.danielt.akw.registry.ModItemGroups;
 import ch.danielt.akw.registry.ModItems;
 import ch.danielt.akw.registry.ModScreenHandlers;
+import ch.danielt.akw.registry.ModSounds;
 import ch.danielt.akw.worldgen.ModWorldGen;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
@@ -33,6 +34,7 @@ public class AkwMod implements ModInitializer {
         ModItems.registerAll();
         ModBlocks.registerAll();
         ModEffects.registerAll();
+        ModSounds.registerAll();
         ModBlockEntities.registerAll();
         ModScreenHandlers.registerAll();
         ModItemGroups.registerAll();

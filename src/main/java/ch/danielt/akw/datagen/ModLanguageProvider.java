@@ -57,6 +57,31 @@ public class ModLanguageProvider {
             builder.add("akw.multiblock.disassembled","Reaktor deaktiviert.");
             builder.add("akw.multiblock.invalid",     "Ungültige Struktur — prüfe Gehäuse-Blöcke.");
             builder.add("akw.multiblock.need_wrench", "Reaktor-Schraubenschlüssel benötigt.");
+
+            // Sound-Untertitel
+            builder.add("subtitles.akw.reactor_ambient",  "Reaktor läuft");
+            builder.add("subtitles.akw.reactor_alert",    "Reaktor-Alarm");
+            builder.add("subtitles.akw.reactor_meltdown", "Kernschmelze!");
+
+            // Advancements
+            builder.add("advancements.akw.mine_uranium.title",   "Uranabbau beginnt");
+            builder.add("advancements.akw.mine_uranium.desc",    "Baue dein erstes Atomkraftwerk");
+            builder.add("advancements.akw.smelt_uranium.title",  "Erstes Metall");
+            builder.add("advancements.akw.smelt_uranium.desc",   "Schmelze Roh-Uran zu einem Uran-Barren");
+            builder.add("advancements.akw.enrich.title",         "Anreicherung");
+            builder.add("advancements.akw.enrich.desc",          "Stelle angereichertes Uran her");
+            builder.add("advancements.akw.fuel_rod.title",       "Brennstab bereit");
+            builder.add("advancements.akw.fuel_rod.desc",        "Fertige einen Brennstab an");
+            builder.add("advancements.akw.first_reactor.title",  "Erster Reaktor");
+            builder.add("advancements.akw.first_reactor.desc",   "Baue deinen ersten Kernreaktor");
+            builder.add("advancements.akw.energy_online.title",  "Energie online");
+            builder.add("advancements.akw.energy_online.desc",   "Verbinde den Reaktor mit dem Stromnetz");
+            builder.add("advancements.akw.elite_reactor.title",  "Elite-Klasse");
+            builder.add("advancements.akw.elite_reactor.desc",   "Baue einen Elite-Nuklearreaktor");
+            builder.add("advancements.akw.fusion_reactor.title", "Kernfusion");
+            builder.add("advancements.akw.fusion_reactor.desc",  "Zähme die Kraft der Sonne");
+            builder.add("advancements.akw.multiblock.title",     "Multiblock-Meister");
+            builder.add("advancements.akw.multiblock.desc",      "Aktiviere einen Multiblock-Reaktor");
         }
     }
 
@@ -107,6 +132,31 @@ public class ModLanguageProvider {
             builder.add("akw.multiblock.disassembled","Reactor deactivated.");
             builder.add("akw.multiblock.invalid",     "Invalid structure — check casing blocks.");
             builder.add("akw.multiblock.need_wrench", "Reactor Wrench required.");
+
+            // Sound subtitles
+            builder.add("subtitles.akw.reactor_ambient",  "Reactor running");
+            builder.add("subtitles.akw.reactor_alert",    "Reactor alert");
+            builder.add("subtitles.akw.reactor_meltdown", "Meltdown!");
+
+            // Advancements
+            builder.add("advancements.akw.mine_uranium.title",   "Nuclear Beginnings");
+            builder.add("advancements.akw.mine_uranium.desc",    "Mine uranium and start your nuclear journey");
+            builder.add("advancements.akw.smelt_uranium.title",  "First Metal");
+            builder.add("advancements.akw.smelt_uranium.desc",   "Smelt raw uranium into an ingot");
+            builder.add("advancements.akw.enrich.title",         "Enrichment");
+            builder.add("advancements.akw.enrich.desc",          "Produce enriched uranium");
+            builder.add("advancements.akw.fuel_rod.title",       "Fuel Rod Ready");
+            builder.add("advancements.akw.fuel_rod.desc",        "Craft a fuel rod");
+            builder.add("advancements.akw.first_reactor.title",  "First Reactor");
+            builder.add("advancements.akw.first_reactor.desc",   "Build your first nuclear reactor");
+            builder.add("advancements.akw.energy_online.title",  "Power Online");
+            builder.add("advancements.akw.energy_online.desc",   "Connect the reactor to the power grid");
+            builder.add("advancements.akw.elite_reactor.title",  "Elite Class");
+            builder.add("advancements.akw.elite_reactor.desc",   "Build an elite nuclear reactor");
+            builder.add("advancements.akw.fusion_reactor.title", "Nuclear Fusion");
+            builder.add("advancements.akw.fusion_reactor.desc",  "Harness the power of the sun");
+            builder.add("advancements.akw.multiblock.title",     "Multiblock Master");
+            builder.add("advancements.akw.multiblock.desc",      "Activate a multiblock reactor");
         }
     }
 }

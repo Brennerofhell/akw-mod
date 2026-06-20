@@ -19,6 +19,7 @@ import net.minecraft.inventory.SidedInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.PropertyDelegate;
 import net.minecraft.screen.ScreenHandler;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.storage.ReadView;
@@ -226,6 +227,13 @@ public class NuclearReactorBlockEntity extends BlockEntity
                             }
                         }
                     });
+        }
+
+        // Strahlungspartikel sichtbar machen wenn Reaktor aktiv
+        if (wasBurning && world instanceof ServerWorld sw && sw.getTime() % 10 == 0) {
+            sw.spawnParticles(ParticleTypes.ELECTRIC_SPARK,
+                    pos.getX() + 0.5, pos.getY() + 1.1, pos.getZ() + 0.5,
+                    3, 0.2, 0.2, 0.2, 0.01);
         }
 
         boolean nowBurning = be.burnTime > 0;

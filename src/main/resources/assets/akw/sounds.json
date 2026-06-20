@@ -1,0 +1,5 @@
+{
+  "reactor_ambient":  { "sounds": [], "subtitle": "subtitles.akw.reactor_ambient" },
+  "reactor_alert":    { "sounds": [], "subtitle": "subtitles.akw.reactor_alert" },
+  "reactor_meltdown": { "sounds": [], "subtitle": "subtitles.akw.reactor_meltdown" }
+}

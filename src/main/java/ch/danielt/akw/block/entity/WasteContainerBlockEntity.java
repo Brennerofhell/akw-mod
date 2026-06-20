@@ -5,6 +5,7 @@ import ch.danielt.akw.registry.ModEffects;
 import ch.danielt.akw.registry.ModItems;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -70,8 +71,13 @@ public class WasteContainerBlockEntity extends BlockEntity
             world.updateComparators(pos, state.getBlock());
         }
 
-        // Passive Strahlung bei Füllstand > 50 % (level >= 8)
+        // Partikel und Strahlung bei Füllstand > 50 % (level >= 8)
         if (level >= 8 && world instanceof ServerWorld serverWorld) {
+            if (serverWorld.getTime() % 20 == 0) {
+                serverWorld.spawnParticles(ParticleTypes.GLOW_SQUID_INK,
+                        pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5,
+                        2, 0.3, 0.2, 0.3, 0.0);
+            }
             Vec3d center = Vec3d.ofCenter(pos);
             Box box = new Box(pos).expand(RADIATION_RADIUS);
             serverWorld.getEntitiesByClass(PlayerEntity.class, box,

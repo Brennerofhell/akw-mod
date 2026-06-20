@@ -1,0 +1,34 @@
+{
+  "parent": "akw:story/energy_online",
+  "criteria": {
+    "has_controller": {
+      "conditions": {
+        "items": [
+          {
+            "items": "akw:multiblock_reactor_controller"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.akw.multiblock.desc"
+    },
+    "frame": "challenge",
+    "icon": {
+      "count": 1,
+      "id": "akw:multiblock_reactor_controller"
+    },
+    "title": {
+      "translate": "advancements.akw.multiblock.title"
+    }
+  },
+  "requirements": [
+    [
+      "has_controller"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

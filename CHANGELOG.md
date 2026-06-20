@@ -5,6 +5,24 @@ Alle nennenswerten Änderungen an der AKW-Mod werden hier dokumentiert.
 Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.9.5] — 2026-06-20
+
+### Hinzugefügt
+- **Sound-Registrierung** (`ModSounds`): drei Sound-Events registriert —
+  `reactor_ambient`, `reactor_alert`, `reactor_meltdown`. Infrastruktur ist bereit;
+  Sounds werden stumm gespielt bis `.ogg`-Dateien in `assets/akw/sounds/` abgelegt werden.
+  `sounds.json` mit Subtitle-Verweisen angelegt.
+- **Strahlungspartikel** (vanilla `ELECTRIC_SPARK`): Reaktoren (Standard + Multiblock)
+  spawnen alle 10 Ticks grüne Funken-Partikel über dem Block, solange ein Brennstab brennt.
+- **Abfallbehälter-Partikel** (vanilla `GLOW_SQUID_INK`): bei Füllstand > 50 %
+  alle 20 Ticks Warnsignalpartikel.
+- **Advancement-Kette** (9 Stufen via `ModAdvancementProvider`, Datagen):
+  Uranabbau → Schmelzen → Anreicherung → Brennstab → Erster Reaktor → Energie online
+  → (Elite-Reaktor / Fusionsreaktor / Multiblock-Meister als Challenges).
+- Sound-Untertitel + Advancement-Übersetzungen in DE und EN.
+
+---
+
 ## [0.8.0] — 2026-06-20
 
 ### Hinzugefügt
