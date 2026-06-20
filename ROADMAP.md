@@ -2,7 +2,7 @@
 
 Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 
-## Status: In Entwicklung (v0.3.7 — Energie-Infrastruktur, Kühlsystem, Kreativ-Tab-Fix)
+## Status: In Entwicklung (v0.9.0 — Sounds & Partikel)
 
 ---
 
@@ -79,8 +79,8 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 
 ### Content
 - [ ] Vollständige Texturen (alle Blöcke & Items)
-- [ ] Sounds & Effekte
-- [ ] Partikel für Radioaktivität
+- [x] Sounds & Effekte (v0.9.0 — Sound-Registrierung + Subtitle-Keys)
+- [x] Partikel für Radioaktivität (v0.9.0 — ELECTRIC_SPARK beim aktiven Reaktor)
 - [ ] Advancement/Achievement System
 
 ### Dokumentation

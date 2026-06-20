@@ -5,6 +5,22 @@ Alle nennenswerten Änderungen an der AKW-Mod werden hier dokumentiert.
 Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.9.0] — 2026-06-20
+
+### Hinzugefügt
+- **Sound-Registrierung (ModSounds):** Drei neue Sound-Events registriert:
+  `reactor_ambient`, `reactor_alert` und `reactor_meltdown` (stille Registrierung
+  mit leeren sounds-Arrays — kein Crash, bereit für .ogg-Dateien).
+- **sounds.json:** Minecraft-Sounddefinition mit Untertitel-Keys für alle drei
+  Reaktor-Sounds (`subtitles.akw.reactor_ambient`, `.reactor_alert`, `.reactor_meltdown`).
+- **Partikel im NuclearReactorBlockEntity:** Wenn ein Reaktor aktiv brennt
+  (`burnTime > 0`), werden alle 10 Ticks `ELECTRIC_SPARK`-Partikel über dem Block
+  gespawnt (serverseitig via `ServerWorld.spawnParticles`).
+- **Lokalisierung:** Untertitel-Keys für alle drei Sounds auf Deutsch und Englisch
+  in `ModLanguageProvider` ergänzt.
+
+---
+
 ## [0.4.0] — 2026-06-19
 
 ### Geändert

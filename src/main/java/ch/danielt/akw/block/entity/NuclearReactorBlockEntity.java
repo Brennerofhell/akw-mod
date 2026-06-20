@@ -14,9 +14,11 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventories;
 import net.minecraft.item.ItemStack;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.screen.PropertyDelegate;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.storage.ReadView;
 import net.minecraft.storage.WriteView;
 import net.minecraft.text.Text;
@@ -173,6 +175,18 @@ public class NuclearReactorBlockEntity extends BlockEntity
         if (be.heat >= be.maxHeat) {
             be.explode(world, pos);
             return;
+        }
+
+        // Reaktor-Partikel sichtbar machen solange in diesem Tick Energie erzeugt wurde.
+        // wasBurning verwenden (vor dem Dekrement erfasst), damit der letzte Tick eines
+        // Brennstabs nicht uebersprungen wird. isClient()-Guard oben garantiert ServerWorld.
+        if (wasBurning) {
+            ServerWorld sw = (ServerWorld) world;
+            if (sw.getTime() % 10 == 0) {
+                sw.spawnParticles(ParticleTypes.ELECTRIC_SPARK,
+                        pos.getX() + 0.5, pos.getY() + 1.1, pos.getZ() + 0.5,
+                        3, 0.2, 0.2, 0.2, 0.01);
+            }
         }
 
         // Energie an angrenzende Verbraucher/Speicher abgeben

@@ -5,6 +5,7 @@ import ch.danielt.akw.registry.ModBlocks;
 import ch.danielt.akw.registry.ModItemGroups;
 import ch.danielt.akw.registry.ModItems;
 import ch.danielt.akw.registry.ModScreenHandlers;
+import ch.danielt.akw.registry.ModSounds;
 import ch.danielt.akw.worldgen.ModWorldGen;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
@@ -35,6 +36,7 @@ public class AkwMod implements ModInitializer {
         ModScreenHandlers.registerAll();
         ModItemGroups.registerAll();
         ModWorldGen.registerAll();
+        ModSounds.registerAll();
 
         // FE-Speicher ueber alle Seiten anbieten (Team Reborn Energy).
         EnergyStorage.SIDED.registerForBlockEntity(

@@ -45,6 +45,10 @@ public class ModLanguageProvider {
 
             builder.add(ModBlocks.ENERGY_CABLE,           "Energie-Kabel");
             builder.add(ModBlocks.ENERGY_BATTERY,         "Akku-Block");
+
+            builder.add("subtitles.akw.reactor_ambient",  "Reaktor läuft");
+            builder.add("subtitles.akw.reactor_alert",    "Reaktor-Alarm");
+            builder.add("subtitles.akw.reactor_meltdown", "Kernschmelze!");
         }
     }
 
@@ -83,6 +87,10 @@ public class ModLanguageProvider {
 
             builder.add(ModBlocks.ENERGY_CABLE,           "Energy Cable");
             builder.add(ModBlocks.ENERGY_BATTERY,         "Battery Block");
+
+            builder.add("subtitles.akw.reactor_ambient",  "Reactor running");
+            builder.add("subtitles.akw.reactor_alert",    "Reactor alert");
+            builder.add("subtitles.akw.reactor_meltdown", "Meltdown!");
         }
     }
 }
