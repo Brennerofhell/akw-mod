@@ -2,7 +2,7 @@
 
 Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 
-## Status: In Entwicklung (v0.7.0 — Hopper-Support, Abfall-Slot, Strahlungsabschirmung)
+## Status: In Entwicklung (v0.8.0 — Redstone-Integration, Komparator-Output, Abfallbehälter)
 
 ---
 
@@ -69,8 +69,8 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 
 ### Automation
 - [x] Hopper-Kompatibilität (v0.7.0): oben → Brennstoff, unten → Abfall
+- [x] Redstone-Integration (v0.8.0): Komparator-Output + POWERED-Pause
 - [ ] Pipe-Netzwerk für Ressourcentransport
-- [ ] Redstone-Integration
 
 ### Zielversion: v0.4.0
 

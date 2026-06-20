@@ -88,6 +88,7 @@ public class NuclearReactorBlockEntity extends BlockEntity
     private int burnTime;
     private int burnTimeTotal;
     private int heat;
+    private int lastComparator = -1;
 
     private final PropertyDelegate propertyDelegate = new PropertyDelegate() {
         @Override
@@ -163,8 +164,9 @@ public class NuclearReactorBlockEntity extends BlockEntity
             dirty = true;
         }
 
-        // Neuen Brennstab zuenden (nur wenn Abfall-Slot Platz hat)
-        if (be.burnTime <= 0 && be.energyStorage.amount < be.energyStorage.capacity) {
+        // Neuen Brennstab zuenden (nur wenn Abfall-Slot Platz hat und kein Redstone-Signal)
+        if (be.burnTime <= 0 && be.energyStorage.amount < be.energyStorage.capacity
+                && !state.get(NuclearReactorBlock.POWERED)) {
             ItemStack fuel  = be.inventory.get(FUEL_SLOT);
             ItemStack waste = be.inventory.get(WASTE_SLOT);
             boolean wasteRoom = waste.isEmpty()
@@ -231,9 +233,23 @@ public class NuclearReactorBlockEntity extends BlockEntity
             world.setBlockState(pos, state.with(NuclearReactorBlock.LIT, nowBurning), Block.NOTIFY_ALL);
             dirty = true;
         }
+
+        // Komparator-Update (Energie-Füllstand 0-15)
+        int comparatorLevel = be.getComparatorLevel();
+        if (comparatorLevel != be.lastComparator) {
+            be.lastComparator = comparatorLevel;
+            world.updateComparators(pos, state.getBlock());
+        }
+
         if (dirty) {
             be.markDirty();
         }
+    }
+
+    /** Energie-Füllstand als Redstone-Stärke 0–15. */
+    public int getComparatorLevel() {
+        if (energyStorage.amount <= 0) return 0;
+        return (int) Math.max(1, energyStorage.amount * 15L / energyStorage.capacity);
     }
 
     /** Zaehlt direkt angrenzende Kuehlrohre (max. 6). */
@@ -255,10 +271,10 @@ public class NuclearReactorBlockEntity extends BlockEntity
     }
 
     /**
-     * Prueft ob ein Blei-Block auf dem direkten Pfad zwischen Reaktor und Spieler liegt.
+     * Prueft ob ein Blei-Block auf dem direkten Pfad zwischen Quelle und Spieler liegt.
      * Schrittweite 1 Block — reicht fuer den max. 8-Block-Radius.
      */
-    private static boolean hasLeadShielding(World world, BlockPos reactorPos, BlockPos playerPos) {
+    static boolean hasLeadShielding(World world, BlockPos reactorPos, BlockPos playerPos) {
         double dx = playerPos.getX() - reactorPos.getX();
         double dy = playerPos.getY() - reactorPos.getY();
         double dz = playerPos.getZ() - reactorPos.getZ();
@@ -323,6 +339,7 @@ public class NuclearReactorBlockEntity extends BlockEntity
         burnTime = view.getInt("BurnTime", 0);
         burnTimeTotal = view.getInt("BurnTimeTotal", 0);
         heat = view.getInt("Heat", 0);
+        lastComparator = getComparatorLevel();
     }
 
     // --- ExtendedScreenHandlerFactory ---

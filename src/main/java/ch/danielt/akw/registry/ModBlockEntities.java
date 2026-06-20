@@ -5,6 +5,7 @@ import ch.danielt.akw.block.entity.EnergyBatteryBlockEntity;
 import ch.danielt.akw.block.entity.EnergyCableBlockEntity;
 import ch.danielt.akw.block.entity.MultiblockReactorControllerBlockEntity;
 import ch.danielt.akw.block.entity.NuclearReactorBlockEntity;
+import ch.danielt.akw.block.entity.WasteContainerBlockEntity;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.block.Block;
 import net.minecraft.block.entity.BlockEntityType;
@@ -19,6 +20,7 @@ public class ModBlockEntities {
     public static BlockEntityType<MultiblockReactorControllerBlockEntity> MULTIBLOCK_REACTOR_CONTROLLER;
     public static BlockEntityType<EnergyCableBlockEntity> ENERGY_CABLE;
     public static BlockEntityType<EnergyBatteryBlockEntity> ENERGY_BATTERY;
+    public static BlockEntityType<WasteContainerBlockEntity> WASTE_CONTAINER;
 
     public static void registerAll() {
         NUCLEAR_REACTOR = Registry.register(
@@ -46,6 +48,12 @@ public class ModBlockEntities {
                 Identifier.of(AkwMod.MOD_ID, "energy_battery"),
                 FabricBlockEntityTypeBuilder.create(
                         EnergyBatteryBlockEntity::new, ModBlocks.ENERGY_BATTERY).build());
+
+        WASTE_CONTAINER = Registry.register(
+                Registries.BLOCK_ENTITY_TYPE,
+                Identifier.of(AkwMod.MOD_ID, "waste_container"),
+                FabricBlockEntityTypeBuilder.create(
+                        WasteContainerBlockEntity::new, ModBlocks.WASTE_CONTAINER).build());
 
         AkwMod.LOGGER.info("[Atomkraftwerk] BlockEntities registriert.");
     }

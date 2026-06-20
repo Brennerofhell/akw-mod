@@ -6,6 +6,7 @@ import ch.danielt.akw.block.EnergyCableBlock;
 import ch.danielt.akw.block.MultiblockReactorControllerBlock;
 import ch.danielt.akw.block.NuclearReactorBlock;
 import ch.danielt.akw.block.ReactorCasingBlock;
+import ch.danielt.akw.block.WasteContainerBlock;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -55,7 +56,7 @@ public class ModBlocks {
     public static final Block COOLING_PIPE = registerDecor("cooling_pipe",
             AbstractBlock.Settings.copy(Blocks.COPPER_BLOCK));
     public static final Block LEAD_BLOCK = registerDecor("lead_block", metal());
-    public static final Block WASTE_CONTAINER = registerDecor("waste_container", metal());
+    public static final Block WASTE_CONTAINER = registerDecor("waste_container", WasteContainerBlock::new, metal());
     public static final Block ENRICHED_URANIUM_BLOCK = registerDecor("enriched_uranium_block",
             metal().luminance(s -> 5));
 
@@ -88,6 +89,13 @@ public class ModBlocks {
 
     private static Block registerDecor(String name, AbstractBlock.Settings settings) {
         Block registered = register(name, Block::new, settings, true);
+        DECOR.add(registered);
+        return registered;
+    }
+
+    private static Block registerDecor(String name, Function<AbstractBlock.Settings, Block> factory,
+                                        AbstractBlock.Settings settings) {
+        Block registered = register(name, factory, settings, true);
         DECOR.add(registered);
         return registered;
     }

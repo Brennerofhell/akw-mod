@@ -5,6 +5,37 @@ Alle nennenswerten Änderungen an der AKW-Mod werden hier dokumentiert.
 Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.8.0] — 2026-06-20
+
+### Hinzugefügt
+- **Komparator-Output** für alle Reaktor-Typen (Standard + Multiblock): Komparator
+  liest den Energie-Füllstand als Signal 0–15 aus — 0 = leer, 15 = voll.
+- **Redstone pausiert Reaktor** (neues Property `POWERED`): Redstone-Signal am
+  Reaktor-Block stoppt das Zünden neuer Brennstäbe. Der laufende Stab brennt noch
+  ab, danach geht der Reaktor sanft in Standby.
+  Praxisnutzen: Komparator-Signal „voll" → Leitung → benachbarter Reaktor pausiert
+  → automatische Lastverteilung.
+- **Abfallbehälter** (`waste_container`) ist jetzt ein vollständiger Speicher-Block:
+  - 9 Slots für Verbrauchte Brennstäbe (GUI öffnet sich per Rechtsklick)
+  - Komparator-Output: Füllstand 0–15
+  - Hopper von oben/seitig → Einlagern (nur Verbrauchte Brennstäbe)
+  - Hopper von unten → Entnehmen
+  - Passive Strahlung (Level 0) bei Füllstand > 50 % in 5-Block-Radius
+    (Blei-Block auf dem Pfad schützt vollständig)
+- Pfadbasierter Strahlungsschutz auch im **Multiblock-Reaktor** nachgezogen
+  (war bisher nur im Standard-Reaktor implementiert).
+
+### Technisch
+- `NuclearReactorBlock` + `MultiblockReactorControllerBlock`: `hasComparatorOutput`,
+  `getComparatorOutput`, `neighborUpdate` (POWERED-Property).
+- `WasteContainerBlock` + `WasteContainerBlockEntity` neu (SidedInventory,
+  NamedScreenHandlerFactory → GenericContainerScreenHandler).
+- Blockstate-JSONs aller 6 Reaktortypen um `powered=false/true` erweitert.
+- `NuclearReactorBlockEntity.hasLeadShielding` ist jetzt package-private
+  (von WasteContainerBlockEntity wiederverwendet).
+
+---
+
 ## [0.7.0] — 2026-06-20
 
 ### Hinzugefügt

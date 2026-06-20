@@ -65,6 +65,7 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
     private int heat;
     private int reactorSize = 0;   // 0 = nicht assembliert
     private int revalidateTimer = 0;
+    private int lastComparator = -1;
 
     private final PropertyDelegate propertyDelegate = new PropertyDelegate() {
         @Override
@@ -206,8 +207,9 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
             dirty = true;
         }
 
-        // Neuen Brennstab zünden
-        if (be.burnTime <= 0 && be.energyStorage.amount < be.effCapacity()) {
+        // Neuen Brennstab zünden (kein Zünden bei Redstone-Signal)
+        if (be.burnTime <= 0 && be.energyStorage.amount < be.effCapacity()
+                && !state.get(MultiblockReactorControllerBlock.POWERED)) {
             ItemStack fuel = be.inventory.get(FUEL_SLOT);
             if (fuel.isOf(ModItems.FUEL_ROD)) {
                 fuel.decrement(1);
@@ -237,7 +239,7 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
                     (long) be.effGenPerTick() * 2);
         }
 
-        // Strahlung
+        // Strahlung (pfadbasierter Blei-Block-Schutz)
         if (be.burnTime > 0 && world instanceof ServerWorld serverWorld) {
             int level = be.heat >= be.effMaxHeat() / 2 ? 1 : 0;
             Vec3d center = Vec3d.ofCenter(pos);
@@ -245,16 +247,14 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
             serverWorld.getEntitiesByClass(PlayerEntity.class, box,
                     p -> p.squaredDistanceTo(center) <= (double) RADIATION_RADIUS * RADIATION_RADIUS)
                     .forEach(player -> {
-                        for (Direction dir : Direction.values()) {
-                            if (world.getBlockState(player.getBlockPos().offset(dir))
-                                     .isOf(ModBlocks.LEAD_BLOCK)) return;
-                        }
-                        player.addStatusEffect(new StatusEffectInstance(
-                                ModEffects.RADIATION, 60, level, false, true));
-                        if (serverWorld.getTime() % 20 == 0) {
-                            player.damage(serverWorld,
-                                    serverWorld.getDamageSources().magic(),
-                                    level == 0 ? 0.5f : 1.5f);
+                        if (!NuclearReactorBlockEntity.hasLeadShielding(world, pos, player.getBlockPos())) {
+                            player.addStatusEffect(new StatusEffectInstance(
+                                    ModEffects.RADIATION, 60, level, false, true));
+                            if (serverWorld.getTime() % 20 == 0) {
+                                player.damage(serverWorld,
+                                        serverWorld.getDamageSources().magic(),
+                                        level == 0 ? 0.5f : 1.5f);
+                            }
                         }
                     });
         }
@@ -266,7 +266,22 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
                     Block.NOTIFY_ALL);
             dirty = true;
         }
+
+        // Komparator-Update (Energie-Füllstand 0-15)
+        int comparatorLevel = be.getComparatorLevel();
+        if (comparatorLevel != be.lastComparator) {
+            be.lastComparator = comparatorLevel;
+            world.updateComparators(pos, state.getBlock());
+        }
+
         if (dirty) be.markDirty();
+    }
+
+    /** Energie-Füllstand als Redstone-Stärke 0–15. */
+    public int getComparatorLevel() {
+        int cap = effCapacity();
+        if (energyStorage.amount <= 0 || cap <= 0) return 0;
+        return (int) Math.max(1, energyStorage.amount * 15L / cap);
     }
 
     private void explode(World world, BlockPos pos, BlockState state) {
@@ -311,6 +326,7 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
         burnTimeTotal = view.getInt("BurnTimeTotal", 0);
         heat      = view.getInt("Heat", 0);
         reactorSize = view.getInt("ReactorSize", 0);
+        lastComparator = getComparatorLevel();
     }
 
     // --- Screen ---
