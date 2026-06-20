@@ -5,6 +5,29 @@ Alle nennenswerten Änderungen an der AKW-Mod werden hier dokumentiert.
 Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.7.0] — 2026-06-20
+
+### Hinzugefügt
+- **Verbrauchter Brennstab** (`spent_fuel_rod`): Wenn ein Brennstab im Reaktor
+  vollständig verbrannt ist, erscheint automatisch ein Verbrauchter Brennstab im
+  neuen Abfall-Slot (rechts neben dem Brennstoff-Slot im GUI).
+- **Abfall-Slot im Reaktor-GUI**: Neuer Output-Slot (Slot 1). Solange der
+  Abfall-Slot keinen Platz mehr hat (max. 64 Stäbe), lädt der Reaktor keinen
+  neuen Brennstab — Wartungsloop erzwungen.
+- **Hopper-Kompatibilität** (via `SidedInventory`):
+  - Hopper von **oben** → befüllt den Brennstoff-Slot (nur Brennstäbe akzeptiert).
+  - Hopper von **unten** → entnimmt verbrauchte Brennstäbe aus dem Abfall-Slot.
+  - Seitliche Hopper haben keinen Zugriff.
+- **Verbesserte Strahlungsabschirmung**: Blei-Block schützt jetzt pfadbasiert —
+  jeder Blei-Block auf der direkten Linie zwischen Reaktor und Spieler blockt
+  die Strahlung vollständig (früher: nur direkt angrenzender Blei-Block).
+
+### Technisch
+- `NuclearReactorBlockEntity` implementiert nun `SidedInventory` (Fabric/MC-Standard).
+- Inventargröße: 1 → 2 Slots (abwärtskompatibel: bestehende Saves laden korrekt).
+
+---
+
 ## [0.6.0] — 2026-06-19
 
 ### Hinzugefügt

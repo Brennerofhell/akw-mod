@@ -48,6 +48,7 @@ public class ModModelProvider extends FabricModelProvider {
         gen.register(ModItems.URANIUM_INGOT,     Models.GENERATED);
         gen.register(ModItems.ENRICHED_URANIUM,  Models.GENERATED);
         gen.register(ModItems.FUEL_ROD,          Models.GENERATED);
+        gen.register(ModItems.SPENT_FUEL_ROD,    Models.GENERATED);
         gen.register(ModItems.REACTOR_WRENCH,    Models.GENERATED);
     }
 }

@@ -35,15 +35,23 @@ public class NuclearReactorScreenHandler extends ScreenHandler {
                                           int syncId, PlayerInventory playerInventory,
                                           Inventory inventory, PropertyDelegate propertyDelegate) {
         super(type, syncId);
-        checkSize(inventory, 1);
+        checkSize(inventory, 2);
         this.inventory = inventory;
         this.propertyDelegate = propertyDelegate;
 
-        // Brennstoff-Slot
+        // Brennstoff-Slot (Slot 0)
         this.addSlot(new Slot(inventory, NuclearReactorBlockEntity.FUEL_SLOT, 80, 35) {
             @Override
             public boolean canInsert(ItemStack stack) {
                 return stack.isOf(ModItems.FUEL_ROD);
+            }
+        });
+
+        // Abfall-Slot (Slot 1, Output-Only)
+        this.addSlot(new Slot(inventory, NuclearReactorBlockEntity.WASTE_SLOT, 116, 35) {
+            @Override
+            public boolean canInsert(ItemStack stack) {
+                return false;
             }
         });
 
@@ -65,7 +73,7 @@ public class NuclearReactorScreenHandler extends ScreenHandler {
         if (playerInventory.player.getEntityWorld().getBlockEntity(pos) instanceof NuclearReactorBlockEntity be) {
             return be;
         }
-        return new net.minecraft.inventory.SimpleInventory(1);
+        return new net.minecraft.inventory.SimpleInventory(2);
     }
 
     private static PropertyDelegate resolveDelegate(PlayerInventory playerInventory, BlockPos pos) {
@@ -118,14 +126,14 @@ public class NuclearReactorScreenHandler extends ScreenHandler {
         if (slot != null && slot.hasStack()) {
             ItemStack original = slot.getStack();
             newStack = original.copy();
-            if (slotIndex == 0) {
-                // aus dem Brennstoff-Slot ins Spieler-Inventar
-                if (!this.insertItem(original, 1, this.slots.size(), true)) {
+            // Slots 0-1 = Block-Inventar (Brennstoff, Abfall); ab Slot 2 = Spieler
+            if (slotIndex < 2) {
+                if (!this.insertItem(original, 2, this.slots.size(), true)) {
                     return ItemStack.EMPTY;
                 }
             } else {
-                // aus dem Spieler-Inventar in den Brennstoff-Slot
-                if (!this.insertItem(original, 0, 1, false)) {
+                // Brennstab → Brennstoff-Slot; sonst kein Ziel
+                if (!this.insertItem(original, NuclearReactorBlockEntity.FUEL_SLOT, 1, false)) {
                     return ItemStack.EMPTY;
                 }
             }

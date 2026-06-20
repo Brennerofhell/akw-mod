@@ -2,7 +2,7 @@
 
 Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 
-## Status: In Entwicklung (v0.3.7 — Energie-Infrastruktur, Kühlsystem, Kreativ-Tab-Fix)
+## Status: In Entwicklung (v0.7.0 — Hopper-Support, Abfall-Slot, Strahlungsabschirmung)
 
 ---
 
@@ -21,7 +21,7 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 - [ ] Texturen (Items, Blöcke, Mod-Icon) — Specs in `briefkasten/ausgang/`
 - [x] Erz-Weltgenerierung (Worldgen) — Uranerz spawnt untertage (y -64…32)
 
-### Current: v0.1.0
+### Current: v0.7.0
 
 ---
 
@@ -36,7 +36,7 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 - [x] Energie-Kabel (FE-Transport zwischen Blöcken, Puffer 8 192 FE)
 - [x] Akku-Block (1 Mio FE Speicher, Komparator-Signal 0–15)
 - [x] Radiation Mechanic (v0.5.0)
-  - [ ] Strahlungs-Blockeffekte
+  - [x] Strahlungs-Blockeffekte (pfadbasierte Blei-Block-Abschirmung, v0.7.0)
   - [x] Spieler-Strahlungsexposition (8-Block-Radius, Stufen I/II je nach Hitze)
   - [x] Strahlungsschutz-Items (Blei-Block bereits vorhanden)
 
@@ -63,13 +63,14 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 ### Crafting & Processing
 - [x] Uranium anreichern (2× Uran-Barren → Angereichertes Uran → Brennstab)
 - [x] Fuel Rod Crafting
+- [x] Abfallverarbeitung: Verbrauchter Brennstab (v0.7.0)
 - [ ] Reactor Assembly
-- [ ] Abfallverarbeitung
+- [ ] Nuklear-Abfall weiterverarbeiten (Recycling / Endlager)
 
 ### Automation
+- [x] Hopper-Kompatibilität (v0.7.0): oben → Brennstoff, unten → Abfall
 - [ ] Pipe-Netzwerk für Ressourcentransport
 - [ ] Redstone-Integration
-- [ ] Hopper-Kompatibilität
 
 ### Zielversion: v0.4.0
 
@@ -95,7 +96,7 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 ## 🚀 Phase 6: Extensions (Post-Release)
 
 - [ ] Weitere Brennstoffe/Materialien
-- [ ] Multiblock Strukturen
+- [x] Multiblock Strukturen (v0.6.0: 3×3×3, 5×5×5, 7×7×7)
 - [ ] Netzwerk-System zwischen Reaktoren
 - [ ] Mod-Kompatibilität (andere Tech-Mods)
 - [ ] Mehrsprachige Erweiterung
@@ -111,7 +112,7 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 - [ ] Performance-Optimierung
 
 ### Infrastructure
-- [ ] CI/CD Pipeline (GitHub Actions)
+- [x] CI/CD Pipeline (GitHub Actions, v0.4.1)
 - [ ] Automatische Builds für CurseForge/Modrinth
 - [ ] Release-Automation
 

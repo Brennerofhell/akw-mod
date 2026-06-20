@@ -40,6 +40,7 @@ public class ModItemGroups {
                                 entries.add(ModItems.URANIUM_INGOT);
                                 entries.add(ModItems.ENRICHED_URANIUM);
                                 entries.add(ModItems.FUEL_ROD);
+                                entries.add(ModItems.SPENT_FUEL_ROD);
                                 entries.add(ModItems.REACTOR_WRENCH);
                                 entries.add(ModBlocks.REACTOR_CASING);
                                 entries.add(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER);
@@ -62,6 +63,7 @@ public class ModItemGroups {
             entries.add(ModItems.URANIUM_INGOT);
             entries.add(ModItems.ENRICHED_URANIUM);
             entries.add(ModItems.FUEL_ROD);
+            entries.add(ModItems.SPENT_FUEL_ROD);
             entries.add(ModItems.REACTOR_WRENCH);
         });
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(entries -> {

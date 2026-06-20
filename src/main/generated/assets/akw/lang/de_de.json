@@ -24,6 +24,7 @@
   "effect.akw.radiation": "Strahlung",
   "item.akw.enriched_uranium": "Angereichertes Uran",
   "item.akw.fuel_rod": "Brennstab",
+  "item.akw.spent_fuel_rod": "Verbrauchter Brennstab",
   "item.akw.raw_uranium": "Roh-Uran",
   "item.akw.reactor_wrench": "Reaktor-Schraubenschlüssel",
   "item.akw.uranium_ingot": "Uran-Barren",

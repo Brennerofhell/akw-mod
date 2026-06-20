@@ -15,6 +15,7 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventories;
+import net.minecraft.inventory.SidedInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.PropertyDelegate;
 import net.minecraft.screen.ScreenHandler;
@@ -29,6 +30,7 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 import team.reborn.energy.api.base.SimpleEnergyStorage;
 
 /**
@@ -44,9 +46,14 @@ import team.reborn.energy.api.base.SimpleEnergyStorage;
  * bei Erreichen der maxHitze explodiert der Reaktor.
  */
 public class NuclearReactorBlockEntity extends BlockEntity
-        implements ImplementedInventory, ExtendedScreenHandlerFactory<BlockPos> {
+        implements ImplementedInventory, SidedInventory, ExtendedScreenHandlerFactory<BlockPos> {
 
     public static final int FUEL_SLOT = 0;
+    public static final int WASTE_SLOT = 1;
+
+    private static final int[] FUEL_SLOTS  = {FUEL_SLOT};
+    private static final int[] WASTE_SLOTS = {WASTE_SLOT};
+    private static final int[] NO_SLOTS    = {};
 
     /** PropertyDelegate-Indizes (gemeinsam von BlockEntity, ScreenHandler, Screen genutzt). */
     public static final int IDX_ENERGY = 0;
@@ -68,7 +75,7 @@ public class NuclearReactorBlockEntity extends BlockEntity
     /** Strahlungs-Radius (Blöcke) eines laufenden Reaktors. */
     private static final int RADIATION_RADIUS = 8;
 
-    private final DefaultedList<ItemStack> inventory = DefaultedList.ofSize(1, ItemStack.EMPTY);
+    private final DefaultedList<ItemStack> inventory = DefaultedList.ofSize(2, ItemStack.EMPTY);
 
     /** Energiespeicher: kein Input (Generator), nur Abgabe. */
     public final SimpleEnergyStorage energyStorage;
@@ -156,11 +163,19 @@ public class NuclearReactorBlockEntity extends BlockEntity
             dirty = true;
         }
 
-        // Neuen Brennstab zuenden, wenn Platz fuer Energie ist
+        // Neuen Brennstab zuenden (nur wenn Abfall-Slot Platz hat)
         if (be.burnTime <= 0 && be.energyStorage.amount < be.energyStorage.capacity) {
-            ItemStack fuel = be.inventory.get(FUEL_SLOT);
-            if (fuel.isOf(ModItems.FUEL_ROD)) {
+            ItemStack fuel  = be.inventory.get(FUEL_SLOT);
+            ItemStack waste = be.inventory.get(WASTE_SLOT);
+            boolean wasteRoom = waste.isEmpty()
+                    || (waste.isOf(ModItems.SPENT_FUEL_ROD) && waste.getCount() < waste.getMaxCount());
+            if (fuel.isOf(ModItems.FUEL_ROD) && wasteRoom) {
                 fuel.decrement(1);
+                if (waste.isEmpty()) {
+                    be.inventory.set(WASTE_SLOT, new ItemStack(ModItems.SPENT_FUEL_ROD));
+                } else {
+                    waste.increment(1);
+                }
                 be.burnTime = be.burnTicksPerRod;
                 be.burnTimeTotal = be.burnTicksPerRod;
                 dirty = true;
@@ -199,7 +214,7 @@ public class NuclearReactorBlockEntity extends BlockEntity
             serverWorld.getEntitiesByClass(PlayerEntity.class, searchBox,
                     p -> p.squaredDistanceTo(center) <= (double) RADIATION_RADIUS * RADIATION_RADIUS)
                     .forEach(player -> {
-                        if (!hasLeadProtection(serverWorld, player.getBlockPos())) {
+                        if (!hasLeadShielding(serverWorld, pos, player.getBlockPos())) {
                             player.addStatusEffect(new StatusEffectInstance(
                                     ModEffects.RADIATION, 60, level, false, true));
                             if (serverWorld.getTime() % 20 == 0) {
@@ -239,10 +254,23 @@ public class NuclearReactorBlockEntity extends BlockEntity
         return count;
     }
 
-    /** Prueft ob mind. 1 Blei-Block direkt neben dem Spieler liegt (Strahlungsschutz). */
-    private static boolean hasLeadProtection(World world, BlockPos playerPos) {
-        for (Direction dir : Direction.values()) {
-            if (world.getBlockState(playerPos.offset(dir)).isOf(ModBlocks.LEAD_BLOCK)) return true;
+    /**
+     * Prueft ob ein Blei-Block auf dem direkten Pfad zwischen Reaktor und Spieler liegt.
+     * Schrittweite 1 Block — reicht fuer den max. 8-Block-Radius.
+     */
+    private static boolean hasLeadShielding(World world, BlockPos reactorPos, BlockPos playerPos) {
+        double dx = playerPos.getX() - reactorPos.getX();
+        double dy = playerPos.getY() - reactorPos.getY();
+        double dz = playerPos.getZ() - reactorPos.getZ();
+        int steps = (int) Math.ceil(Math.sqrt(dx * dx + dy * dy + dz * dz));
+        if (steps == 0) return false;
+        for (int i = 1; i <= steps; i++) {
+            double t = (double) i / steps;
+            BlockPos check = new BlockPos(
+                    (int) Math.floor(reactorPos.getX() + dx * t + 0.5),
+                    (int) Math.floor(reactorPos.getY() + dy * t + 0.5),
+                    (int) Math.floor(reactorPos.getZ() + dz * t + 0.5));
+            if (world.getBlockState(check).isOf(ModBlocks.LEAD_BLOCK)) return true;
         }
         return false;
     }
@@ -256,6 +284,25 @@ public class NuclearReactorBlockEntity extends BlockEntity
 
     private void pushEnergy(World world, BlockPos pos) {
         EnergyNet.pushToNeighbors(energyStorage, world, pos, energyStorage.maxExtract);
+    }
+
+    // --- SidedInventory (Hopper-Kompatibilitaet) ---
+
+    @Override
+    public int[] getAvailableSlots(Direction side) {
+        if (side == Direction.UP)   return FUEL_SLOTS;
+        if (side == Direction.DOWN) return WASTE_SLOTS;
+        return NO_SLOTS;
+    }
+
+    @Override
+    public boolean canInsert(int slot, ItemStack stack, @Nullable Direction dir) {
+        return slot == FUEL_SLOT && stack.isOf(ModItems.FUEL_ROD);
+    }
+
+    @Override
+    public boolean canExtract(int slot, ItemStack stack, Direction dir) {
+        return slot == WASTE_SLOT;
     }
 
     @Override

@@ -24,6 +24,7 @@
   "effect.akw.radiation": "Radiation",
   "item.akw.enriched_uranium": "Enriched Uranium",
   "item.akw.fuel_rod": "Fuel Rod",
+  "item.akw.spent_fuel_rod": "Spent Fuel Rod",
   "item.akw.raw_uranium": "Raw Uranium",
   "item.akw.reactor_wrench": "Reactor Wrench",
   "item.akw.uranium_ingot": "Uranium Ingot",
