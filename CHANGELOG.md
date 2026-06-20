@@ -5,6 +5,16 @@ Alle nennenswerten Änderungen an der AKW-Mod werden hier dokumentiert.
 Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.0.0] — 2026-06-20
+
+### Release
+- Erster stabiler Release des Atomkraftwerk-Mods
+- Vollständiger Gameplay-Loop: Uranabbau → Anreicherung → Reaktor → Energie → Abfallmanagement
+- README vollständig überarbeitet und auf aktuellen Stand gebracht
+- fabric.mod.json mit GitHub-Links vervollständigt
+
+---
+
 ## [0.4.0] — 2026-06-19
 
 ### Geändert

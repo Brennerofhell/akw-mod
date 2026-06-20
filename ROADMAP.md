@@ -2,7 +2,7 @@
 
 Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 
-## Status: In Entwicklung (v0.3.7 — Energie-Infrastruktur, Kühlsystem, Kreativ-Tab-Fix)
+## Status: v1.0.0 — Erster stabiler Release
 
 ---
 
@@ -75,20 +75,20 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 
 ---
 
-## 📊 Phase 5: Quality & Polish
+## ✅ Phase 5: Quality & Polish
 
 ### Content
-- [ ] Vollständige Texturen (alle Blöcke & Items)
+- [x] Vollständige Texturen (alle Blöcke & Items)
 - [ ] Sounds & Effekte
 - [ ] Partikel für Radioaktivität
 - [ ] Advancement/Achievement System
 
 ### Dokumentation
+- [x] Mod-Anleitung (README überarbeitet, fabric.mod.json vervollständigt)
 - [ ] In-Game-Wiki / Manual
-- [ ] Mod-Anleitung
 - [ ] Config-System für Balance-Einstellungen
 
-### Zielversion: v1.0.0
+### Zielversion: v1.0.0 ✅ (erster stabiler Release)
 
 ---
 
