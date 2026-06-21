@@ -1,0 +1,33 @@
+{
+  "parent": "akw:story/smelt_uranium",
+  "criteria": {
+    "has_enriched_uranium": {
+      "conditions": {
+        "items": [
+          {
+            "items": "akw:enriched_uranium"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.akw.enrich.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "akw:enriched_uranium"
+    },
+    "title": {
+      "translate": "advancements.akw.enrich.title"
+    }
+  },
+  "requirements": [
+    [
+      "has_enriched_uranium"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

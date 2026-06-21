@@ -2,12 +2,12 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "key": {
-    "I": "akw:uranium_ingot"
+    "E": "akw:enriched_uranium"
   },
   "pattern": [
-    "I",
-    "I",
-    "I"
+    "E",
+    "E",
+    "E"
   ],
   "result": {
     "count": 1,

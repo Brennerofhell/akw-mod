@@ -44,11 +44,18 @@ public class ModRecipeProvider extends FabricRecipeProvider {
                         .criterion(hasItem(ModItems.RAW_URANIUM), conditionsFromItem(ModItems.RAW_URANIUM))
                         .offerTo(exporter, key("uranium_ingot_from_blasting"));
 
-                // Brennstab
-                createShaped(RecipeCategory.MISC, ModItems.FUEL_ROD)
-                        .pattern("I").pattern("I").pattern("I")
-                        .input('I', ModItems.URANIUM_INGOT)
+                // Angereichertes Uran: 2 Uran-Barren → 1 Angereichertes Uran
+                createShaped(RecipeCategory.MISC, ModItems.ENRICHED_URANIUM)
+                        .pattern("UU")
+                        .input('U', ModItems.URANIUM_INGOT)
                         .criterion(hasItem(ModItems.URANIUM_INGOT), conditionsFromItem(ModItems.URANIUM_INGOT))
+                        .offerTo(exporter, key("enriched_uranium"));
+
+                // Brennstab: 3 Angereicherte Uran-Einheiten (statt rohe Barren)
+                createShaped(RecipeCategory.MISC, ModItems.FUEL_ROD)
+                        .pattern("E").pattern("E").pattern("E")
+                        .input('E', ModItems.ENRICHED_URANIUM)
+                        .criterion(hasItem(ModItems.ENRICHED_URANIUM), conditionsFromItem(ModItems.ENRICHED_URANIUM))
                         .offerTo(exporter, key("fuel_rod"));
 
                 // Reaktoren
@@ -143,6 +150,29 @@ public class ModRecipeProvider extends FabricRecipeProvider {
                         .input('U', ModItems.URANIUM_INGOT)
                         .criterion(hasItem(ModItems.URANIUM_INGOT), conditionsFromItem(ModItems.URANIUM_INGOT))
                         .offerTo(exporter, key("enriched_uranium_block"));
+
+                // Multiblock-Reaktor-System
+                createShaped(RecipeCategory.MISC, ModItems.REACTOR_WRENCH)
+                        .pattern(" I").pattern("IS")
+                        .input('I', Items.IRON_INGOT)
+                        .input('S', Items.STICK)
+                        .criterion(hasItem(Items.IRON_INGOT), conditionsFromItem(Items.IRON_INGOT))
+                        .offerTo(exporter, key("reactor_wrench"));
+
+                createShaped(RecipeCategory.MISC, ModBlocks.REACTOR_CASING, 4)
+                        .pattern("ILI").pattern("LIL").pattern("ILI")
+                        .input('I', Items.IRON_INGOT)
+                        .input('L', ModBlocks.LEAD_BLOCK)
+                        .criterion(hasItem(ModBlocks.LEAD_BLOCK), conditionsFromItem(ModBlocks.LEAD_BLOCK))
+                        .offerTo(exporter, key("reactor_casing"));
+
+                createShaped(RecipeCategory.MISC, ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER)
+                        .pattern("CRC").pattern("RNR").pattern("CRC")
+                        .input('C', ModBlocks.REACTOR_CASING)
+                        .input('R', Items.REDSTONE_BLOCK)
+                        .input('N', ModBlocks.NUCLEAR_REACTOR)
+                        .criterion(hasItem(ModBlocks.REACTOR_CASING), conditionsFromItem(ModBlocks.REACTOR_CASING))
+                        .offerTo(exporter, key("multiblock_reactor_controller"));
 
                 // Energie-Infrastruktur
                 createShaped(RecipeCategory.REDSTONE, ModBlocks.ENERGY_CABLE, 3)

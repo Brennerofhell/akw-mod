@@ -1,0 +1,33 @@
+{
+  "parent": "akw:story/mine_uranium",
+  "criteria": {
+    "has_uranium_ingot": {
+      "conditions": {
+        "items": [
+          {
+            "items": "akw:uranium_ingot"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.akw.smelt_uranium.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "akw:uranium_ingot"
+    },
+    "title": {
+      "translate": "advancements.akw.smelt_uranium.title"
+    }
+  },
+  "requirements": [
+    [
+      "has_uranium_ingot"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

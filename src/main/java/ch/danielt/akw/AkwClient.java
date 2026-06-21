@@ -15,5 +15,7 @@ public class AkwClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         HandledScreens.register(ModScreenHandlers.NUCLEAR_REACTOR, NuclearReactorScreen::new);
+        // MULTIBLOCK_REACTOR hat Typ ScreenHandlerType<NuclearReactorScreenHandler> → direkt kompatibel
+        HandledScreens.register(ModScreenHandlers.MULTIBLOCK_REACTOR, NuclearReactorScreen::new);
     }
 }

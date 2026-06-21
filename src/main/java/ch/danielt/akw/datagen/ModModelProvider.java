@@ -18,6 +18,10 @@ public class ModModelProvider extends FabricModelProvider {
 
     @Override
     public void generateBlockStateModels(BlockStateModelGenerator gen) {
+        // Multiblock-System
+        gen.registerSimpleCubeAll(ModBlocks.REACTOR_CASING);
+        gen.registerSimpleCubeAll(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER);
+
         // Einfache Würfel-Blöcke
         gen.registerSimpleCubeAll(ModBlocks.URANIUM_ORE);
         gen.registerSimpleCubeAll(ModBlocks.DEEPSLATE_URANIUM_ORE);
@@ -40,8 +44,11 @@ public class ModModelProvider extends FabricModelProvider {
 
     @Override
     public void generateItemModels(ItemModelGenerator gen) {
-        gen.register(ModItems.RAW_URANIUM,   Models.GENERATED);
-        gen.register(ModItems.URANIUM_INGOT, Models.GENERATED);
-        gen.register(ModItems.FUEL_ROD,      Models.GENERATED);
+        gen.register(ModItems.RAW_URANIUM,       Models.GENERATED);
+        gen.register(ModItems.URANIUM_INGOT,     Models.GENERATED);
+        gen.register(ModItems.ENRICHED_URANIUM,  Models.GENERATED);
+        gen.register(ModItems.FUEL_ROD,          Models.GENERATED);
+        gen.register(ModItems.SPENT_FUEL_ROD,    Models.GENERATED);
+        gen.register(ModItems.REACTOR_WRENCH,    Models.GENERATED);
     }
 }

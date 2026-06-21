@@ -1,0 +1,34 @@
+{
+  "parent": "akw:story/energy_online",
+  "criteria": {
+    "has_elite": {
+      "conditions": {
+        "items": [
+          {
+            "items": "akw:elite_nuclear_reactor"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.akw.elite_reactor.desc"
+    },
+    "frame": "challenge",
+    "icon": {
+      "count": 1,
+      "id": "akw:elite_nuclear_reactor"
+    },
+    "title": {
+      "translate": "advancements.akw.elite_reactor.title"
+    }
+  },
+  "requirements": [
+    [
+      "has_elite"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

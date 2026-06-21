@@ -29,28 +29,46 @@ public class ModItemGroups {
             RegistryKey.of(RegistryKeys.ITEM_GROUP, Identifier.of(AkwMod.MOD_ID, "akw"));
 
     public static void registerAll() {
-        Registry.register(Registries.ITEM_GROUP, AKW_GROUP_KEY,
-                FabricItemGroup.builder()
-                        .icon(() -> new ItemStack(ModItems.RAW_URANIUM))
-                        .displayName(Text.translatable("itemgroup.akw"))
-                        .entries((ctx, entries) -> {
-                            entries.add(ModItems.RAW_URANIUM);
-                            entries.add(ModItems.URANIUM_INGOT);
-                            entries.add(ModItems.FUEL_ROD);
-                            entries.add(ModBlocks.URANIUM_ORE);
-                            entries.add(ModBlocks.DEEPSLATE_URANIUM_ORE);
-                            ModBlocks.REACTORS.forEach(entries::add);
-                            ModBlocks.DECOR.forEach(entries::add);
-                            entries.add(ModBlocks.ENERGY_CABLE);
-                            entries.add(ModBlocks.ENERGY_BATTERY);
-                        })
-                        .build());
+        AkwMod.LOGGER.info("[Atomkraftwerk] Starte Kreativ-Tab-Registration...");
+        try {
+            Registry.register(Registries.ITEM_GROUP, AKW_GROUP_KEY,
+                    FabricItemGroup.builder()
+                            .icon(() -> new ItemStack(ModItems.RAW_URANIUM))
+                            .displayName(Text.translatable("itemgroup.akw"))
+                            .entries((ctx, entries) -> {
+                                entries.add(ModItems.RAW_URANIUM);
+                                entries.add(ModItems.URANIUM_INGOT);
+                                entries.add(ModItems.ENRICHED_URANIUM);
+                                entries.add(ModItems.FUEL_ROD);
+                                entries.add(ModItems.SPENT_FUEL_ROD);
+                                entries.add(ModItems.REACTOR_WRENCH);
+                                entries.add(ModBlocks.REACTOR_CASING);
+                                entries.add(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER);
+                                entries.add(ModBlocks.URANIUM_ORE);
+                                entries.add(ModBlocks.DEEPSLATE_URANIUM_ORE);
+                                ModBlocks.REACTORS.forEach(entries::add);
+                                ModBlocks.DECOR.forEach(entries::add);
+                                entries.add(ModBlocks.ENERGY_CABLE);
+                                entries.add(ModBlocks.ENERGY_BATTERY);
+                            })
+                            .build());
+        } catch (Exception e) {
+            AkwMod.LOGGER.error("[Atomkraftwerk] Kreativ-Tab-Registration fehlgeschlagen!", e);
+            throw e;
+        }
 
         // Zusätzlich in die passenden Vanilla-Tabs (wie andere Mods).
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.INGREDIENTS).register(entries -> {
             entries.add(ModItems.RAW_URANIUM);
             entries.add(ModItems.URANIUM_INGOT);
+            entries.add(ModItems.ENRICHED_URANIUM);
             entries.add(ModItems.FUEL_ROD);
+            entries.add(ModItems.SPENT_FUEL_ROD);
+            entries.add(ModItems.REACTOR_WRENCH);
+        });
+        ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(entries -> {
+            entries.add(ModBlocks.REACTOR_CASING);
+            entries.add(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER);
         });
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.NATURAL).register(entries -> {
             entries.add(ModBlocks.URANIUM_ORE);

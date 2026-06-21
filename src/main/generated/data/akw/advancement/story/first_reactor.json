@@ -1,0 +1,34 @@
+{
+  "parent": "akw:story/fuel_rod",
+  "criteria": {
+    "has_reactor": {
+      "conditions": {
+        "items": [
+          {
+            "items": "akw:nuclear_reactor"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.akw.first_reactor.desc"
+    },
+    "frame": "goal",
+    "icon": {
+      "count": 1,
+      "id": "akw:nuclear_reactor"
+    },
+    "title": {
+      "translate": "advancements.akw.first_reactor.title"
+    }
+  },
+  "requirements": [
+    [
+      "has_reactor"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

@@ -10,6 +10,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.screen.ArrayPropertyDelegate;
 import net.minecraft.screen.PropertyDelegate;
 import net.minecraft.screen.ScreenHandler;
+import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.util.math.BlockPos;
 
@@ -18,24 +19,39 @@ public class NuclearReactorScreenHandler extends ScreenHandler {
     private final Inventory inventory;
     private final PropertyDelegate propertyDelegate;
 
-    /** Client-Konstruktor (vom ExtendedScreenHandlerType mit der BlockPos aufgerufen). */
+    /** Client-Konstruktor für NUCLEAR_REACTOR (aufgerufen vom ExtendedScreenHandlerType). */
     public NuclearReactorScreenHandler(int syncId, PlayerInventory playerInventory, BlockPos pos) {
         this(syncId, playerInventory, resolveInventory(playerInventory, pos), resolveDelegate(playerInventory, pos));
     }
 
     public NuclearReactorScreenHandler(int syncId, PlayerInventory playerInventory,
                                        Inventory inventory, PropertyDelegate propertyDelegate) {
-        super(ModScreenHandlers.NUCLEAR_REACTOR, syncId);
-        checkSize(inventory, 1);
+        this(ModScreenHandlers.NUCLEAR_REACTOR, syncId, playerInventory, inventory, propertyDelegate);
+        inventory.onOpen(playerInventory.player);
+    }
+
+    /** Geschützter Konstruktor für Unterklassen (anderer ScreenHandlerType). */
+    protected NuclearReactorScreenHandler(ScreenHandlerType<? extends NuclearReactorScreenHandler> type,
+                                          int syncId, PlayerInventory playerInventory,
+                                          Inventory inventory, PropertyDelegate propertyDelegate) {
+        super(type, syncId);
+        checkSize(inventory, 2);
         this.inventory = inventory;
         this.propertyDelegate = propertyDelegate;
-        inventory.onOpen(playerInventory.player);
 
-        // Brennstoff-Slot
+        // Brennstoff-Slot (Slot 0)
         this.addSlot(new Slot(inventory, NuclearReactorBlockEntity.FUEL_SLOT, 80, 35) {
             @Override
             public boolean canInsert(ItemStack stack) {
                 return stack.isOf(ModItems.FUEL_ROD);
+            }
+        });
+
+        // Abfall-Slot (Slot 1, Output-Only)
+        this.addSlot(new Slot(inventory, NuclearReactorBlockEntity.WASTE_SLOT, 116, 35) {
+            @Override
+            public boolean canInsert(ItemStack stack) {
+                return false;
             }
         });
 
@@ -57,7 +73,7 @@ public class NuclearReactorScreenHandler extends ScreenHandler {
         if (playerInventory.player.getEntityWorld().getBlockEntity(pos) instanceof NuclearReactorBlockEntity be) {
             return be;
         }
-        return new net.minecraft.inventory.SimpleInventory(1);
+        return new net.minecraft.inventory.SimpleInventory(2);
     }
 
     private static PropertyDelegate resolveDelegate(PlayerInventory playerInventory, BlockPos pos) {
@@ -110,14 +126,14 @@ public class NuclearReactorScreenHandler extends ScreenHandler {
         if (slot != null && slot.hasStack()) {
             ItemStack original = slot.getStack();
             newStack = original.copy();
-            if (slotIndex == 0) {
-                // aus dem Brennstoff-Slot ins Spieler-Inventar
-                if (!this.insertItem(original, 1, this.slots.size(), true)) {
+            // Slots 0-1 = Block-Inventar (Brennstoff, Abfall); ab Slot 2 = Spieler
+            if (slotIndex < 2) {
+                if (!this.insertItem(original, 2, this.slots.size(), true)) {
                     return ItemStack.EMPTY;
                 }
             } else {
-                // aus dem Spieler-Inventar in den Brennstoff-Slot
-                if (!this.insertItem(original, 0, 1, false)) {
+                // Brennstab → Brennstoff-Slot; sonst kein Ziel
+                if (!this.insertItem(original, NuclearReactorBlockEntity.FUEL_SLOT, 1, false)) {
                     return ItemStack.EMPTY;
                 }
             }

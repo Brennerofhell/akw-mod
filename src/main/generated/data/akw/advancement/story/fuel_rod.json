@@ -1,0 +1,33 @@
+{
+  "parent": "akw:story/enrich",
+  "criteria": {
+    "has_fuel_rod": {
+      "conditions": {
+        "items": [
+          {
+            "items": "akw:fuel_rod"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.akw.fuel_rod.desc"
+    },
+    "icon": {
+      "count": 1,
+      "id": "akw:fuel_rod"
+    },
+    "title": {
+      "translate": "advancements.akw.fuel_rod.title"
+    }
+  },
+  "requirements": [
+    [
+      "has_fuel_rod"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

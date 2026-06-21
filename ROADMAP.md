@@ -2,7 +2,7 @@
 
 Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 
-## Status: In Entwicklung (v0.3.7 — Energie-Infrastruktur, Kühlsystem, Kreativ-Tab-Fix)
+## Status: v1.0.0 — Erster stabiler Release
 
 ---
 
@@ -21,7 +21,7 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 - [ ] Texturen (Items, Blöcke, Mod-Icon) — Specs in `briefkasten/ausgang/`
 - [x] Erz-Weltgenerierung (Worldgen) — Uranerz spawnt untertage (y -64…32)
 
-### Current: v0.1.0
+### Current: v0.7.0
 
 ---
 
@@ -35,10 +35,10 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
   - [x] Kühlsystem-Logik (Hitzeaufbau, Kühlrohr-Kühlung, Drosselung, Überhitzung→Explosion, Hitzebalken im GUI)
 - [x] Energie-Kabel (FE-Transport zwischen Blöcken, Puffer 8 192 FE)
 - [x] Akku-Block (1 Mio FE Speicher, Komparator-Signal 0–15)
-- [ ] Radiation Mechanic
-  - [ ] Strahlungs-Blockeffekte
-  - [ ] Spieler-Strahlungsexposition
-  - [ ] Strahlungsschutz-Items (Blei-Block bereits vorhanden)
+- [x] Radiation Mechanic (v0.5.0)
+  - [x] Strahlungs-Blockeffekte (pfadbasierte Blei-Block-Abschirmung, v0.7.0)
+  - [x] Spieler-Strahlungsexposition (8-Block-Radius, Stufen I/II je nach Hitze)
+  - [x] Strahlungsschutz-Items (Blei-Block bereits vorhanden)
 
 ### Zielversion: v0.2.0 ✅ (Reaktoren & Energie ausgeliefert)
 
@@ -61,15 +61,16 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 ## ⚙️ Phase 4: Advanced Mechanics
 
 ### Crafting & Processing
-- [ ] Uranium anreichern (mit Rezept-System)
-- [ ] Fuel Rod Crafting
+- [x] Uranium anreichern (2× Uran-Barren → Angereichertes Uran → Brennstab)
+- [x] Fuel Rod Crafting
+- [x] Abfallverarbeitung: Verbrauchter Brennstab (v0.7.0)
 - [ ] Reactor Assembly
-- [ ] Abfallverarbeitung
+- [ ] Nuklear-Abfall weiterverarbeiten (Recycling / Endlager)
 
 ### Automation
+- [x] Hopper-Kompatibilität (v0.7.0): oben → Brennstoff, unten → Abfall
+- [x] Redstone-Integration (v0.8.0): Komparator-Output + POWERED-Pause
 - [ ] Pipe-Netzwerk für Ressourcentransport
-- [ ] Redstone-Integration
-- [ ] Hopper-Kompatibilität
 
 ### Zielversion: v0.4.0
 
@@ -79,9 +80,9 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 
 ### Content
 - [ ] Vollständige Texturen (alle Blöcke & Items)
-- [ ] Sounds & Effekte
-- [ ] Partikel für Radioaktivität
-- [ ] Advancement/Achievement System
+- [x] Sounds & Effekte (v0.9.5 — Infrastruktur + Partikel; .ogg-Dateien ausstehend)
+- [x] Partikel für Radioaktivität (v0.9.5 — vanilla ELECTRIC_SPARK)
+- [x] Advancement/Achievement System (v0.9.5 — 9-stufige Kette)
 
 ### Dokumentation
 - [ ] In-Game-Wiki / Manual
@@ -95,7 +96,7 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 ## 🚀 Phase 6: Extensions (Post-Release)
 
 - [ ] Weitere Brennstoffe/Materialien
-- [ ] Multiblock Strukturen
+- [x] Multiblock Strukturen (v0.6.0: 3×3×3, 5×5×5, 7×7×7)
 - [ ] Netzwerk-System zwischen Reaktoren
 - [ ] Mod-Kompatibilität (andere Tech-Mods)
 - [ ] Mehrsprachige Erweiterung
@@ -111,7 +112,7 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 - [ ] Performance-Optimierung
 
 ### Infrastructure
-- [ ] CI/CD Pipeline (GitHub Actions)
+- [x] CI/CD Pipeline (GitHub Actions, v0.4.1)
 - [ ] Automatische Builds für CurseForge/Modrinth
 - [ ] Release-Automation
 

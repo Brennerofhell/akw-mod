@@ -5,6 +5,152 @@ Alle nennenswerten Änderungen an der AKW-Mod werden hier dokumentiert.
 Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.0.0] — 2026-06-20
+
+### Release
+- Erster stabiler Release des Atomkraftwerk-Mods.
+- Vollständiger Gameplay-Loop: Uranabbau → Anreicherung → Reaktor → Energie → Abfallmanagement.
+- README vollständig überarbeitet: korrekte Feature-Liste, Reaktor-Werte, Installation, Projektstruktur.
+- `fabric.mod.json`: GitHub-Links in `contact`-Feld eingetragen.
+- ROADMAP Phase 5 abgeschlossen.
+
+---
+
+## [0.9.5] — 2026-06-20
+
+### Hinzugefügt
+- **Sound-Registrierung** (`ModSounds`): drei Sound-Events registriert —
+  `reactor_ambient`, `reactor_alert`, `reactor_meltdown`. Infrastruktur ist bereit;
+  Sounds werden stumm gespielt bis `.ogg`-Dateien in `assets/akw/sounds/` abgelegt werden.
+  `sounds.json` mit Subtitle-Verweisen angelegt.
+- **Strahlungspartikel** (vanilla `ELECTRIC_SPARK`): Reaktoren (Standard + Multiblock)
+  spawnen alle 10 Ticks grüne Funken-Partikel über dem Block, solange ein Brennstab brennt.
+- **Abfallbehälter-Partikel** (vanilla `GLOW_SQUID_INK`): bei Füllstand > 50 %
+  alle 20 Ticks Warnsignalpartikel.
+- **Advancement-Kette** (9 Stufen via `ModAdvancementProvider`, Datagen):
+  Uranabbau → Schmelzen → Anreicherung → Brennstab → Erster Reaktor → Energie online
+  → (Elite-Reaktor / Fusionsreaktor / Multiblock-Meister als Challenges).
+- Sound-Untertitel + Advancement-Übersetzungen in DE und EN.
+
+---
+
+## [0.8.0] — 2026-06-20
+
+### Hinzugefügt
+- **Komparator-Output** für alle Reaktor-Typen (Standard + Multiblock): Komparator
+  liest den Energie-Füllstand als Signal 0–15 aus — 0 = leer, 15 = voll.
+- **Redstone pausiert Reaktor** (neues Property `POWERED`): Redstone-Signal am
+  Reaktor-Block stoppt das Zünden neuer Brennstäbe. Der laufende Stab brennt noch
+  ab, danach geht der Reaktor sanft in Standby.
+  Praxisnutzen: Komparator-Signal „voll" → Leitung → benachbarter Reaktor pausiert
+  → automatische Lastverteilung.
+- **Abfallbehälter** (`waste_container`) ist jetzt ein vollständiger Speicher-Block:
+  - 9 Slots für Verbrauchte Brennstäbe (GUI öffnet sich per Rechtsklick)
+  - Komparator-Output: Füllstand 0–15
+  - Hopper von oben/seitig → Einlagern (nur Verbrauchte Brennstäbe)
+  - Hopper von unten → Entnehmen
+  - Passive Strahlung (Level 0) bei Füllstand > 50 % in 5-Block-Radius
+    (Blei-Block auf dem Pfad schützt vollständig)
+- Pfadbasierter Strahlungsschutz auch im **Multiblock-Reaktor** nachgezogen
+  (war bisher nur im Standard-Reaktor implementiert).
+
+### Technisch
+- `NuclearReactorBlock` + `MultiblockReactorControllerBlock`: `hasComparatorOutput`,
+  `getComparatorOutput`, `neighborUpdate` (POWERED-Property).
+- `WasteContainerBlock` + `WasteContainerBlockEntity` neu (SidedInventory,
+  NamedScreenHandlerFactory → GenericContainerScreenHandler).
+- Blockstate-JSONs aller 6 Reaktortypen um `powered=false/true` erweitert.
+- `NuclearReactorBlockEntity.hasLeadShielding` ist jetzt package-private
+  (von WasteContainerBlockEntity wiederverwendet).
+
+---
+
+## [0.7.0] — 2026-06-20
+
+### Hinzugefügt
+- **Verbrauchter Brennstab** (`spent_fuel_rod`): Wenn ein Brennstab im Reaktor
+  vollständig verbrannt ist, erscheint automatisch ein Verbrauchter Brennstab im
+  neuen Abfall-Slot (rechts neben dem Brennstoff-Slot im GUI).
+- **Abfall-Slot im Reaktor-GUI**: Neuer Output-Slot (Slot 1). Solange der
+  Abfall-Slot keinen Platz mehr hat (max. 64 Stäbe), lädt der Reaktor keinen
+  neuen Brennstab — Wartungsloop erzwungen.
+- **Hopper-Kompatibilität** (via `SidedInventory`):
+  - Hopper von **oben** → befüllt den Brennstoff-Slot (nur Brennstäbe akzeptiert).
+  - Hopper von **unten** → entnimmt verbrauchte Brennstäbe aus dem Abfall-Slot.
+  - Seitliche Hopper haben keinen Zugriff.
+- **Verbesserte Strahlungsabschirmung**: Blei-Block schützt jetzt pfadbasiert —
+  jeder Blei-Block auf der direkten Linie zwischen Reaktor und Spieler blockt
+  die Strahlung vollständig (früher: nur direkt angrenzender Blei-Block).
+
+### Technisch
+- `NuclearReactorBlockEntity` implementiert nun `SidedInventory` (Fabric/MC-Standard).
+- Inventargröße: 1 → 2 Slots (abwärtskompatibel: bestehende Saves laden korrekt).
+
+---
+
+## [0.6.0] — 2026-06-19
+
+### Hinzugefügt
+- **Multiblock-Reaktor-System:** Zwei neue Blöcke ermöglichen Reaktoren, die mehrere
+  Blöcke groß sind.
+  - `Reaktor-Gehäuse` — Wandblock (Eisen + Blei-Block, 4 Stück pro Rezept); hart und
+    explosionsresistent.
+  - `Multiblock-Reaktor-Controller` — Steuerblock mit GUI, FACING-Ausrichtung und
+    ASSEMBLED-Status. Rezept: 8× Reaktor-Gehäuse + 1× Reaktionsblöcke + Redstone.
+- **Reaktor-Schraubenschlüssel** — Werkzeug zum Assemblieren/Disassemblieren.
+  Rezept: 2× Eisen-Barren + 1× Stab.
+- **Automatische Größenerkennung:** 3×3×3, 5×5×5 oder 7×7×7 (Außenmaß). Leistung
+  skaliert mit dem Innenvolumen (outerSize−2)³:
+  - 3×3×3: 50 FE/Tick, 200 000 FE Kapazität
+  - 5×5×5: 1 350 FE/Tick, 5,4 Mio. FE Kapazität
+  - 7×7×7: 6 250 FE/Tick, 25 Mio. FE Kapazität
+- **Struktur-Revalidierung:** Alle 100 Ticks wird die Struktur geprüft — werden
+  Gehäuse-Blöcke entfernt, deaktiviert sich der Reaktor automatisch.
+- Strahlung + Überhitzungsexplosion (bricht alle Gehäuse-Blöcke) auch für Multiblock.
+- I18n-Schlüssel für alle Feedback-Nachrichten (de_de + en_us).
+
+---
+
+## [0.5.1] — 2026-06-19
+
+### Hinzugefügt
+- **Angereichertes Uran** (`enriched_uranium`): Neues Zwischenprodukt in der
+  Uran-Verarbeitungskette. Rezept: 2 Uran-Barren → 1 Angereichertes Uran.
+  Brennstab benötigt jetzt 3× Angereichertes Uran statt Uran-Barren (doppelt
+  so teuer, realistischerer Anreicherungsprozess).
+- **Textur** für Angereichertes Uran: leuchtend gelblich-grüner Stil (abgeleitet
+  vom Uran-Barren, mit Energie-Highlights).
+
+---
+
+## [0.5.0] — 2026-06-19
+
+### Hinzugefügt
+- **Steuerstab-Logik:** Jeder direkt angrenzende `Steuerstab-Block` reduziert den
+  Hitzeaufbau des Reaktors um 4 Wärme/Tick (bis zu 6 Stäbe = 24 Reduktion).
+  Beispiel: Basis-Reaktor (6 Hitze/Tick) + 2 Steuerstäbe = nur noch 0 Aufbau netto
+  (vor Kühlung).
+- **Strahlung (Radiation):** Laufende Reaktoren bestrahlen Spieler im Radius von
+  8 Blöcken. Strahlung I bei niedrigem Hitze-Level, Strahlung II ab 50% der
+  Maximaltemperatur. Schaden: 0,5 HP/s bzw. 1,5 HP/s. **Blei-Block** direkt neben
+  dem Spieler blockiert die Strahlung vollständig.
+- **Status-Effekt „Strahlung"** (`effect.akw.radiation`) — grünes Effekt-Icon im
+  Spieler-HUD, sichtbare Partikel.
+
+---
+
+## [0.4.1] — 2026-06-19
+
+### Hinzugefügt
+- **CI-Pipeline** (`.github/workflows/build.yml`) — GitHub Actions führt bei jedem
+  Push automatisch `./gradlew build` aus; fehlgeschlagene Builds blockieren Merges.
+  Gebaute JARs werden als Artefakt hochgeladen.
+- **Diagnose-Logging** in `ModItemGroups.registerAll()` — im Log erscheint jetzt
+  sowohl der Start als auch etwaige Fehler der Kreativ-Tab-Registration (try/catch
+  mit explizitem `LOGGER.error` vor dem Weiterwerfen der Exception).
+
+---
+
 ## [0.4.0] — 2026-06-19
 
 ### Geändert

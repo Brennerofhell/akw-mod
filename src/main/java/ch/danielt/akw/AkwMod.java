@@ -2,9 +2,11 @@ package ch.danielt.akw;
 
 import ch.danielt.akw.registry.ModBlockEntities;
 import ch.danielt.akw.registry.ModBlocks;
+import ch.danielt.akw.registry.ModEffects;
 import ch.danielt.akw.registry.ModItemGroups;
 import ch.danielt.akw.registry.ModItems;
 import ch.danielt.akw.registry.ModScreenHandlers;
+import ch.danielt.akw.registry.ModSounds;
 import ch.danielt.akw.worldgen.ModWorldGen;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
@@ -31,6 +33,8 @@ public class AkwMod implements ModInitializer {
     public void onInitialize() {
         ModItems.registerAll();
         ModBlocks.registerAll();
+        ModEffects.registerAll();
+        ModSounds.registerAll();
         ModBlockEntities.registerAll();
         ModScreenHandlers.registerAll();
         ModItemGroups.registerAll();
@@ -39,6 +43,8 @@ public class AkwMod implements ModInitializer {
         // FE-Speicher ueber alle Seiten anbieten (Team Reborn Energy).
         EnergyStorage.SIDED.registerForBlockEntity(
                 (be, dir) -> be.energyStorage, ModBlockEntities.NUCLEAR_REACTOR);
+        EnergyStorage.SIDED.registerForBlockEntity(
+                (be, dir) -> be.energyStorage, ModBlockEntities.MULTIBLOCK_REACTOR_CONTROLLER);
         EnergyStorage.SIDED.registerForBlockEntity(
                 (be, dir) -> be.energyStorage, ModBlockEntities.ENERGY_CABLE);
         EnergyStorage.SIDED.registerForBlockEntity(

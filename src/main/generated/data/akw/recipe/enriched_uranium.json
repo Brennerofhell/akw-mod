@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "U": "akw:uranium_ingot"
+  },
+  "pattern": [
+    "UU"
+  ],
+  "result": {
+    "count": 1,
+    "id": "akw:enriched_uranium"
+  }
+}

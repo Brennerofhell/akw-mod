@@ -5,7 +5,10 @@
   "name": "Atomkraftwerk",
   "description": "Baue dein eigenes Atomkraftwerk: Uran abbauen, Brennstaebe herstellen, Reaktor betreiben und FE-kompatiblen Strom erzeugen.",
   "authors": ["danielt"],
-  "contact": {},
+  "contact": {
+    "sources": "https://github.com/Brennerofhell/akw-mod",
+    "issues": "https://github.com/Brennerofhell/akw-mod/issues"
+  },
   "license": "MIT",
   "icon": "assets/akw/icon.png",
   "environment": "*",

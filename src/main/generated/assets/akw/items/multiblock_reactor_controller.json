@@ -1,0 +1,6 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "akw:block/multiblock_reactor_controller"
+  }
+}

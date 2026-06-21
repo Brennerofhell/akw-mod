@@ -20,6 +20,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
+import net.minecraft.world.block.WireOrientation;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -31,6 +32,8 @@ public class NuclearReactorBlock extends Block implements BlockEntityProvider {
 
     public static final EnumProperty<Direction> FACING = Properties.HORIZONTAL_FACING;
     public static final BooleanProperty LIT = Properties.LIT;
+    /** Redstone-Signal an → kein neues Zünden; laufender Stab brennt noch ab. */
+    public static final BooleanProperty POWERED = Properties.POWERED;
 
     public final int capacity;
     public final int genPerTick;
@@ -52,12 +55,35 @@ public class NuclearReactorBlock extends Block implements BlockEntityProvider {
         this.heatPerTick = heatPerTick;
         setDefaultState(getDefaultState()
                 .with(FACING, Direction.NORTH)
-                .with(LIT, false));
+                .with(LIT, false)
+                .with(POWERED, false));
     }
 
     @Override
     protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
-        builder.add(FACING, LIT);
+        builder.add(FACING, LIT, POWERED);
+    }
+
+    @Override
+    protected boolean hasComparatorOutput(BlockState state) {
+        return true;
+    }
+
+    @Override
+    protected int getComparatorOutput(BlockState state, World world, BlockPos pos, Direction direction) {
+        if (world.getBlockEntity(pos) instanceof NuclearReactorBlockEntity be) {
+            return be.getComparatorLevel();
+        }
+        return 0;
+    }
+
+    @Override
+    protected void neighborUpdate(BlockState state, World world, BlockPos pos, Block sourceBlock,
+                                   WireOrientation wireOrientation, boolean notify) {
+        boolean powered = world.isReceivingRedstonePower(pos);
+        if (powered != state.get(POWERED)) {
+            world.setBlockState(pos, state.with(POWERED, powered), Block.NOTIFY_ALL);
+        }
     }
 
     @Nullable
