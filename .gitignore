@@ -4,6 +4,9 @@ build/
 out/
 classes/
 
+# Lokales Jar-Archiv (alte Fabric-Releases), nicht ins Repo
+releases/
+
 # Fabric Datagen-Cache (Inhalt von src/main/generated wird committed, der Cache nicht)
 src/main/generated/.cache/
 

@@ -64,8 +64,15 @@ java {
     targetCompatibility = JavaVersion.VERSION_21
 }
 
+// NeoForge-Artefakte strikt von den (alten) Fabric-Jars trennen:
+// alle hier gebauten Jars landen unter build/libs/neoforge/.
 jar {
+    destinationDirectory = layout.buildDirectory.dir('libs/neoforge')
     from('LICENSE') {
         rename { "${it}_${project.base.archivesName.get()}" }
     }
+}
+
+tasks.named('sourcesJar') {
+    destinationDirectory = layout.buildDirectory.dir('libs/neoforge')
 }
