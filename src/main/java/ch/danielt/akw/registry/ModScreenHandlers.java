@@ -3,41 +3,30 @@ package ch.danielt.akw.registry;
 import ch.danielt.akw.AkwMod;
 import ch.danielt.akw.screen.MultiblockReactorScreenHandler;
 import ch.danielt.akw.screen.NuclearReactorScreenHandler;
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.screen.ScreenHandlerType;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.inventory.MenuType;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
 
-/**
- * Registriert die {@link ScreenHandlerType}s der Mod. Der Reaktor nutzt einen
- * {@link ExtendedScreenHandlerType}, der beim Öffnen die {@link BlockPos} des
- * Reaktors zum Client synchronisiert (via {@link BlockPos#PACKET_CODEC}), damit
- * der Client-Konstruktor des ScreenHandlers die passende BlockEntity auflösen kann.
- *
- * <p>Ein gemeinsamer ScreenHandler-Typ bedient alle Reaktor-Tiers.
- */
 public class ModScreenHandlers {
+    private static final DeferredRegister<MenuType<?>> MENU_TYPES =
+            DeferredRegister.create(BuiltInRegistries.MENU, AkwMod.MOD_ID);
 
-    public static ScreenHandlerType<NuclearReactorScreenHandler> NUCLEAR_REACTOR;
-    /** Typisiert als NuclearReactorScreenHandler, erzeugt aber MultiblockReactorScreenHandler-Instanzen. */
-    public static ScreenHandlerType<NuclearReactorScreenHandler> MULTIBLOCK_REACTOR;
+    public static final DeferredHolder<MenuType<?>, MenuType<NuclearReactorScreenHandler>> NUCLEAR_REACTOR =
+            MENU_TYPES.register("nuclear_reactor", () ->
+                    IMenuTypeExtension.create((syncId, inv, buf) ->
+                            new NuclearReactorScreenHandler(syncId, inv, buf.readBlockPos())));
 
-    public static void registerAll() {
-        NUCLEAR_REACTOR = Registry.register(
-                Registries.SCREEN_HANDLER,
-                Identifier.of(AkwMod.MOD_ID, "nuclear_reactor"),
-                new ExtendedScreenHandlerType<>(
-                        NuclearReactorScreenHandler::new, BlockPos.PACKET_CODEC));
+    public static final DeferredHolder<MenuType<?>, MenuType<NuclearReactorScreenHandler>> MULTIBLOCK_REACTOR =
+            MENU_TYPES.register("multiblock_reactor", () ->
+                    IMenuTypeExtension.create((syncId, inv, buf) ->
+                            new MultiblockReactorScreenHandler(syncId, inv, buf.readBlockPos())));
 
-        MULTIBLOCK_REACTOR = Registry.register(
-                Registries.SCREEN_HANDLER,
-                Identifier.of(AkwMod.MOD_ID, "multiblock_reactor"),
-                new ExtendedScreenHandlerType<>(
-                        (syncId, inv, pos) -> new MultiblockReactorScreenHandler(syncId, inv, pos),
-                        BlockPos.PACKET_CODEC));
-
+    public static void register(IEventBus bus) {
+        MENU_TYPES.register(bus);
         AkwMod.LOGGER.info("[Atomkraftwerk] ScreenHandler registriert.");
     }
 }

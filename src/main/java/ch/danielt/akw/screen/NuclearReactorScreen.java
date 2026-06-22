@@ -1,80 +1,94 @@
 package ch.danielt.akw.screen;
 
 import ch.danielt.akw.AkwMod;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Inventory;
 
-/**
- * Client-seitiger GUI-Screen des Reaktors. Zeichnet den Hintergrund
- * ({@code textures/gui/nuclear_reactor.png}) und legt zwei dynamische Overlays
- * darüber: den von unten gefüllten grünen Energiebalken und die orange
- * Brenn-Anzeige. Alle angezeigten Werte stammen aus dem
- * {@link NuclearReactorScreenHandler} (gespeist vom serverseitig synchronisierten
- * {@code PropertyDelegate}) — der Screen hält keinen eigenen Zustand.
- *
- * <p>Beim Überfahren des Energiebalkens zeigt {@link #render} einen Tooltip
- * {@code <energie> / <kapazität> FE}.
- */
-public class NuclearReactorScreen extends HandledScreen<NuclearReactorScreenHandler> {
+import java.util.Objects;
 
-    private static final Identifier TEXTURE =
-            Identifier.of(AkwMod.MOD_ID, "textures/gui/nuclear_reactor.png");
+public class NuclearReactorScreen extends AbstractContainerScreen<NuclearReactorScreenHandler> {
 
-    public NuclearReactorScreen(NuclearReactorScreenHandler handler, PlayerInventory inventory, Text title) {
+    private static final ResourceLocation TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(AkwMod.MOD_ID, "textures/gui/nuclear_reactor.png");
+
+    private Button redstoneButton;
+    private Button comparatorButton;
+
+    public NuclearReactorScreen(NuclearReactorScreenHandler handler, Inventory inventory, Component title) {
         super(handler, inventory, title);
     }
 
     @Override
-    protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY) {
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, 0f, 0f,
-                backgroundWidth, backgroundHeight, backgroundWidth, backgroundHeight);
-
-        // Energiebalken (gruen, von unten gefuellt)
-        int barX = x + 153;
-        int barTop = y + 17;
-        int barH = 52;
-        int fillH = (int) (barH * handler.getEnergyFraction());
-        context.fill(barX, barTop + (barH - fillH), barX + 12, barTop + barH, 0xFF3CC850);
-
-        // Hitzebalken (links neben dem Energiebalken, von unten gefuellt)
-        int heatX = x + 137;
-        context.fill(heatX, barTop, heatX + 12, barTop + barH, 0xFF202020);
-        float heatFrac = handler.getHeatFraction();
-        int heatFill = (int) (barH * heatFrac);
-        // Orange im Normalbetrieb, Rot ab Drosselschwelle (75 %).
-        int heatColor = heatFrac >= 0.75f ? 0xFFE03030 : 0xFFE0902C;
-        context.fill(heatX, barTop + (barH - heatFill), heatX + 12, barTop + barH, heatColor);
-
-        // Brenn-Anzeige (orange) links neben dem Brennstoff-Slot
-        int bx = x + 72;
-        int bTop = y + 34;
-        int bH = 18;
-        context.fill(bx, bTop, bx + 4, bTop + bH, 0xFF202020);
-        int bf = (int) (bH * handler.getBurnFraction());
-        context.fill(bx, bTop + (bH - bf), bx + 4, bTop + bH, 0xFFE0902C);
+    protected void init() {
+        super.init();
+        redstoneButton = addRenderableWidget(Button.builder(
+                Component.translatable(menu.getRedstoneMode().translationKey()),
+                btn -> Objects.requireNonNull(this.minecraft).gameMode
+                        .handleInventoryButtonClick(menu.containerId, 0))
+                .bounds(leftPos + 7, topPos + 17, 71, 20)
+                .build());
+        comparatorButton = addRenderableWidget(Button.builder(
+                Component.translatable(menu.getComparatorMode().translationKey()),
+                btn -> Objects.requireNonNull(this.minecraft).gameMode
+                        .handleInventoryButtonClick(menu.containerId, 1))
+                .bounds(leftPos + 7, topPos + 40, 71, 20)
+                .build());
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
-        drawMouseoverTooltip(context, mouseX, mouseY);
+    protected void renderBg(GuiGraphics graphics, float delta, int mouseX, int mouseY) {
+        graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE, leftPos, topPos,
+                0.0F, 0.0F, imageWidth, imageHeight, 256, 256);
 
-        int ex = x + 152;
-        int ey = y + 16;
+        // Energiebalken (gruen, von unten gefuellt)
+        int barX = leftPos + 153;
+        int barTop = topPos + 17;
+        int barH = 52;
+        int fillH = (int) (barH * menu.getEnergyFraction());
+        graphics.fill(barX, barTop + (barH - fillH), barX + 12, barTop + barH, 0xFF3CC850);
+
+        // Hitzebalken (links neben dem Energiebalken, von unten gefuellt)
+        int heatX = leftPos + 137;
+        graphics.fill(heatX, barTop, heatX + 12, barTop + barH, 0xFF202020);
+        float heatFrac = menu.getHeatFraction();
+        int heatFill = (int) (barH * heatFrac);
+        // Orange im Normalbetrieb, Rot ab Drosselschwelle (75 %).
+        int heatColor = heatFrac >= 0.75f ? 0xFFE03030 : 0xFFE0902C;
+        graphics.fill(heatX, barTop + (barH - heatFill), heatX + 12, barTop + barH, heatColor);
+
+        // Brenn-Anzeige (orange) links neben dem Brennstoff-Slot
+        int bx = leftPos + 72;
+        int bTop = topPos + 34;
+        int bH = 18;
+        graphics.fill(bx, bTop, bx + 4, bTop + bH, 0xFF202020);
+        int bf = (int) (bH * menu.getBurnFraction());
+        graphics.fill(bx, bTop + (bH - bf), bx + 4, bTop + bH, 0xFFE0902C);
+    }
+
+    @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+        // Button-Labels dynamisch aktualisieren (ContainerData wird jedes Frame gelesen)
+        redstoneButton.setMessage(Component.translatable(menu.getRedstoneMode().translationKey()));
+        comparatorButton.setMessage(Component.translatable(menu.getComparatorMode().translationKey()));
+        super.render(graphics, mouseX, mouseY, delta);
+
+        int ex = leftPos + 152;
+        int ey = topPos + 16;
         if (mouseX >= ex && mouseX < ex + 14 && mouseY >= ey && mouseY < ey + 54) {
-            context.drawTooltip(textRenderer,
-                    Text.literal(handler.getEnergy() + " / " + handler.getCapacity() + " FE"),
+            graphics.setTooltipForNextFrame(this.font,
+                    Component.literal(menu.getEnergy() + " / " + menu.getCapacity() + " FE"),
                     mouseX, mouseY);
         }
 
-        int hx = x + 136;
+        int hx = leftPos + 136;
         if (mouseX >= hx && mouseX < hx + 14 && mouseY >= ey && mouseY < ey + 54) {
-            context.drawTooltip(textRenderer,
-                    Text.literal(handler.getHeat() + " / " + handler.getMaxHeat() + " Hitze"),
+            graphics.setTooltipForNextFrame(this.font,
+                    Component.literal(menu.getHeat() + " / " + menu.getMaxHeat() + " Hitze"),
                     mouseX, mouseY);
         }
     }

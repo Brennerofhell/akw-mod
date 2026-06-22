@@ -85,7 +85,56 @@ Reaktoren erzeugen pro Betrieb-Tick Hitze. Ohne Kühlung steigt sie bis zur Expl
 
 ---
 
-## 5. Energie-Infrastruktur
+## 5. Modularer Multiblock-Reaktor
+
+Neben den sechs fertigen Einblockreaktoren gibt es eine zweite Bauweise: den modularen
+Reaktor. Seine Leistung hängt von den wirklich eingebauten Modulen ab.
+
+### Hülle bauen
+
+1. Baue einen hohlen Würfel mit Außenmaß **3×3×3**, **5×5×5** oder **7×7×7**.
+2. Die Außenwand muss vollständig aus **Reaktor-Gehäusen** bestehen.
+3. Ersetze den mittleren Block einer Seitenwand durch genau einen
+   **Multiblock-Controller**. Der Innenraum liegt hinter seiner Vorderseite.
+4. Setze mindestens einen **Reaktorkern** in den Innenraum.
+5. Erlaubt sind innen Luft, Reaktorkerne, Steuerstäbe, Kühlrohre und Blei-Blöcke.
+6. Rechtsklicke den Controller mit dem **Reaktor-Schraubenschlüssel**.
+
+Der Controller meldet, ob die Hülle unvollständig ist, ein Kern fehlt oder ein
+ungültiger Block im Innenraum steht. Er prüft die Struktur während des Betriebs alle
+100 Ticks erneut.
+
+### Innenmodule
+
+- Jeder **Reaktorkern** kann einen Brennstab pro Zyklus verwenden und liefert bis zu
+  **80 FE/Tick**.
+- Direkt benachbarte Kerne erhöhen ihre Reaktivität und damit die Leistung, erzeugen
+  aber konzentrierte Wärme.
+- Bis zu zwei angrenzende **Steuerstäbe** senken die Wärme eines Kerns.
+- Ein **Kühlrohr** wirkt nur, wenn sein zusammenhängendes Rohrnetz die Außenhülle
+  berührt. Der Kern muss direkt an ein solches Netz angrenzen.
+- Nicht mit der Hülle verbundene Kühlrohre werden beim Assemblieren angezeigt, kühlen
+  den Reaktor aber nicht.
+
+Ein Brennzyklus aktiviert so viele Kerne, wie Brennstäbe und freie Plätze im
+Abfallslot vorhanden sind. Pro aktivem Kern werden ein Brennstab verbraucht und ein
+verbrauchter Brennstab erzeugt. Bei 90 Prozent Maximaltemperatur erfolgt eine
+automatische Abschaltung; bei weiterem Temperaturanstieg bleibt die Kernschmelze
+gefährlich.
+
+### Anschlüsse im aktuellen MVP
+
+- Rechtsklick auf den assemblierten Controller öffnet das bekannte Reaktor-GUI.
+- Hopper von oben liefern Brennstäbe; Hopper von unten entnehmen Abfall.
+- FE wird über angrenzende Kabel, Akkus oder Verbraucher ausgegeben.
+- Ein Redstone-Signal am Controller verhindert den Start eines neuen Brennzyklus.
+
+Eigene Energie-, Item- und Redstone-Ports sowie rechteckige Hüllen bis 9×9×9 sind für
+die nächste Multiblock-Ausbaustufe vorgesehen.
+
+---
+
+## 6. Energie-Infrastruktur
 
 ### Energie-Kabel (`akw:energy_cable`)
 - Transportiert FE zwischen Blöcken.
@@ -103,7 +152,7 @@ kompatibel mit Create-FE-Brücken (kein extra Addon nötig).
 
 ---
 
-## 6. Rezepte
+## 7. Rezepte
 
 **Grundkette**
 
@@ -146,17 +195,18 @@ kompatibel mit Create-FE-Brücken (kein extra Addon nötig).
 
 ---
 
-## 7. Reaktor-Bausteine
+## 8. Reaktor-Bausteine
 
-- **Reaktorkern**, **Steuerstab-Block** — Crafting-Bauteile der höheren Reaktoren.
-- **Kühlrohr** — aktive Kühlung (−8 Hitze/Tick je angrenzendem Rohr).
+- **Reaktorkern**, **Steuerstab-Block** — Innenmodule des Multiblocks und
+  Crafting-Bauteile der höheren Einblockreaktoren.
+- **Kühlrohr** — direkte Kühlung bei Einblockreaktoren; verbundenes Wärmenetz im Multiblock.
 - **Blei-Block** — als Strahlenschutz gedacht (derzeit dekorativ/Lager).
 - **Abfallbehälter** — Lager für verbrauchtes Material (dekorativ).
 - **Angereicherter-Uran-Block** — kompaktes Uran-Lager (leuchtet schwach).
 
 ---
 
-## 8. Strom nutzen
+## 9. Strom nutzen
 
 Der erzeugte Strom ist **FE** (Forge Energy), bereitgestellt über die *Team Reborn
 Energy*-API. Platziere einen Verbraucher, ein **Energie-Kabel** oder einen **Akku-Block**

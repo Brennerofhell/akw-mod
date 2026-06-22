@@ -1,30 +1,6 @@
 plugins {
-    id 'fabric-loom' version '1.17-SNAPSHOT'
+    id 'net.neoforged.moddev' version '2.0.141'
     id 'maven-publish'
-}
-
-loom {
-    runs {
-        datagen {
-            inherit client
-            name "Data Generation"
-            vmArg "-Dfabric-api.datagen"
-            vmArg "-Dfabric-api.datagen.output-dir=${file("src/main/generated")}"
-            vmArg "-Dfabric-api.datagen.modid=akw"
-            runDir "build/datagen"
-        }
-    }
-}
-
-// Datagen schreibt ausschliesslich nach src/main/generated (committed), damit der
-// Aufraeum-Schritt von Fabric niemals handgepflegte Dateien in src/main/resources
-// (Texturen, fabric.mod.json, icon.png, worldgen) loescht.
-sourceSets {
-    main {
-        resources {
-            srcDir 'src/main/generated'
-        }
-    }
 }
 
 version = project.mod_version
@@ -34,29 +10,45 @@ base {
     archivesName = project.archives_base_name
 }
 
-repositories {
-    // Team Reborn Energy API liegt auf dem Fabric-Maven
-    maven {
-        name = 'Fabric'
-        url = 'https://maven.fabricmc.net/'
+neoForge {
+    version = project.neoforge_version
+
+    runs {
+        client {
+            client()
+        }
+        server {
+            server()
+        }
+        clientData {
+            clientData()
+            programArguments.addAll '--mod', 'akw',
+                '--all',
+                '--output', file('src/main/generated').getAbsolutePath(),
+                '--existing', file('src/main/resources').getAbsolutePath()
+        }
+        serverData {
+            serverData()
+            programArguments.addAll '--mod', 'akw',
+                '--all',
+                '--output', file('src/main/generated').getAbsolutePath(),
+                '--existing', file('src/main/resources').getAbsolutePath()
+        }
+    }
+
+    mods {
+        akw {
+            sourceSet(sourceSets.main)
+        }
     }
 }
 
-dependencies {
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-
-    // FE-kompatible Energie auf Fabric (Tech Reborn Oekosystem) + per JiJ buendeln
-    modImplementation "teamreborn:energy:${project.energy_version}"
-    include "teamreborn:energy:${project.energy_version}"
-}
+sourceSets.main.resources.srcDir 'src/main/generated'
 
 processResources {
     inputs.property 'version', project.version
     filteringCharset 'UTF-8'
-    filesMatching('fabric.mod.json') {
+    filesMatching('META-INF/neoforge.mods.toml') {
         expand 'version': project.version
     }
 }

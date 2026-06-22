@@ -3,132 +3,124 @@ package ch.danielt.akw.datagen;
 import ch.danielt.akw.AkwMod;
 import ch.danielt.akw.registry.ModBlocks;
 import ch.danielt.akw.registry.ModItems;
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricAdvancementProvider;
-import net.minecraft.advancement.Advancement;
-import net.minecraft.advancement.AdvancementEntry;
-import net.minecraft.advancement.AdvancementFrame;
-import net.minecraft.advancement.criterion.InventoryChangedCriterion;
-import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.advancements.Advancement;
+import net.minecraft.advancements.AdvancementHolder;
+import net.minecraft.advancements.AdvancementType;
+import net.minecraft.advancements.critereon.InventoryChangeTrigger;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.data.advancements.AdvancementSubProvider;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**
  * Erzeugt die Advancement-Kette: Uranabbau → Schmelzen → Anreicherung → Brennstab
  * → Erster Reaktor → Energie online → (Elite / Fusion / Multiblock).
  */
-public class ModAdvancementProvider extends FabricAdvancementProvider {
-
-    public ModAdvancementProvider(FabricDataOutput output,
-                                   CompletableFuture<RegistryWrapper.WrapperLookup> lookup) {
-        super(output, lookup);
-    }
+public class ModAdvancementProvider implements AdvancementSubProvider {
 
     @Override
-    public void generateAdvancement(RegistryWrapper.WrapperLookup lookup,
-                                     Consumer<AdvancementEntry> exporter) {
+    public void generate(HolderLookup.Provider registries, Consumer<AdvancementHolder> consumer) {
 
-        AdvancementEntry mineUranium = Advancement.Builder.create()
+        AdvancementHolder mineUranium = Advancement.Builder.advancement()
                 .display(
                         ModItems.RAW_URANIUM,
-                        Text.translatable("advancements.akw.mine_uranium.title"),
-                        Text.translatable("advancements.akw.mine_uranium.desc"),
-                        Identifier.ofVanilla("textures/gui/advancements/backgrounds/stone.png"),
-                        AdvancementFrame.TASK, true, true, false)
-                .criterion("has_raw_uranium",
-                        InventoryChangedCriterion.Conditions.items(ModItems.RAW_URANIUM))
-                .build(exporter, AkwMod.MOD_ID + ":story/mine_uranium");
+                        Component.translatable("advancements.akw.mine_uranium.title"),
+                        Component.translatable("advancements.akw.mine_uranium.desc"),
+                        ResourceLocation.withDefaultNamespace("textures/gui/advancements/backgrounds/stone.png"),
+                        AdvancementType.TASK, true, true, false)
+                .addCriterion("has_raw_uranium",
+                        InventoryChangeTrigger.TriggerInstance.hasItems(ModItems.RAW_URANIUM))
+                .save(consumer, AkwMod.MOD_ID + ":story/mine_uranium");
 
-        AdvancementEntry smeltUranium = Advancement.Builder.create()
+        AdvancementHolder smeltUranium = Advancement.Builder.advancement()
                 .parent(mineUranium)
                 .display(
                         ModItems.URANIUM_INGOT,
-                        Text.translatable("advancements.akw.smelt_uranium.title"),
-                        Text.translatable("advancements.akw.smelt_uranium.desc"),
-                        null, AdvancementFrame.TASK, true, true, false)
-                .criterion("has_uranium_ingot",
-                        InventoryChangedCriterion.Conditions.items(ModItems.URANIUM_INGOT))
-                .build(exporter, AkwMod.MOD_ID + ":story/smelt_uranium");
+                        Component.translatable("advancements.akw.smelt_uranium.title"),
+                        Component.translatable("advancements.akw.smelt_uranium.desc"),
+                        null, AdvancementType.TASK, true, true, false)
+                .addCriterion("has_uranium_ingot",
+                        InventoryChangeTrigger.TriggerInstance.hasItems(ModItems.URANIUM_INGOT))
+                .save(consumer, AkwMod.MOD_ID + ":story/smelt_uranium");
 
-        AdvancementEntry enrich = Advancement.Builder.create()
+        AdvancementHolder enrich = Advancement.Builder.advancement()
                 .parent(smeltUranium)
                 .display(
                         ModItems.ENRICHED_URANIUM,
-                        Text.translatable("advancements.akw.enrich.title"),
-                        Text.translatable("advancements.akw.enrich.desc"),
-                        null, AdvancementFrame.TASK, true, true, false)
-                .criterion("has_enriched_uranium",
-                        InventoryChangedCriterion.Conditions.items(ModItems.ENRICHED_URANIUM))
-                .build(exporter, AkwMod.MOD_ID + ":story/enrich");
+                        Component.translatable("advancements.akw.enrich.title"),
+                        Component.translatable("advancements.akw.enrich.desc"),
+                        null, AdvancementType.TASK, true, true, false)
+                .addCriterion("has_enriched_uranium",
+                        InventoryChangeTrigger.TriggerInstance.hasItems(ModItems.ENRICHED_URANIUM))
+                .save(consumer, AkwMod.MOD_ID + ":story/enrich");
 
-        AdvancementEntry fuelRod = Advancement.Builder.create()
+        AdvancementHolder fuelRod = Advancement.Builder.advancement()
                 .parent(enrich)
                 .display(
                         ModItems.FUEL_ROD,
-                        Text.translatable("advancements.akw.fuel_rod.title"),
-                        Text.translatable("advancements.akw.fuel_rod.desc"),
-                        null, AdvancementFrame.TASK, true, true, false)
-                .criterion("has_fuel_rod",
-                        InventoryChangedCriterion.Conditions.items(ModItems.FUEL_ROD))
-                .build(exporter, AkwMod.MOD_ID + ":story/fuel_rod");
+                        Component.translatable("advancements.akw.fuel_rod.title"),
+                        Component.translatable("advancements.akw.fuel_rod.desc"),
+                        null, AdvancementType.TASK, true, true, false)
+                .addCriterion("has_fuel_rod",
+                        InventoryChangeTrigger.TriggerInstance.hasItems(ModItems.FUEL_ROD))
+                .save(consumer, AkwMod.MOD_ID + ":story/fuel_rod");
 
-        AdvancementEntry firstReactor = Advancement.Builder.create()
+        AdvancementHolder firstReactor = Advancement.Builder.advancement()
                 .parent(fuelRod)
                 .display(
                         ModBlocks.NUCLEAR_REACTOR,
-                        Text.translatable("advancements.akw.first_reactor.title"),
-                        Text.translatable("advancements.akw.first_reactor.desc"),
-                        null, AdvancementFrame.GOAL, true, true, false)
-                .criterion("has_reactor",
-                        InventoryChangedCriterion.Conditions.items(ModBlocks.NUCLEAR_REACTOR))
-                .build(exporter, AkwMod.MOD_ID + ":story/first_reactor");
+                        Component.translatable("advancements.akw.first_reactor.title"),
+                        Component.translatable("advancements.akw.first_reactor.desc"),
+                        null, AdvancementType.GOAL, true, true, false)
+                .addCriterion("has_reactor",
+                        InventoryChangeTrigger.TriggerInstance.hasItems(ModBlocks.NUCLEAR_REACTOR))
+                .save(consumer, AkwMod.MOD_ID + ":story/first_reactor");
 
-        AdvancementEntry energyOnline = Advancement.Builder.create()
+        AdvancementHolder energyOnline = Advancement.Builder.advancement()
                 .parent(firstReactor)
                 .display(
                         ModBlocks.ENERGY_CABLE,
-                        Text.translatable("advancements.akw.energy_online.title"),
-                        Text.translatable("advancements.akw.energy_online.desc"),
-                        null, AdvancementFrame.GOAL, true, true, false)
-                .criterion("has_cable",
-                        InventoryChangedCriterion.Conditions.items(ModBlocks.ENERGY_CABLE))
-                .build(exporter, AkwMod.MOD_ID + ":story/energy_online");
+                        Component.translatable("advancements.akw.energy_online.title"),
+                        Component.translatable("advancements.akw.energy_online.desc"),
+                        null, AdvancementType.GOAL, true, true, false)
+                .addCriterion("has_cable",
+                        InventoryChangeTrigger.TriggerInstance.hasItems(ModBlocks.ENERGY_CABLE))
+                .save(consumer, AkwMod.MOD_ID + ":story/energy_online");
 
-        Advancement.Builder.create()
+        Advancement.Builder.advancement()
                 .parent(energyOnline)
                 .display(
                         ModBlocks.ELITE_NUCLEAR_REACTOR,
-                        Text.translatable("advancements.akw.elite_reactor.title"),
-                        Text.translatable("advancements.akw.elite_reactor.desc"),
-                        null, AdvancementFrame.CHALLENGE, true, true, false)
-                .criterion("has_elite",
-                        InventoryChangedCriterion.Conditions.items(ModBlocks.ELITE_NUCLEAR_REACTOR))
-                .build(exporter, AkwMod.MOD_ID + ":story/elite_reactor");
+                        Component.translatable("advancements.akw.elite_reactor.title"),
+                        Component.translatable("advancements.akw.elite_reactor.desc"),
+                        null, AdvancementType.CHALLENGE, true, true, false)
+                .addCriterion("has_elite",
+                        InventoryChangeTrigger.TriggerInstance.hasItems(ModBlocks.ELITE_NUCLEAR_REACTOR))
+                .save(consumer, AkwMod.MOD_ID + ":story/elite_reactor");
 
-        Advancement.Builder.create()
+        Advancement.Builder.advancement()
                 .parent(energyOnline)
                 .display(
                         ModBlocks.FUSION_REACTOR,
-                        Text.translatable("advancements.akw.fusion_reactor.title"),
-                        Text.translatable("advancements.akw.fusion_reactor.desc"),
-                        null, AdvancementFrame.CHALLENGE, true, true, false)
-                .criterion("has_fusion",
-                        InventoryChangedCriterion.Conditions.items(ModBlocks.FUSION_REACTOR))
-                .build(exporter, AkwMod.MOD_ID + ":story/fusion_reactor");
+                        Component.translatable("advancements.akw.fusion_reactor.title"),
+                        Component.translatable("advancements.akw.fusion_reactor.desc"),
+                        null, AdvancementType.CHALLENGE, true, true, false)
+                .addCriterion("has_fusion",
+                        InventoryChangeTrigger.TriggerInstance.hasItems(ModBlocks.FUSION_REACTOR))
+                .save(consumer, AkwMod.MOD_ID + ":story/fusion_reactor");
 
-        Advancement.Builder.create()
+        Advancement.Builder.advancement()
                 .parent(energyOnline)
                 .display(
                         ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER,
-                        Text.translatable("advancements.akw.multiblock.title"),
-                        Text.translatable("advancements.akw.multiblock.desc"),
-                        null, AdvancementFrame.CHALLENGE, true, true, false)
-                .criterion("has_controller",
-                        InventoryChangedCriterion.Conditions.items(
+                        Component.translatable("advancements.akw.multiblock.title"),
+                        Component.translatable("advancements.akw.multiblock.desc"),
+                        null, AdvancementType.CHALLENGE, true, true, false)
+                .addCriterion("has_controller",
+                        InventoryChangeTrigger.TriggerInstance.hasItems(
                                 ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER))
-                .build(exporter, AkwMod.MOD_ID + ":story/multiblock");
+                .save(consumer, AkwMod.MOD_ID + ":story/multiblock");
     }
 }

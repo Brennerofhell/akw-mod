@@ -1,20 +1,19 @@
 package ch.danielt.akw.block;
 
 import ch.danielt.akw.block.entity.WasteContainerBlockEntity;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockEntityProvider;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.BlockEntityTicker;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.ItemScatterer;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -22,22 +21,22 @@ import org.jetbrains.annotations.Nullable;
  * Komparator-Signal (0–15) aus. Bei Füllstand > 50 % strahlt der Block
  * passiv (Level 0) in einem Radius von 5 Blöcken — Blei-Block schützt.
  */
-public class WasteContainerBlock extends Block implements BlockEntityProvider {
+public class WasteContainerBlock extends Block implements EntityBlock {
 
-    public WasteContainerBlock(Settings settings) {
+    public WasteContainerBlock(Properties settings) {
         super(settings);
     }
 
     @Override
-    public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new WasteContainerBlockEntity(pos, state);
     }
 
     @Nullable
     @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state,
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state,
                                                                    BlockEntityType<T> type) {
-        if (world.isClient()) return null;
+        if (level.isClientSide()) return null;
         return (w, pos, st, be) -> {
             if (be instanceof WasteContainerBlockEntity waste) {
                 WasteContainerBlockEntity.tick(w, pos, st, waste);
@@ -46,36 +45,28 @@ public class WasteContainerBlock extends Block implements BlockEntityProvider {
     }
 
     @Override
-    protected boolean hasComparatorOutput(BlockState state) {
+    public boolean hasAnalogOutputSignal(BlockState state) {
         return true;
     }
 
     @Override
-    protected int getComparatorOutput(BlockState state, World world, BlockPos pos, Direction direction) {
-        if (world.getBlockEntity(pos) instanceof WasteContainerBlockEntity be) {
+    public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos, Direction direction) {
+        if (level.getBlockEntity(pos) instanceof WasteContainerBlockEntity be) {
             return be.getComparatorLevel();
         }
         return 0;
     }
 
     @Override
-    protected ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player,
-                                  BlockHitResult hit) {
-        if (!world.isClient()) {
-            BlockEntity be = world.getBlockEntity(pos);
-            if (be instanceof WasteContainerBlockEntity waste) {
-                player.openHandledScreen(waste);
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
+                                               BlockHitResult hit) {
+        if (!level.isClientSide()) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof WasteContainerBlockEntity waste && player instanceof ServerPlayer serverPlayer) {
+                serverPlayer.openMenu(waste, buf -> buf.writeBlockPos(pos));
             }
         }
-        return ActionResult.SUCCESS;
+        return InteractionResult.SUCCESS;
     }
 
-    @Override
-    protected void onStateReplaced(BlockState state, ServerWorld world, BlockPos pos, boolean moved) {
-        BlockEntity be = world.getBlockEntity(pos);
-        if (be instanceof WasteContainerBlockEntity waste) {
-            ItemScatterer.spawn(world, pos, waste);
-        }
-        super.onStateReplaced(state, world, pos, moved);
-    }
 }

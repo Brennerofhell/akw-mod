@@ -2,69 +2,64 @@ package ch.danielt.akw.block.entity;
 
 import ch.danielt.akw.energy.EnergyNet;
 import ch.danielt.akw.registry.ModBlockEntities;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.storage.ReadView;
-import net.minecraft.storage.WriteView;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import team.reborn.energy.api.base.SimpleEnergyStorage;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 /**
  * Akku-Block: grosser FE-Puffer, der Reaktor-Spitzen aufnimmt und an
- * Verbraucher/Kabel weitergibt. Nimmt FE über alle Seiten an und gibt es über
- * alle Seiten ab. Der Füllstand wird als Komparator-Signal (0–15) ausgegeben,
+ * Verbraucher/Kabel weitergibt. Nimmt FE ueber alle Seiten an und gibt es ueber
+ * alle Seiten ab. Der Fuellstand wird als Komparator-Signal (0–15) ausgegeben,
  * sodass man den Ladestand per Redstone ablesen kann (GUI folgt in der Politur).
  */
 public class EnergyBatteryBlockEntity extends BlockEntity {
 
-    public static final long CAPACITY = 1_000_000;
-    public static final long TRANSFER = 4_096;
+    public static final int CAPACITY = 1_000_000;
+    public static final int TRANSFER = 4_096;
 
-    public final SimpleEnergyStorage energyStorage = new SimpleEnergyStorage(CAPACITY, TRANSFER, TRANSFER) {
-        @Override
-        protected void onFinalCommit() {
-            EnergyBatteryBlockEntity.this.markDirty();
-        }
-    };
+    public final MutableEnergyStorage energyStorage = new MutableEnergyStorage(CAPACITY, TRANSFER);
 
     private int lastComparator;
 
     public EnergyBatteryBlockEntity(BlockPos pos, BlockState state) {
-        super(ModBlockEntities.ENERGY_BATTERY, pos, state);
+        super(ModBlockEntities.ENERGY_BATTERY.get(), pos, state);
+        energyStorage.setOnChange(this::setChanged);
     }
 
-    public static void tick(World world, BlockPos pos, BlockState state, EnergyBatteryBlockEntity be) {
-        if (world.isClient()) {
+    public static void tick(Level level, BlockPos pos, BlockState state, EnergyBatteryBlockEntity be) {
+        if (level.isClientSide()) {
             return;
         }
-        EnergyNet.pushToNeighbors(be.energyStorage, world, pos, TRANSFER);
+        EnergyNet.pushToNeighbors(be.energyStorage, level, pos, TRANSFER);
 
-        int level = be.getComparatorLevel();
-        if (level != be.lastComparator) {
-            be.lastComparator = level;
-            world.updateComparators(pos, state.getBlock());
+        int lvl = be.getComparatorLevel();
+        if (lvl != be.lastComparator) {
+            be.lastComparator = lvl;
+            level.updateNeighbourForOutputSignal(pos, state.getBlock());
         }
     }
 
-    /** Füllstand als Redstone-Stärke 0–15. */
+    /** Fuellstand als Redstone-Staerke 0–15. */
     public int getComparatorLevel() {
-        if (energyStorage.amount <= 0) {
+        if (energyStorage.getEnergyStored() <= 0) {
             return 0;
         }
-        return (int) Math.max(1, energyStorage.amount * 15 / energyStorage.capacity);
+        return (int) Math.max(1, (long) energyStorage.getEnergyStored() * 15 / energyStorage.getMaxEnergyStored());
     }
 
     @Override
-    protected void writeData(WriteView view) {
-        super.writeData(view);
-        view.putLong("Energy", energyStorage.amount);
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        output.putInt("Energy", energyStorage.getEnergyStored());
     }
 
     @Override
-    protected void readData(ReadView view) {
-        super.readData(view);
-        energyStorage.amount = view.getLong("Energy", 0L);
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        energyStorage.setEnergy(input.getIntOr("Energy", 0));
         lastComparator = getComparatorLevel();
     }
 }

@@ -2,19 +2,22 @@ package ch.danielt.akw.registry;
 
 import ch.danielt.akw.AkwMod;
 import ch.danielt.akw.effect.RadiationEffect;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.effect.MobEffect;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
 
 public class ModEffects {
-    public static final RegistryEntry<StatusEffect> RADIATION = Registry.registerReference(
-            Registries.STATUS_EFFECT,
-            Identifier.of(AkwMod.MOD_ID, "radiation"),
-            new RadiationEffect());
+    private static final DeferredRegister<MobEffect> MOB_EFFECTS =
+            DeferredRegister.create(BuiltInRegistries.MOB_EFFECT, AkwMod.MOD_ID);
 
-    public static void registerAll() {
+    public static final DeferredHolder<MobEffect, RadiationEffect> RADIATION =
+            MOB_EFFECTS.register("radiation", RadiationEffect::new);
+
+    public static void register(IEventBus bus) {
+        MOB_EFFECTS.register(bus);
         AkwMod.LOGGER.info("[Atomkraftwerk] Effekte registriert.");
     }
 }

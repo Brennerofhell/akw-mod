@@ -1,10 +1,10 @@
 package ch.danielt.akw.block;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 
 /** Wandblock für Multiblock-Reaktoren. Keine eigene Logik. */
 public class ReactorCasingBlock extends Block {
-    public ReactorCasingBlock(Settings settings) {
+    public ReactorCasingBlock(Properties settings) {
         super(settings);
     }
 }

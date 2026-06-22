@@ -2,27 +2,26 @@ package ch.danielt.akw.block;
 
 import ch.danielt.akw.block.entity.MultiblockReactorControllerBlockEntity;
 import ch.danielt.akw.registry.ModItems;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockEntityProvider;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.BlockEntityTicker;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemPlacementContext;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.BooleanProperty;
-import net.minecraft.state.property.EnumProperty;
-import net.minecraft.state.property.Properties;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.ItemScatterer;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.World;
-import net.minecraft.world.block.WireOrientation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.redstone.Orientation;
+import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -30,65 +29,65 @@ import org.jetbrains.annotations.Nullable;
  * öffnet das GUI (wenn assembliert). Rechtsklick mit Schraubenschlüssel assembliert
  * (oder disassembliert) den Reaktor.
  */
-public class MultiblockReactorControllerBlock extends Block implements BlockEntityProvider {
+public class MultiblockReactorControllerBlock extends Block implements EntityBlock {
 
-    public static final EnumProperty<Direction> FACING = Properties.HORIZONTAL_FACING;
-    public static final BooleanProperty ASSEMBLED = BooleanProperty.of("assembled");
-    public static final BooleanProperty LIT = Properties.LIT;
-    public static final BooleanProperty POWERED = Properties.POWERED;
+    public static final EnumProperty<Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
+    public static final BooleanProperty ASSEMBLED = BooleanProperty.create("assembled");
+    public static final BooleanProperty LIT = BlockStateProperties.LIT;
+    public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
 
-    public MultiblockReactorControllerBlock(Settings settings) {
+    public MultiblockReactorControllerBlock(Properties settings) {
         super(settings);
-        setDefaultState(getDefaultState()
-                .with(FACING, Direction.NORTH)
-                .with(ASSEMBLED, false)
-                .with(LIT, false)
-                .with(POWERED, false));
+        registerDefaultState(defaultBlockState()
+                .setValue(FACING, Direction.NORTH)
+                .setValue(ASSEMBLED, false)
+                .setValue(LIT, false)
+                .setValue(POWERED, false));
     }
 
     @Override
-    protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(FACING, ASSEMBLED, LIT, POWERED);
     }
 
     @Override
-    protected boolean hasComparatorOutput(BlockState state) {
+    public boolean hasAnalogOutputSignal(BlockState state) {
         return true;
     }
 
     @Override
-    protected int getComparatorOutput(BlockState state, World world, BlockPos pos, Direction direction) {
-        if (world.getBlockEntity(pos) instanceof MultiblockReactorControllerBlockEntity be) {
+    public int getAnalogOutputSignal(BlockState state, Level level, BlockPos pos, Direction direction) {
+        if (level.getBlockEntity(pos) instanceof MultiblockReactorControllerBlockEntity be) {
             return be.getComparatorLevel();
         }
         return 0;
     }
 
     @Override
-    protected void neighborUpdate(BlockState state, World world, BlockPos pos, Block sourceBlock,
-                                   WireOrientation wireOrientation, boolean notify) {
-        boolean powered = world.isReceivingRedstonePower(pos);
-        if (powered != state.get(POWERED)) {
-            world.setBlockState(pos, state.with(POWERED, powered), Block.NOTIFY_ALL);
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block,
+                                @Nullable Orientation orientation, boolean movedByPiston) {
+        boolean powered = level.hasNeighborSignal(pos);
+        if (powered != state.getValue(POWERED)) {
+            level.setBlock(pos, state.setValue(POWERED, powered), Block.UPDATE_ALL);
         }
     }
 
     @Nullable
     @Override
-    public BlockState getPlacementState(ItemPlacementContext ctx) {
-        return getDefaultState().with(FACING, ctx.getHorizontalPlayerFacing().getOpposite());
+    public BlockState getStateForPlacement(BlockPlaceContext ctx) {
+        return defaultBlockState().setValue(FACING, ctx.getHorizontalDirection().getOpposite());
     }
 
     @Override
-    public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new MultiblockReactorControllerBlockEntity(pos, state);
     }
 
     @Nullable
     @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state,
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state,
                                                                    BlockEntityType<T> type) {
-        if (world.isClient()) return null;
+        if (level.isClientSide()) return null;
         return (w, pos, st, be) -> {
             if (be instanceof MultiblockReactorControllerBlockEntity controller) {
                 MultiblockReactorControllerBlockEntity.tick(w, pos, st, controller);
@@ -97,48 +96,44 @@ public class MultiblockReactorControllerBlock extends Block implements BlockEnti
     }
 
     @Override
-    protected ActionResult onUse(BlockState state, World world, BlockPos pos,
-                                  PlayerEntity player, BlockHitResult hit) {
-        if (world.isClient()) return ActionResult.SUCCESS;
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
+                                               Player player, BlockHitResult hit) {
+        if (level.isClientSide()) return InteractionResult.SUCCESS;
 
-        BlockEntity be = world.getBlockEntity(pos);
+        BlockEntity be = level.getBlockEntity(pos);
         if (!(be instanceof MultiblockReactorControllerBlockEntity controller)) {
-            return ActionResult.PASS;
+            return InteractionResult.PASS;
         }
 
-        boolean holdingWrench = player.getMainHandStack().isOf(ModItems.REACTOR_WRENCH);
+        boolean holdingWrench = player.getMainHandItem().is(ModItems.REACTOR_WRENCH);
 
         if (holdingWrench) {
-            if (state.get(ASSEMBLED)) {
+            if (state.getValue(ASSEMBLED)) {
                 // Disassemblieren
-                controller.disassemble(world, pos, state);
-                player.sendMessage(Text.translatable("akw.multiblock.disassembled"), true);
+                controller.disassemble(level, pos, state);
+                player.displayClientMessage(Component.translatable("akw.multiblock.disassembled"), true);
             } else {
                 // Assemblieren
-                if (controller.tryAssemble(world, pos, state)) {
-                    player.sendMessage(Text.translatable("akw.multiblock.assembled"), true);
+                if (controller.tryAssemble(level, pos, state)) {
+                    player.displayClientMessage(Component.translatable("akw.multiblock.assembled",
+                            controller.getLayout().coreCount(),
+                            controller.getLayout().connectedCoolingPipeCount()), true);
                 } else {
-                    player.sendMessage(Text.translatable("akw.multiblock.invalid"), true);
+                    player.displayClientMessage(controller.getLastAssemblyError(), true);
                 }
             }
-            return ActionResult.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
 
         // Kein Wrench: GUI öffnen (nur wenn assembliert)
-        if (state.get(ASSEMBLED)) {
-            player.openHandledScreen(controller);
+        if (state.getValue(ASSEMBLED)) {
+            if (player instanceof ServerPlayer serverPlayer) {
+                serverPlayer.openMenu(controller, buf -> buf.writeBlockPos(pos));
+            }
         } else {
-            player.sendMessage(Text.translatable("akw.multiblock.need_wrench"), true);
+            player.displayClientMessage(Component.translatable("akw.multiblock.need_wrench"), true);
         }
-        return ActionResult.SUCCESS;
+        return InteractionResult.SUCCESS;
     }
 
-    @Override
-    protected void onStateReplaced(BlockState state, ServerWorld world, BlockPos pos, boolean moved) {
-        BlockEntity be = world.getBlockEntity(pos);
-        if (be instanceof MultiblockReactorControllerBlockEntity controller) {
-            ItemScatterer.spawn(world, pos, controller);
-        }
-        super.onStateReplaced(state, world, pos, moved);
-    }
 }

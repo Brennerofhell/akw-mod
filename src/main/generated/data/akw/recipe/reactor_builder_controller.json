@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "B": "akw:energy_battery",
+    "C": "akw:reactor_casing",
+    "E": "akw:energy_cable",
+    "R": "minecraft:redstone_block"
+  },
+  "pattern": [
+    "CRC",
+    "EBE",
+    "CRC"
+  ],
+  "result": {
+    "count": 1,
+    "id": "akw:reactor_builder_controller"
+  }
+}

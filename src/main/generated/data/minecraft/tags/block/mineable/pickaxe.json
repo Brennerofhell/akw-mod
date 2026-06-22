@@ -15,6 +15,9 @@
     "akw:waste_container",
     "akw:enriched_uranium_block",
     "akw:energy_cable",
-    "akw:energy_battery"
+    "akw:energy_battery",
+    "akw:reactor_casing",
+    "akw:multiblock_reactor_controller",
+    "akw:reactor_builder_controller"
   ]
 }

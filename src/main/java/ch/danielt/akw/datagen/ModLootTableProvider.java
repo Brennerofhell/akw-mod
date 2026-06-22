@@ -2,44 +2,76 @@ package ch.danielt.akw.datagen;
 
 import ch.danielt.akw.registry.ModBlocks;
 import ch.danielt.akw.registry.ModItems;
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricBlockLootTableProvider;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.data.loot.BlockLootSubProvider;
+import net.minecraft.world.flag.FeatureFlags;
+import net.minecraft.world.level.block.Block;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.List;
+import java.util.Set;
 
-public class ModLootTableProvider extends FabricBlockLootTableProvider {
+/** Block-Loot-Tabellen: Erze mit Silk-Touch/Fortune, alle anderen Bloecke droppen sich selbst. */
+public class ModLootTableProvider extends BlockLootSubProvider {
 
-    public ModLootTableProvider(FabricDataOutput dataOutput,
-                                CompletableFuture<RegistryWrapper.WrapperLookup> registryLookup) {
-        super(dataOutput, registryLookup);
+    public ModLootTableProvider(HolderLookup.Provider registries) {
+        super(Set.of(), FeatureFlags.VANILLA_SET, registries);
+    }
+
+    private static final List<Block> KNOWN_BLOCKS = List.of(
+            ModBlocks.URANIUM_ORE.get(),
+            ModBlocks.DEEPSLATE_URANIUM_ORE.get(),
+            ModBlocks.NUCLEAR_REACTOR.get(),
+            ModBlocks.ADVANCED_NUCLEAR_REACTOR.get(),
+            ModBlocks.ELITE_NUCLEAR_REACTOR.get(),
+            ModBlocks.BREEDER_REACTOR.get(),
+            ModBlocks.THORIUM_REACTOR.get(),
+            ModBlocks.FUSION_REACTOR.get(),
+            ModBlocks.REACTOR_CORE.get(),
+            ModBlocks.CONTROL_ROD_BLOCK.get(),
+            ModBlocks.COOLING_PIPE.get(),
+            ModBlocks.LEAD_BLOCK.get(),
+            ModBlocks.WASTE_CONTAINER.get(),
+            ModBlocks.ENRICHED_URANIUM_BLOCK.get(),
+            ModBlocks.REACTOR_CASING.get(),
+            ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER.get(),
+            ModBlocks.REACTOR_BUILDER_CONTROLLER.get(),
+            ModBlocks.ENERGY_CABLE.get(),
+            ModBlocks.ENERGY_BATTERY.get());
+
+    @Override
+    protected void generate() {
+        // Erze: Silk Touch → Block, sonst Roh-Uran (Fortune wirkt)
+        add(ModBlocks.URANIUM_ORE.get(),
+                createOreDrop(ModBlocks.URANIUM_ORE.get(), ModItems.RAW_URANIUM.get()));
+        add(ModBlocks.DEEPSLATE_URANIUM_ORE.get(),
+                createOreDrop(ModBlocks.DEEPSLATE_URANIUM_ORE.get(), ModItems.RAW_URANIUM.get()));
+
+        // Reaktoren
+        dropSelf(ModBlocks.NUCLEAR_REACTOR.get());
+        dropSelf(ModBlocks.ADVANCED_NUCLEAR_REACTOR.get());
+        dropSelf(ModBlocks.ELITE_NUCLEAR_REACTOR.get());
+        dropSelf(ModBlocks.BREEDER_REACTOR.get());
+        dropSelf(ModBlocks.THORIUM_REACTOR.get());
+        dropSelf(ModBlocks.FUSION_REACTOR.get());
+
+        // Bausteine
+        dropSelf(ModBlocks.REACTOR_CORE.get());
+        dropSelf(ModBlocks.CONTROL_ROD_BLOCK.get());
+        dropSelf(ModBlocks.COOLING_PIPE.get());
+        dropSelf(ModBlocks.LEAD_BLOCK.get());
+        dropSelf(ModBlocks.WASTE_CONTAINER.get());
+        dropSelf(ModBlocks.ENRICHED_URANIUM_BLOCK.get());
+        dropSelf(ModBlocks.REACTOR_CASING.get());
+        dropSelf(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER.get());
+        dropSelf(ModBlocks.REACTOR_BUILDER_CONTROLLER.get());
+
+        // Energie-Infrastruktur
+        dropSelf(ModBlocks.ENERGY_CABLE.get());
+        dropSelf(ModBlocks.ENERGY_BATTERY.get());
     }
 
     @Override
-    public void generate() {
-        // Erze: Silk Touch → Block, sonst Roh-Uran (Fortune wirkt)
-        addDrop(ModBlocks.URANIUM_ORE, oreDrops(ModBlocks.URANIUM_ORE, ModItems.RAW_URANIUM));
-        addDrop(ModBlocks.DEEPSLATE_URANIUM_ORE,
-                oreDrops(ModBlocks.DEEPSLATE_URANIUM_ORE, ModItems.RAW_URANIUM));
-
-        // Reaktoren
-        addDrop(ModBlocks.NUCLEAR_REACTOR);
-        addDrop(ModBlocks.ADVANCED_NUCLEAR_REACTOR);
-        addDrop(ModBlocks.ELITE_NUCLEAR_REACTOR);
-        addDrop(ModBlocks.BREEDER_REACTOR);
-        addDrop(ModBlocks.THORIUM_REACTOR);
-        addDrop(ModBlocks.FUSION_REACTOR);
-
-        // Bausteine
-        addDrop(ModBlocks.REACTOR_CORE);
-        addDrop(ModBlocks.CONTROL_ROD_BLOCK);
-        addDrop(ModBlocks.COOLING_PIPE);
-        addDrop(ModBlocks.LEAD_BLOCK);
-        addDrop(ModBlocks.WASTE_CONTAINER);
-        addDrop(ModBlocks.ENRICHED_URANIUM_BLOCK);
-
-        // Energie-Infrastruktur
-        addDrop(ModBlocks.ENERGY_CABLE);
-        addDrop(ModBlocks.ENERGY_BATTERY);
+    protected Iterable<Block> getKnownBlocks() {
+        return KNOWN_BLOCKS;
     }
 }

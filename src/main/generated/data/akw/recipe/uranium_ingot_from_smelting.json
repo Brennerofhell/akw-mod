@@ -5,6 +5,7 @@
   "experience": 0.7,
   "ingredient": "akw:raw_uranium",
   "result": {
+    "count": 1,
     "id": "akw:uranium_ingot"
   }
 }

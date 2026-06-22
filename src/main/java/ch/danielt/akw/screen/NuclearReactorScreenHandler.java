@@ -1,56 +1,58 @@
 package ch.danielt.akw.screen;
 
 import ch.danielt.akw.block.entity.NuclearReactorBlockEntity;
+import ch.danielt.akw.reactor.ComparatorMode;
+import ch.danielt.akw.reactor.RedstoneMode;
 import ch.danielt.akw.registry.ModItems;
 import ch.danielt.akw.registry.ModScreenHandlers;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.ArrayPropertyDelegate;
-import net.minecraft.screen.PropertyDelegate;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.ScreenHandlerType;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.Container;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.inventory.SimpleContainerData;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 
-public class NuclearReactorScreenHandler extends ScreenHandler {
+public class NuclearReactorScreenHandler extends AbstractContainerMenu {
 
-    private final Inventory inventory;
-    private final PropertyDelegate propertyDelegate;
+    private final Container inventory;
+    private final ContainerData propertyDelegate;
 
-    /** Client-Konstruktor für NUCLEAR_REACTOR (aufgerufen vom ExtendedScreenHandlerType). */
-    public NuclearReactorScreenHandler(int syncId, PlayerInventory playerInventory, BlockPos pos) {
+    /** Client-Konstruktor für NUCLEAR_REACTOR (aufgerufen vom IMenuTypeExtension). */
+    public NuclearReactorScreenHandler(int syncId, Inventory playerInventory, BlockPos pos) {
         this(syncId, playerInventory, resolveInventory(playerInventory, pos), resolveDelegate(playerInventory, pos));
     }
 
-    public NuclearReactorScreenHandler(int syncId, PlayerInventory playerInventory,
-                                       Inventory inventory, PropertyDelegate propertyDelegate) {
-        this(ModScreenHandlers.NUCLEAR_REACTOR, syncId, playerInventory, inventory, propertyDelegate);
-        inventory.onOpen(playerInventory.player);
+    public NuclearReactorScreenHandler(int syncId, Inventory playerInventory,
+                                       Container inventory, ContainerData propertyDelegate) {
+        this(ModScreenHandlers.NUCLEAR_REACTOR.get(), syncId, playerInventory, inventory, propertyDelegate);
     }
 
-    /** Geschützter Konstruktor für Unterklassen (anderer ScreenHandlerType). */
-    protected NuclearReactorScreenHandler(ScreenHandlerType<? extends NuclearReactorScreenHandler> type,
-                                          int syncId, PlayerInventory playerInventory,
-                                          Inventory inventory, PropertyDelegate propertyDelegate) {
+    /** Geschützter Konstruktor für Unterklassen (anderer MenuType). */
+    protected NuclearReactorScreenHandler(MenuType<? extends NuclearReactorScreenHandler> type,
+                                          int syncId, Inventory playerInventory,
+                                          Container inventory, ContainerData propertyDelegate) {
         super(type, syncId);
-        checkSize(inventory, 2);
+        checkContainerSize(inventory, 2);
         this.inventory = inventory;
         this.propertyDelegate = propertyDelegate;
 
         // Brennstoff-Slot (Slot 0)
         this.addSlot(new Slot(inventory, NuclearReactorBlockEntity.FUEL_SLOT, 80, 35) {
             @Override
-            public boolean canInsert(ItemStack stack) {
-                return stack.isOf(ModItems.FUEL_ROD);
+            public boolean mayPlace(ItemStack stack) {
+                return stack.is(ModItems.FUEL_ROD);
             }
         });
 
         // Abfall-Slot (Slot 1, Output-Only)
         this.addSlot(new Slot(inventory, NuclearReactorBlockEntity.WASTE_SLOT, 116, 35) {
             @Override
-            public boolean canInsert(ItemStack stack) {
+            public boolean mayPlace(ItemStack stack) {
                 return false;
             }
         });
@@ -66,21 +68,21 @@ public class NuclearReactorScreenHandler extends ScreenHandler {
             this.addSlot(new Slot(playerInventory, col, 8 + col * 18, 142));
         }
 
-        this.addProperties(propertyDelegate);
+        this.addDataSlots(propertyDelegate);
     }
 
-    private static Inventory resolveInventory(PlayerInventory playerInventory, BlockPos pos) {
-        if (playerInventory.player.getEntityWorld().getBlockEntity(pos) instanceof NuclearReactorBlockEntity be) {
+    private static Container resolveInventory(Inventory playerInventory, BlockPos pos) {
+        if (playerInventory.player.level().getBlockEntity(pos) instanceof NuclearReactorBlockEntity be) {
             return be;
         }
-        return new net.minecraft.inventory.SimpleInventory(2);
+        return new SimpleContainer(2);
     }
 
-    private static PropertyDelegate resolveDelegate(PlayerInventory playerInventory, BlockPos pos) {
-        if (playerInventory.player.getEntityWorld().getBlockEntity(pos) instanceof NuclearReactorBlockEntity be) {
-            return be.getPropertyDelegate();
+    private static ContainerData resolveDelegate(Inventory playerInventory, BlockPos pos) {
+        if (playerInventory.player.level().getBlockEntity(pos) instanceof NuclearReactorBlockEntity be) {
+            return be.getContainerData();
         }
-        return new ArrayPropertyDelegate(NuclearReactorBlockEntity.PROPERTY_COUNT);
+        return new SimpleContainerData(NuclearReactorBlockEntity.PROPERTY_COUNT);
     }
 
     public int getEnergy() {
@@ -119,35 +121,64 @@ public class NuclearReactorScreenHandler extends ScreenHandler {
                 : (float) propertyDelegate.get(NuclearReactorBlockEntity.IDX_BURN_TIME) / total;
     }
 
+    public RedstoneMode getRedstoneMode() {
+        int ord = propertyDelegate.get(NuclearReactorBlockEntity.IDX_REDSTONE_MODE);
+        return ord >= 0 && ord < RedstoneMode.values().length
+                ? RedstoneMode.values()[ord] : RedstoneMode.HIGH_DISABLES;
+    }
+
+    public ComparatorMode getComparatorMode() {
+        int ord = propertyDelegate.get(NuclearReactorBlockEntity.IDX_COMPARATOR_MODE);
+        return ord >= 0 && ord < ComparatorMode.values().length
+                ? ComparatorMode.values()[ord] : ComparatorMode.ENERGY;
+    }
+
     @Override
-    public ItemStack quickMove(PlayerEntity player, int slotIndex) {
+    public boolean clickMenuButton(Player player, int id) {
+        if (id == 0) {
+            int next = (propertyDelegate.get(NuclearReactorBlockEntity.IDX_REDSTONE_MODE) + 1)
+                    % RedstoneMode.values().length;
+            propertyDelegate.set(NuclearReactorBlockEntity.IDX_REDSTONE_MODE, next);
+            return true;
+        }
+        if (id == 1) {
+            int next = (propertyDelegate.get(NuclearReactorBlockEntity.IDX_COMPARATOR_MODE) + 1)
+                    % ComparatorMode.values().length;
+            propertyDelegate.set(NuclearReactorBlockEntity.IDX_COMPARATOR_MODE, next);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public ItemStack quickMoveStack(Player player, int slotIndex) {
         ItemStack newStack = ItemStack.EMPTY;
         Slot slot = this.slots.get(slotIndex);
-        if (slot != null && slot.hasStack()) {
-            ItemStack original = slot.getStack();
+        if (slot != null && slot.hasItem()) {
+            ItemStack original = slot.getItem();
             newStack = original.copy();
             // Slots 0-1 = Block-Inventar (Brennstoff, Abfall); ab Slot 2 = Spieler
             if (slotIndex < 2) {
-                if (!this.insertItem(original, 2, this.slots.size(), true)) {
+                if (!this.moveItemStackTo(original, 2, this.slots.size(), true)) {
                     return ItemStack.EMPTY;
                 }
             } else {
                 // Brennstab → Brennstoff-Slot; sonst kein Ziel
-                if (!this.insertItem(original, NuclearReactorBlockEntity.FUEL_SLOT, 1, false)) {
+                if (!this.moveItemStackTo(original, NuclearReactorBlockEntity.FUEL_SLOT, 1, false)) {
                     return ItemStack.EMPTY;
                 }
             }
             if (original.isEmpty()) {
-                slot.setStack(ItemStack.EMPTY);
+                slot.set(ItemStack.EMPTY);
             } else {
-                slot.markDirty();
+                slot.setChanged();
             }
         }
         return newStack;
     }
 
     @Override
-    public boolean canUse(PlayerEntity player) {
-        return this.inventory.canPlayerUse(player);
+    public boolean stillValid(Player player) {
+        return this.inventory.stillValid(player);
     }
 }

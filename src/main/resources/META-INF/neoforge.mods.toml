@@ -1,0 +1,24 @@
+modLoader    = "javafml"
+loaderVersion = "[4,)"
+license       = "MIT"
+
+[[mods]]
+  modId       = "akw"
+  version     = "${version}"
+  displayName = "Atomkraftwerk"
+  description = "Baue dein eigenes Atomkraftwerk: Uran abbauen, Brennstaebe herstellen, Reaktor betreiben und FE-kompatiblen Strom erzeugen."
+  logoFile    = "assets/akw/icon.png"
+
+[[dependencies.akw]]
+  modId        = "neoforge"
+  type         = "required"
+  versionRange = "[21.10,)"
+  ordering     = "NONE"
+  side         = "BOTH"
+
+[[dependencies.akw]]
+  modId        = "minecraft"
+  type         = "required"
+  versionRange = "[1.21.10,1.22)"
+  ordering     = "NONE"
+  side         = "BOTH"

@@ -56,16 +56,20 @@ Rohr + 2 Eigenkühlung). Drosselung bei 75 % maxHitze; Explosion bei 100 %.
 ### Multiblock-Reaktor
 
 Reaktor-Gehäuse-Blöcke in 3×3×3, 5×5×5 oder 7×7×7 um einen Multiblock-Controller
-platzieren, dann mit dem Reaktor-Schraubenschlüssel assemblieren. Leistung skaliert
-mit der Multiblock-Größe.
+platzieren und mindestens einen Reaktorkern in den Innenraum setzen. Steuerstäbe neben
+Kernen senken deren Wärme; Kühlrohre müssen Kerne mit der Außenhülle verbinden. Danach
+mit dem Reaktor-Schraubenschlüssel assemblieren. Leistung, Wärme, Speicher und
+Brennstoffverbrauch skalieren mit den tatsächlich eingebauten Kernen statt mit leerem
+Innenvolumen. Der Controller besitzt Brennstoff- und Abfallslot, unterstützt Hopper
+(oben Brennstoff, unten Abfall) und gibt FE an angrenzende Blöcke ab.
 
 ### Reaktor-Bausteine
 
 | Block | ID | Verwendung |
 |---|---|---|
-| Reaktorkern | `akw:reactor_core` | Crafting-Bauteil |
-| Steuerstab-Block | `akw:control_rod_block` | Reduziert Hitze/Tick im Reaktor |
-| Kühlrohr | `akw:cooling_pipe` | −8 Hitze/Tick je angrenzendem Rohr |
+| Reaktorkern | `akw:reactor_core` | Leistungsmodul im Multiblock und Crafting-Bauteil |
+| Steuerstab-Block | `akw:control_rod_block` | Senkt Wärme angrenzender Multiblock-Kerne |
+| Kühlrohr | `akw:cooling_pipe` | Kühlt Kerne über eine Verbindung zur Multiblock-Hülle |
 | Blei-Block | `akw:lead_block` | Strahlenschutz (Blei auf dem Pfad Reaktor→Spieler blockt Strahlung) |
 | Abfallbehälter | `akw:waste_container` | 9-Slot-GUI für Verbrauchte Brennstäbe; Komparator-Ausgang 0–15; Hopper-Support; passive Strahlung bei > 50 % Füllstand |
 | Angereicherter-Uran-Block | `akw:enriched_uranium_block` | Kompaktlager (leuchtet schwach) |
@@ -122,18 +126,29 @@ Uranabbau beginnt → Erstes Metall → Anreicherung → Brennstab bereit
 
 ## Build (Entwickler)
 
-Voraussetzung: **JDK 21**. Der Pfad ist in `gradle.properties` hinterlegt.
+Voraussetzung: **JDK 21 oder neuer**; kompiliert wird weiterhin für Java 21.
 
 ```bash
-# Mod bauen (JAR unter build/libs/)
-JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home ./gradlew build
+# Normale Arbeitskopie: Mod bauen (JAR unter build/libs/)
+./gradlew build
 
 # Assets/Daten regenerieren
-JAVA_HOME=... ./gradlew runDatagen
+./gradlew runDatagen
 
 # Minecraft-Client zum Testen starten
-JAVA_HOME=... ./gradlew runClient
+./gradlew runClient
 ```
+
+**Windows und OneDrive:** Einmal `tools/prepare-onedrive.ps1` ausführen und danach
+`gradlew-onedrive.bat` statt `gradlew.bat` verwenden:
+
+```powershell
+.\tools\prepare-onedrive.ps1
+.\gradlew-onedrive.bat build --console=plain
+```
+
+Quellen bleiben dabei in OneDrive. Gradle-Cache und Buildausgabe liegen unter
+`%LOCALAPPDATA%\AKWMod`, damit Files On-Demand keine Hash- und Loom-Caches auslagert.
 
 ---
 

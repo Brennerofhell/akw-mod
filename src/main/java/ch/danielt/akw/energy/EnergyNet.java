@@ -1,15 +1,15 @@
 package ch.danielt.akw.energy;
 
-import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.World;
-import team.reborn.energy.api.EnergyStorage;
-import team.reborn.energy.api.EnergyStorageUtil;
-import team.reborn.energy.api.base.SimpleEnergyStorage;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.Level;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.transfer.energy.EnergyHandler;
+import net.neoforged.neoforge.transfer.energy.EnergyHandlerUtil;
+import net.neoforged.neoforge.transfer.transaction.Transaction;
 
 /**
- * Gemeinsame FE-Verteil-Logik (Team Reborn Energy). Wird von allen
+ * Gemeinsame FE-Verteil-Logik (NeoForge Transfer-API, 1.21.10). Wird von allen
  * energieabgebenden BlockEntities (Reaktor, Akku, Kabel) genutzt, damit die
  * Push-Logik nur an einer Stelle lebt — der modulare Kern des Energiesystems.
  */
@@ -20,20 +20,27 @@ public final class EnergyNet {
 
     /**
      * Versucht, FE aus {@code source} an alle sechs angrenzenden FE-Speicher
-     * abzugeben (höchstens {@code maxPerSide} pro Seite und Tick).
+     * abzugeben (höchstens {@code limit} pro Seite und Tick).
      */
-    public static void pushToNeighbors(SimpleEnergyStorage source, World world, BlockPos pos, long maxPerSide) {
-        if (source.amount <= 0) {
+    public static void pushToNeighbors(EnergyHandler source, Level level, BlockPos pos, int limit) {
+        if (source.getAmountAsInt() <= 0) {
             return;
         }
-        for (Direction dir : Direction.values()) {
-            EnergyStorage target = EnergyStorage.SIDED.find(world, pos.offset(dir), dir.getOpposite());
+        for (Direction side : Direction.values()) {
+            if (source.getAmountAsInt() <= 0) {
+                break;
+            }
+            BlockPos neighborPos = pos.relative(side);
+            EnergyHandler target = Capabilities.Energy.BLOCK.getCapability(
+                    level, neighborPos, null, null, side.getOpposite());
             if (target == null) {
                 continue;
             }
-            try (Transaction tx = Transaction.openOuter()) {
-                EnergyStorageUtil.move(source, target, maxPerSide, tx);
-                tx.commit();
+            try (Transaction tx = Transaction.openRoot()) {
+                int moved = EnergyHandlerUtil.move(source, target, limit, tx);
+                if (moved > 0) {
+                    tx.commit();
+                }
             }
         }
     }

@@ -1,29 +1,25 @@
 package ch.danielt.akw.registry;
 
 import ch.danielt.akw.AkwMod;
-import net.minecraft.item.Item;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredItem;
+import net.neoforged.neoforge.registries.DeferredRegister;
 
 public class ModItems {
-    public static final Item RAW_URANIUM = register("raw_uranium");
-    public static final Item URANIUM_INGOT = register("uranium_ingot");
-    public static final Item ENRICHED_URANIUM = register("enriched_uranium");
-    public static final Item FUEL_ROD = register("fuel_rod");
-    public static final Item SPENT_FUEL_ROD = register("spent_fuel_rod");
-    public static final Item REACTOR_WRENCH = register("reactor_wrench");
+    private static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(AkwMod.MOD_ID);
 
-    private static Item register(String name) {
-        RegistryKey<Item> key = RegistryKey.of(RegistryKeys.ITEM, Identifier.of(AkwMod.MOD_ID, name));
-        Item item = new Item(new Item.Settings().registryKey(key));
-        return Registry.register(Registries.ITEM, key, item);
-    }
+    public static final DeferredItem<Item> RAW_URANIUM      = ITEMS.registerSimpleItem("raw_uranium");
+    public static final DeferredItem<Item> URANIUM_INGOT    = ITEMS.registerSimpleItem("uranium_ingot");
+    public static final DeferredItem<Item> ENRICHED_URANIUM = ITEMS.registerSimpleItem("enriched_uranium");
+    public static final DeferredItem<Item> FUEL_ROD         = ITEMS.registerSimpleItem("fuel_rod");
+    public static final DeferredItem<Item> SPENT_FUEL_ROD   = ITEMS.registerSimpleItem("spent_fuel_rod");
+    public static final DeferredItem<Item> REACTOR_WRENCH   = ITEMS.registerSimpleItem("reactor_wrench");
 
-    /** Erzwingt das Laden der Klasse und damit die Feld-Registrierung. */
-    public static void registerAll() {
+    public static void register(IEventBus bus) {
+        ITEMS.register(bus);
         AkwMod.LOGGER.info("[Atomkraftwerk] Items registriert.");
     }
 }

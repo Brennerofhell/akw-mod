@@ -1,36 +1,36 @@
 package ch.danielt.akw.block;
 
 import ch.danielt.akw.block.entity.EnergyCableBlockEntity;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockEntityProvider;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.BlockEntityTicker;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * Energie-Kabel-Block. Transportiert FE über sein {@link EnergyCableBlockEntity}
  * zwischen angrenzenden Blöcken (Reaktoren, Akkus, Verbrauchern).
  */
-public class EnergyCableBlock extends Block implements BlockEntityProvider {
+public class EnergyCableBlock extends Block implements EntityBlock {
 
-    public EnergyCableBlock(Settings settings) {
+    public EnergyCableBlock(Properties settings) {
         super(settings);
     }
 
     @Override
-    public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new EnergyCableBlockEntity(pos, state);
     }
 
     @Nullable
     @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state,
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state,
                                                                   BlockEntityType<T> type) {
-        if (world.isClient()) {
+        if (level.isClientSide()) {
             return null;
         }
         return (w, pos, st, be) -> {

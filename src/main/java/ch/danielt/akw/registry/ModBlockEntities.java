@@ -5,56 +5,61 @@ import ch.danielt.akw.block.entity.EnergyBatteryBlockEntity;
 import ch.danielt.akw.block.entity.EnergyCableBlockEntity;
 import ch.danielt.akw.block.entity.MultiblockReactorControllerBlockEntity;
 import ch.danielt.akw.block.entity.NuclearReactorBlockEntity;
+import ch.danielt.akw.block.entity.ReactorBuilderControllerBlockEntity;
 import ch.danielt.akw.block.entity.WasteContainerBlockEntity;
-import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
-import net.minecraft.block.Block;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
 
 public class ModBlockEntities {
+    private static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES =
+            DeferredRegister.create(BuiltInRegistries.BLOCK_ENTITY_TYPE, AkwMod.MOD_ID);
 
-    /** Ein gemeinsamer BlockEntity-Typ fuer alle Reaktor-Bloecke. */
-    public static BlockEntityType<NuclearReactorBlockEntity> NUCLEAR_REACTOR;
-    public static BlockEntityType<MultiblockReactorControllerBlockEntity> MULTIBLOCK_REACTOR_CONTROLLER;
-    public static BlockEntityType<EnergyCableBlockEntity> ENERGY_CABLE;
-    public static BlockEntityType<EnergyBatteryBlockEntity> ENERGY_BATTERY;
-    public static BlockEntityType<WasteContainerBlockEntity> WASTE_CONTAINER;
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<NuclearReactorBlockEntity>> NUCLEAR_REACTOR =
+            BLOCK_ENTITIES.register("nuclear_reactor", () -> new BlockEntityType<>(
+                    NuclearReactorBlockEntity::new,
+                    ModBlocks.NUCLEAR_REACTOR.get(),
+                    ModBlocks.ADVANCED_NUCLEAR_REACTOR.get(),
+                    ModBlocks.ELITE_NUCLEAR_REACTOR.get(),
+                    ModBlocks.BREEDER_REACTOR.get(),
+                    ModBlocks.THORIUM_REACTOR.get(),
+                    ModBlocks.FUSION_REACTOR.get()
+            ));
 
-    public static void registerAll() {
-        NUCLEAR_REACTOR = Registry.register(
-                Registries.BLOCK_ENTITY_TYPE,
-                Identifier.of(AkwMod.MOD_ID, "nuclear_reactor"),
-                FabricBlockEntityTypeBuilder.create(
-                        NuclearReactorBlockEntity::new,
-                        ModBlocks.REACTORS.toArray(new Block[0])).build());
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<MultiblockReactorControllerBlockEntity>> MULTIBLOCK_REACTOR_CONTROLLER =
+            BLOCK_ENTITIES.register("multiblock_reactor_controller", () -> new BlockEntityType<>(
+                    MultiblockReactorControllerBlockEntity::new,
+                    ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER.get()
+            ));
 
-        MULTIBLOCK_REACTOR_CONTROLLER = Registry.register(
-                Registries.BLOCK_ENTITY_TYPE,
-                Identifier.of(AkwMod.MOD_ID, "multiblock_reactor_controller"),
-                FabricBlockEntityTypeBuilder.create(
-                        MultiblockReactorControllerBlockEntity::new,
-                        ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER).build());
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ReactorBuilderControllerBlockEntity>> REACTOR_BUILDER_CONTROLLER =
+            BLOCK_ENTITIES.register("reactor_builder_controller", () -> new BlockEntityType<>(
+                    ReactorBuilderControllerBlockEntity::new,
+                    ModBlocks.REACTOR_BUILDER_CONTROLLER.get()
+            ));
 
-        ENERGY_CABLE = Registry.register(
-                Registries.BLOCK_ENTITY_TYPE,
-                Identifier.of(AkwMod.MOD_ID, "energy_cable"),
-                FabricBlockEntityTypeBuilder.create(
-                        EnergyCableBlockEntity::new, ModBlocks.ENERGY_CABLE).build());
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<EnergyCableBlockEntity>> ENERGY_CABLE =
+            BLOCK_ENTITIES.register("energy_cable", () -> new BlockEntityType<>(
+                    EnergyCableBlockEntity::new,
+                    ModBlocks.ENERGY_CABLE.get()
+            ));
 
-        ENERGY_BATTERY = Registry.register(
-                Registries.BLOCK_ENTITY_TYPE,
-                Identifier.of(AkwMod.MOD_ID, "energy_battery"),
-                FabricBlockEntityTypeBuilder.create(
-                        EnergyBatteryBlockEntity::new, ModBlocks.ENERGY_BATTERY).build());
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<EnergyBatteryBlockEntity>> ENERGY_BATTERY =
+            BLOCK_ENTITIES.register("energy_battery", () -> new BlockEntityType<>(
+                    EnergyBatteryBlockEntity::new,
+                    ModBlocks.ENERGY_BATTERY.get()
+            ));
 
-        WASTE_CONTAINER = Registry.register(
-                Registries.BLOCK_ENTITY_TYPE,
-                Identifier.of(AkwMod.MOD_ID, "waste_container"),
-                FabricBlockEntityTypeBuilder.create(
-                        WasteContainerBlockEntity::new, ModBlocks.WASTE_CONTAINER).build());
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<WasteContainerBlockEntity>> WASTE_CONTAINER =
+            BLOCK_ENTITIES.register("waste_container", () -> new BlockEntityType<>(
+                    WasteContainerBlockEntity::new,
+                    ModBlocks.WASTE_CONTAINER.get()
+            ));
 
+    public static void register(IEventBus bus) {
+        BLOCK_ENTITIES.register(bus);
         AkwMod.LOGGER.info("[Atomkraftwerk] BlockEntities registriert.");
     }
 }

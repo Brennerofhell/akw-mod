@@ -1,54 +1,55 @@
 package ch.danielt.akw.datagen;
 
+import ch.danielt.akw.AkwMod;
 import ch.danielt.akw.registry.ModBlocks;
 import ch.danielt.akw.registry.ModItems;
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
-import net.fabricmc.fabric.api.client.datagen.v1.provider.FabricModelProvider;
-import net.minecraft.block.Block;
-import net.minecraft.client.data.BlockStateModelGenerator;
-import net.minecraft.client.data.ItemModelGenerator;
-import net.minecraft.client.data.Models;
-import net.minecraft.client.data.TexturedModel;
+import net.minecraft.client.data.models.BlockModelGenerators;
+import net.minecraft.client.data.models.ItemModelGenerators;
+import net.minecraft.client.data.models.ModelProvider;
+import net.minecraft.client.data.models.model.ModelTemplates;
+import net.minecraft.client.data.models.model.TexturedModel;
+import net.minecraft.data.PackOutput;
+import net.minecraft.world.level.block.Block;
+import net.neoforged.neoforge.registries.DeferredBlock;
 
-public class ModModelProvider extends FabricModelProvider {
+public class ModModelProvider extends ModelProvider {
 
-    public ModModelProvider(FabricDataOutput output) {
-        super(output);
+    public ModModelProvider(PackOutput output) {
+        super(output, AkwMod.MOD_ID);
     }
 
     @Override
-    public void generateBlockStateModels(BlockStateModelGenerator gen) {
+    protected void registerModels(BlockModelGenerators blockModels, ItemModelGenerators itemModels) {
         // Multiblock-System
-        gen.registerSimpleCubeAll(ModBlocks.REACTOR_CASING);
-        gen.registerSimpleCubeAll(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER);
+        blockModels.createTrivialCube(ModBlocks.REACTOR_CASING.get());
+        blockModels.createTrivialCube(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER.get());
+        blockModels.createTrivialCube(ModBlocks.REACTOR_BUILDER_CONTROLLER.get());
 
         // Einfache Würfel-Blöcke
-        gen.registerSimpleCubeAll(ModBlocks.URANIUM_ORE);
-        gen.registerSimpleCubeAll(ModBlocks.DEEPSLATE_URANIUM_ORE);
-        gen.registerSimpleCubeAll(ModBlocks.REACTOR_CORE);
-        gen.registerSimpleCubeAll(ModBlocks.CONTROL_ROD_BLOCK);
-        gen.registerSimpleCubeAll(ModBlocks.COOLING_PIPE);
-        gen.registerSimpleCubeAll(ModBlocks.LEAD_BLOCK);
-        gen.registerSimpleCubeAll(ModBlocks.WASTE_CONTAINER);
-        gen.registerSimpleCubeAll(ModBlocks.ENRICHED_URANIUM_BLOCK);
-        gen.registerSimpleCubeAll(ModBlocks.ENERGY_CABLE);
-        gen.registerSimpleCubeAll(ModBlocks.ENERGY_BATTERY);
+        blockModels.createTrivialCube(ModBlocks.URANIUM_ORE.get());
+        blockModels.createTrivialCube(ModBlocks.DEEPSLATE_URANIUM_ORE.get());
+        blockModels.createTrivialCube(ModBlocks.REACTOR_CORE.get());
+        blockModels.createTrivialCube(ModBlocks.CONTROL_ROD_BLOCK.get());
+        blockModels.createTrivialCube(ModBlocks.COOLING_PIPE.get());
+        blockModels.createTrivialCube(ModBlocks.LEAD_BLOCK.get());
+        blockModels.createTrivialCube(ModBlocks.WASTE_CONTAINER.get());
+        blockModels.createTrivialCube(ModBlocks.ENRICHED_URANIUM_BLOCK.get());
+        blockModels.createTrivialCube(ModBlocks.ENERGY_CABLE.get());
+        blockModels.createTrivialCube(ModBlocks.ENERGY_BATTERY.get());
 
         // Reaktoren: orientierbar (FACING) + LIT-Zustand — identisch zum Ofen.
-        // registerCooker erzeugt Aus-/An-Modell (_front bzw. _front_on), den
+        // createFurnace erzeugt Aus-/An-Modell (_front bzw. _front_on), den
         // Blockstate (HORIZONTAL_FACING × LIT) und das Item-Modell.
-        for (Block block : ModBlocks.REACTORS) {
-            gen.registerCooker(block, TexturedModel.ORIENTABLE);
+        for (DeferredBlock<? extends Block> block : ModBlocks.REACTORS) {
+            blockModels.createFurnace(block.get(), TexturedModel.ORIENTABLE);
         }
-    }
 
-    @Override
-    public void generateItemModels(ItemModelGenerator gen) {
-        gen.register(ModItems.RAW_URANIUM,       Models.GENERATED);
-        gen.register(ModItems.URANIUM_INGOT,     Models.GENERATED);
-        gen.register(ModItems.ENRICHED_URANIUM,  Models.GENERATED);
-        gen.register(ModItems.FUEL_ROD,          Models.GENERATED);
-        gen.register(ModItems.SPENT_FUEL_ROD,    Models.GENERATED);
-        gen.register(ModItems.REACTOR_WRENCH,    Models.GENERATED);
+        // Item-Modelle (flach generiert)
+        itemModels.generateFlatItem(ModItems.RAW_URANIUM.get(),      ModelTemplates.FLAT_ITEM);
+        itemModels.generateFlatItem(ModItems.URANIUM_INGOT.get(),    ModelTemplates.FLAT_ITEM);
+        itemModels.generateFlatItem(ModItems.ENRICHED_URANIUM.get(), ModelTemplates.FLAT_ITEM);
+        itemModels.generateFlatItem(ModItems.FUEL_ROD.get(),         ModelTemplates.FLAT_ITEM);
+        itemModels.generateFlatItem(ModItems.SPENT_FUEL_ROD.get(),   ModelTemplates.FLAT_ITEM);
+        itemModels.generateFlatItem(ModItems.REACTOR_WRENCH.get(),   ModelTemplates.FLAT_ITEM);
     }
 }

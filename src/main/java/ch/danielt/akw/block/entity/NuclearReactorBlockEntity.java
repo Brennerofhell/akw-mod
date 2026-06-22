@@ -2,37 +2,37 @@ package ch.danielt.akw.block.entity;
 
 import ch.danielt.akw.block.NuclearReactorBlock;
 import ch.danielt.akw.energy.EnergyNet;
+import ch.danielt.akw.reactor.ComparatorMode;
+import ch.danielt.akw.reactor.RedstoneMode;
 import ch.danielt.akw.registry.ModBlockEntities;
 import ch.danielt.akw.registry.ModBlocks;
 import ch.danielt.akw.registry.ModEffects;
 import ch.danielt.akw.registry.ModItems;
 import ch.danielt.akw.screen.NuclearReactorScreenHandler;
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventories;
-import net.minecraft.inventory.SidedInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.PropertyDelegate;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.storage.ReadView;
-import net.minecraft.storage.WriteView;
-import net.minecraft.text.Text;
-import net.minecraft.util.collection.DefaultedList;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.NonNullList;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.WorldlyContainer;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
-import team.reborn.energy.api.base.SimpleEnergyStorage;
 
 /**
  * Gemeinsame BlockEntity fuer alle Reaktor-Typen. Die Tier-Parameter
@@ -47,7 +47,7 @@ import team.reborn.energy.api.base.SimpleEnergyStorage;
  * bei Erreichen der maxHitze explodiert der Reaktor.
  */
 public class NuclearReactorBlockEntity extends BlockEntity
-        implements ImplementedInventory, SidedInventory, ExtendedScreenHandlerFactory<BlockPos> {
+        implements ImplementedInventory, WorldlyContainer, MenuProvider {
 
     public static final int FUEL_SLOT = 0;
     public static final int WASTE_SLOT = 1;
@@ -56,14 +56,16 @@ public class NuclearReactorBlockEntity extends BlockEntity
     private static final int[] WASTE_SLOTS = {WASTE_SLOT};
     private static final int[] NO_SLOTS    = {};
 
-    /** PropertyDelegate-Indizes (gemeinsam von BlockEntity, ScreenHandler, Screen genutzt). */
+    /** ContainerData-Indizes (gemeinsam von BlockEntity, ScreenHandler, Screen genutzt). */
     public static final int IDX_ENERGY = 0;
     public static final int IDX_CAPACITY = 1;
     public static final int IDX_BURN_TIME = 2;
     public static final int IDX_BURN_TOTAL = 3;
     public static final int IDX_HEAT = 4;
     public static final int IDX_MAX_HEAT = 5;
-    public static final int PROPERTY_COUNT = 6;
+    public static final int IDX_REDSTONE_MODE = 6;
+    public static final int IDX_COMPARATOR_MODE = 7;
+    public static final int PROPERTY_COUNT = 8;
 
     /** Kuehlung pro Tick je angrenzendem Kuehlrohr. */
     public static final int COOL_PER_PIPE = 8;
@@ -73,13 +75,13 @@ public class NuclearReactorBlockEntity extends BlockEntity
     public static final int THROTTLE_NUMERATOR = 3;
     /** Hitze-Reduktion pro Tick je angrenzendem Steuerstab-Block. */
     public static final int HEAT_REDUCTION_PER_ROD = 4;
-    /** Strahlungs-Radius (Blöcke) eines laufenden Reaktors. */
+    /** Strahlungs-Radius (Bloecke) eines laufenden Reaktors. */
     private static final int RADIATION_RADIUS = 8;
 
-    private final DefaultedList<ItemStack> inventory = DefaultedList.ofSize(2, ItemStack.EMPTY);
+    private final NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
 
     /** Energiespeicher: kein Input (Generator), nur Abgabe. */
-    public final SimpleEnergyStorage energyStorage;
+    public final MutableEnergyStorage energyStorage;
     private final int genPerTick;
     private final int burnTicksPerRod;
     private final int maxHeat;
@@ -90,19 +92,22 @@ public class NuclearReactorBlockEntity extends BlockEntity
     private int burnTimeTotal;
     private int heat;
     private int lastComparator = -1;
+    private RedstoneMode redstoneMode = RedstoneMode.HIGH_DISABLES;
+    private ComparatorMode comparatorMode = ComparatorMode.ENERGY;
 
-    private final PropertyDelegate propertyDelegate = new PropertyDelegate() {
+    private final ContainerData containerData = new ContainerData() {
         @Override
         public int get(int index) {
-            // amount/capacity sind long; auf Integer.MAX_VALUE begrenzen, da der
-            // PropertyDelegate nur int synchronisiert (verhindert Overflow-Anzeige).
+            // energy/capacity sind int; auf Integer.MAX_VALUE begrenzen
             return switch (index) {
-                case IDX_ENERGY -> (int) Math.min(energyStorage.amount, Integer.MAX_VALUE);
-                case IDX_CAPACITY -> (int) Math.min(energyStorage.capacity, Integer.MAX_VALUE);
+                case IDX_ENERGY -> Math.min(energyStorage.getEnergyStored(), Integer.MAX_VALUE);
+                case IDX_CAPACITY -> Math.min(energyStorage.getMaxEnergyStored(), Integer.MAX_VALUE);
                 case IDX_BURN_TIME -> burnTime;
                 case IDX_BURN_TOTAL -> burnTimeTotal;
                 case IDX_HEAT -> heat;
                 case IDX_MAX_HEAT -> maxHeat;
+                case IDX_REDSTONE_MODE -> redstoneMode.ordinal();
+                case IDX_COMPARATOR_MODE -> comparatorMode.ordinal();
                 default -> 0;
             };
         }
@@ -110,24 +115,36 @@ public class NuclearReactorBlockEntity extends BlockEntity
         @Override
         public void set(int index, int value) {
             switch (index) {
-                case IDX_ENERGY -> energyStorage.amount = value;
+                case IDX_ENERGY -> energyStorage.setEnergy(value);
                 case IDX_BURN_TIME -> burnTime = value;
                 case IDX_BURN_TOTAL -> burnTimeTotal = value;
                 case IDX_HEAT -> heat = value;
+                case IDX_REDSTONE_MODE -> {
+                    if (value >= 0 && value < RedstoneMode.values().length) {
+                        redstoneMode = RedstoneMode.values()[value];
+                        setChanged();
+                    }
+                }
+                case IDX_COMPARATOR_MODE -> {
+                    if (value >= 0 && value < ComparatorMode.values().length) {
+                        comparatorMode = ComparatorMode.values()[value];
+                        setChanged();
+                    }
+                }
                 default -> { }
             }
         }
 
         @Override
-        public int size() {
+        public int getCount() {
             return PROPERTY_COUNT;
         }
     };
 
     public NuclearReactorBlockEntity(BlockPos pos, BlockState state) {
-        super(ModBlockEntities.NUCLEAR_REACTOR, pos, state);
+        super(ModBlockEntities.NUCLEAR_REACTOR.get(), pos, state);
         NuclearReactorBlock block = (NuclearReactorBlock) state.getBlock();
-        this.energyStorage = new SimpleEnergyStorage(block.capacity, 0, block.maxExtract);
+        this.energyStorage = new MutableEnergyStorage(block.capacity, 0, block.maxExtract);
         this.genPerTick = block.genPerTick;
         this.burnTicksPerRod = block.burnTicksPerRod;
         this.maxHeat = block.maxHeat;
@@ -137,20 +154,28 @@ public class NuclearReactorBlockEntity extends BlockEntity
     }
 
     @Override
-    public DefaultedList<ItemStack> getItems() {
+    public NonNullList<ItemStack> getItems() {
         return inventory;
     }
 
-    public PropertyDelegate getPropertyDelegate() {
-        return propertyDelegate;
+    public ContainerData getContainerData() {
+        return containerData;
     }
 
-    public static void tick(World world, BlockPos pos, BlockState state, NuclearReactorBlockEntity be) {
-        if (world.isClient()) {
+    public static void tick(Level level, BlockPos pos, BlockState state, NuclearReactorBlockEntity be) {
+        if (level.isClientSide()) {
             return;
         }
         boolean wasBurning = be.burnTime > 0;
         boolean dirty = false;
+
+        // EMERGENCY_STOP: laufenden Brennstab sofort stoppen, wenn Signal anliegt
+        boolean powered = state.getValue(NuclearReactorBlock.POWERED);
+        if (powered && be.redstoneMode == RedstoneMode.EMERGENCY_STOP && be.burnTime > 0) {
+            be.burnTime = 0;
+            be.burnTimeTotal = 0;
+            dirty = true;
+        }
 
         // Laufenden Brennstab abbrennen und Energie erzeugen (mit Hitze-Drosselung)
         if (be.burnTime > 0) {
@@ -159,25 +184,31 @@ public class NuclearReactorBlockEntity extends BlockEntity
             if (be.heat >= be.maxHeat * THROTTLE_NUMERATOR / 4) {
                 gen = Math.max(1, gen / 4);   // Ueberhitzung droht -> Erzeugung drosseln
             }
-            if (be.energyStorage.amount < be.energyStorage.capacity) {
-                be.energyStorage.amount = Math.min(be.energyStorage.capacity, be.energyStorage.amount + gen);
+            if (be.energyStorage.getEnergyStored() < be.energyStorage.getMaxEnergyStored()) {
+                be.energyStorage.setEnergy(Math.min(
+                        be.energyStorage.getMaxEnergyStored(),
+                        be.energyStorage.getEnergyStored() + gen));
             }
             dirty = true;
         }
 
-        // Neuen Brennstab zuenden (nur wenn Abfall-Slot Platz hat und kein Redstone-Signal)
-        if (be.burnTime <= 0 && be.energyStorage.amount < be.energyStorage.capacity
-                && !state.get(NuclearReactorBlock.POWERED)) {
+        // Neuen Brennstab zuenden (abhaengig vom Redstone-Modus)
+        boolean canIgnite = switch (be.redstoneMode) {
+            case IGNORED -> true;
+            case HIGH_ENABLES -> powered;
+            case HIGH_DISABLES, EMERGENCY_STOP -> !powered;
+        };
+        if (be.burnTime <= 0 && be.energyStorage.getEnergyStored() < be.energyStorage.getMaxEnergyStored() && canIgnite) {
             ItemStack fuel  = be.inventory.get(FUEL_SLOT);
             ItemStack waste = be.inventory.get(WASTE_SLOT);
             boolean wasteRoom = waste.isEmpty()
-                    || (waste.isOf(ModItems.SPENT_FUEL_ROD) && waste.getCount() < waste.getMaxCount());
-            if (fuel.isOf(ModItems.FUEL_ROD) && wasteRoom) {
-                fuel.decrement(1);
+                    || (waste.is(ModItems.SPENT_FUEL_ROD) && waste.getCount() < waste.getMaxStackSize());
+            if (fuel.is(ModItems.FUEL_ROD) && wasteRoom) {
+                fuel.shrink(1);
                 if (waste.isEmpty()) {
-                    be.inventory.set(WASTE_SLOT, new ItemStack(ModItems.SPENT_FUEL_ROD));
+                    be.inventory.set(WASTE_SLOT, new ItemStack(ModItems.SPENT_FUEL_ROD.get()));
                 } else {
-                    waste.increment(1);
+                    waste.grow(1);
                 }
                 be.burnTime = be.burnTicksPerRod;
                 be.burnTimeTotal = be.burnTicksPerRod;
@@ -185,10 +216,10 @@ public class NuclearReactorBlockEntity extends BlockEntity
             }
         }
 
-        // Hitze-Dynamik: Aufbau (reduziert durch Steuerstäbe), Abbau durch Kühlung
+        // Hitze-Dynamik: Aufbau (reduziert durch Steuerstaebe), Abbau durch Kuehlung
         int heatPerTickEffective = Math.max(0, be.heatPerTick
-                - be.countControlRods(world, pos) * HEAT_REDUCTION_PER_ROD);
-        int cooling = PASSIVE_COOL + be.countCoolingPipes(world, pos) * COOL_PER_PIPE;
+                - be.countControlRods(level, pos) * HEAT_REDUCTION_PER_ROD);
+        int cooling = PASSIVE_COOL + be.countCoolingPipes(level, pos) * COOL_PER_PIPE;
         int oldHeat = be.heat;
         if (wasBurning) {
             be.heat += heatPerTickEffective;
@@ -200,80 +231,108 @@ public class NuclearReactorBlockEntity extends BlockEntity
 
         // Ueberhitzung -> Explosion (Reaktor wird zerstoert)
         if (be.heat >= be.maxHeat) {
-            be.explode(world, pos);
+            be.explode(level, pos);
             return;
         }
 
         // Energie an angrenzende Verbraucher/Speicher abgeben
-        if (be.energyStorage.amount > 0) {
-            be.pushEnergy(world, pos);
+        if (be.energyStorage.getEnergyStored() > 0) {
+            be.pushEnergy(level, pos);
         }
 
         // Strahlung: laufender Reaktor bestrahlt Spieler in der Naehe
-        if (be.burnTime > 0 && world instanceof ServerWorld serverWorld) {
-            int level = be.heat >= be.maxHeat / 2 ? 1 : 0;
-            Vec3d center = Vec3d.ofCenter(pos);
-            Box searchBox = new Box(pos).expand(RADIATION_RADIUS);
-            serverWorld.getEntitiesByClass(PlayerEntity.class, searchBox,
-                    p -> p.squaredDistanceTo(center) <= (double) RADIATION_RADIUS * RADIATION_RADIUS)
+        if (be.burnTime > 0 && level instanceof ServerLevel serverLevel) {
+            int radLevel = be.heat >= be.maxHeat / 2 ? 1 : 0;
+            Vec3 center = Vec3.atCenterOf(pos);
+            AABB searchBox = new AABB(pos).inflate(RADIATION_RADIUS);
+            serverLevel.getEntitiesOfClass(Player.class, searchBox,
+                    p -> p.distanceToSqr(center) <= (double) RADIATION_RADIUS * RADIATION_RADIUS)
                     .forEach(player -> {
-                        if (!hasLeadShielding(serverWorld, pos, player.getBlockPos())) {
-                            player.addStatusEffect(new StatusEffectInstance(
-                                    ModEffects.RADIATION, 60, level, false, true));
-                            if (serverWorld.getTime() % 20 == 0) {
-                                player.damage(serverWorld,
-                                        serverWorld.getDamageSources().magic(),
-                                        level == 0 ? 0.5f : 1.5f);
+                        if (!hasLeadShielding(serverLevel, pos, player.blockPosition())) {
+                            player.addEffect(new MobEffectInstance(
+                                    ModEffects.RADIATION, 60, radLevel, false, true));
+                            if (serverLevel.getGameTime() % 20 == 0) {
+                                player.hurt(
+                                        serverLevel.damageSources().magic(),
+                                        radLevel == 0 ? 0.5f : 1.5f);
                             }
                         }
                     });
         }
 
         // Strahlungspartikel sichtbar machen wenn Reaktor aktiv
-        if (wasBurning && world instanceof ServerWorld sw && sw.getTime() % 10 == 0) {
-            sw.spawnParticles(ParticleTypes.ELECTRIC_SPARK,
+        if (wasBurning && level instanceof ServerLevel sw && sw.getGameTime() % 10 == 0) {
+            sw.sendParticles(ParticleTypes.ELECTRIC_SPARK,
                     pos.getX() + 0.5, pos.getY() + 1.1, pos.getZ() + 0.5,
                     3, 0.2, 0.2, 0.2, 0.01);
         }
 
         boolean nowBurning = be.burnTime > 0;
         if (nowBurning != wasBurning) {
-            world.setBlockState(pos, state.with(NuclearReactorBlock.LIT, nowBurning), Block.NOTIFY_ALL);
+            level.setBlock(pos, state.setValue(NuclearReactorBlock.LIT, nowBurning), Block.UPDATE_ALL);
             dirty = true;
         }
 
-        // Komparator-Update (Energie-Füllstand 0-15)
+        // Komparator-Update (Energie-Fuellstand 0-15)
         int comparatorLevel = be.getComparatorLevel();
         if (comparatorLevel != be.lastComparator) {
             be.lastComparator = comparatorLevel;
-            world.updateComparators(pos, state.getBlock());
+            level.updateNeighbourForOutputSignal(pos, state.getBlock());
         }
 
         if (dirty) {
-            be.markDirty();
+            be.setChanged();
         }
     }
 
-    /** Energie-Füllstand als Redstone-Stärke 0–15. */
+    /** Komparator-Ausgang 0–15, Quelle abhaengig von {@code comparatorMode}. */
     public int getComparatorLevel() {
-        if (energyStorage.amount <= 0) return 0;
-        return (int) Math.max(1, energyStorage.amount * 15L / energyStorage.capacity);
+        return switch (comparatorMode) {
+            case ENERGY -> {
+                int stored = energyStorage.getEnergyStored();
+                int cap = energyStorage.getMaxEnergyStored();
+                if (stored <= 0 || cap <= 0) yield 0;
+                yield (int) Math.max(1, (long) stored * 15 / cap);
+            }
+            case TEMPERATURE -> {
+                if (heat <= 0 || maxHeat <= 0) yield 0;
+                yield Math.max(1, heat * 15 / maxHeat);
+            }
+            case FUEL -> {
+                ItemStack fuel = inventory.get(FUEL_SLOT);
+                if (fuel.isEmpty()) yield 0;
+                yield Math.max(1, fuel.getCount() * 15 / fuel.getMaxStackSize());
+            }
+            case WASTE -> {
+                ItemStack waste = inventory.get(WASTE_SLOT);
+                if (waste.isEmpty()) yield 0;
+                yield Math.max(1, waste.getCount() * 15 / waste.getMaxStackSize());
+            }
+        };
+    }
+
+    public RedstoneMode getRedstoneMode() {
+        return redstoneMode;
+    }
+
+    public ComparatorMode getComparatorMode() {
+        return comparatorMode;
     }
 
     /** Zaehlt direkt angrenzende Kuehlrohre (max. 6). */
-    private int countCoolingPipes(World world, BlockPos pos) {
+    private int countCoolingPipes(Level level, BlockPos pos) {
         int count = 0;
         for (Direction dir : Direction.values()) {
-            if (world.getBlockState(pos.offset(dir)).isOf(ModBlocks.COOLING_PIPE)) count++;
+            if (level.getBlockState(pos.relative(dir)).is(ModBlocks.COOLING_PIPE.get())) count++;
         }
         return count;
     }
 
     /** Zaehlt direkt angrenzende Steuerstab-Bloecke (max. 6). */
-    private int countControlRods(World world, BlockPos pos) {
+    private int countControlRods(Level level, BlockPos pos) {
         int count = 0;
         for (Direction dir : Direction.values()) {
-            if (world.getBlockState(pos.offset(dir)).isOf(ModBlocks.CONTROL_ROD_BLOCK)) count++;
+            if (level.getBlockState(pos.relative(dir)).is(ModBlocks.CONTROL_ROD_BLOCK.get())) count++;
         }
         return count;
     }
@@ -282,7 +341,7 @@ public class NuclearReactorBlockEntity extends BlockEntity
      * Prueft ob ein Blei-Block auf dem direkten Pfad zwischen Quelle und Spieler liegt.
      * Schrittweite 1 Block — reicht fuer den max. 8-Block-Radius.
      */
-    static boolean hasLeadShielding(World world, BlockPos reactorPos, BlockPos playerPos) {
+    static boolean hasLeadShielding(Level level, BlockPos reactorPos, BlockPos playerPos) {
         double dx = playerPos.getX() - reactorPos.getX();
         double dy = playerPos.getY() - reactorPos.getY();
         double dz = playerPos.getZ() - reactorPos.getZ();
@@ -294,76 +353,79 @@ public class NuclearReactorBlockEntity extends BlockEntity
                     (int) Math.floor(reactorPos.getX() + dx * t + 0.5),
                     (int) Math.floor(reactorPos.getY() + dy * t + 0.5),
                     (int) Math.floor(reactorPos.getZ() + dz * t + 0.5));
-            if (world.getBlockState(check).isOf(ModBlocks.LEAD_BLOCK)) return true;
+            if (level.getBlockState(check).is(ModBlocks.LEAD_BLOCK.get())) return true;
         }
         return false;
     }
 
     /** Reaktor entfernen (Inhalt wird ausgeworfen) und Explosion ausloesen. */
-    private void explode(World world, BlockPos pos) {
-        world.removeBlock(pos, false);
-        world.createExplosion(null, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
-                explosionPower, true, World.ExplosionSourceType.BLOCK);
+    private void explode(Level level, BlockPos pos) {
+        level.removeBlock(pos, false);
+        level.explode(null, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
+                explosionPower, true, Level.ExplosionInteraction.BLOCK);
     }
 
-    private void pushEnergy(World world, BlockPos pos) {
-        EnergyNet.pushToNeighbors(energyStorage, world, pos, energyStorage.maxExtract);
+    private void pushEnergy(Level level, BlockPos pos) {
+        EnergyNet.pushToNeighbors(energyStorage, level, pos, energyStorage.getMaxExtract());
     }
 
-    // --- SidedInventory (Hopper-Kompatibilitaet) ---
+    // --- WorldlyContainer (Hopper-Kompatibilitaet) ---
 
     @Override
-    public int[] getAvailableSlots(Direction side) {
+    public int[] getSlotsForFace(Direction side) {
         if (side == Direction.UP)   return FUEL_SLOTS;
         if (side == Direction.DOWN) return WASTE_SLOTS;
         return NO_SLOTS;
     }
 
     @Override
-    public boolean canInsert(int slot, ItemStack stack, @Nullable Direction dir) {
-        return slot == FUEL_SLOT && stack.isOf(ModItems.FUEL_ROD);
+    public boolean canPlaceItemThroughFace(int slot, ItemStack stack, @Nullable Direction dir) {
+        return slot == FUEL_SLOT && stack.is(ModItems.FUEL_ROD);
     }
 
     @Override
-    public boolean canExtract(int slot, ItemStack stack, Direction dir) {
+    public boolean canTakeItemThroughFace(int slot, ItemStack stack, Direction dir) {
         return slot == WASTE_SLOT;
     }
 
     @Override
-    protected void writeData(WriteView view) {
-        super.writeData(view);
-        Inventories.writeData(view, inventory);
-        view.putLong("Energy", energyStorage.amount);
-        view.putInt("BurnTime", burnTime);
-        view.putInt("BurnTimeTotal", burnTimeTotal);
-        view.putInt("Heat", heat);
+    protected void saveAdditional(ValueOutput output) {
+        super.saveAdditional(output);
+        ContainerHelper.saveAllItems(output, inventory);
+        output.putInt("Energy", energyStorage.getEnergyStored());
+        output.putInt("BurnTime", burnTime);
+        output.putInt("BurnTimeTotal", burnTimeTotal);
+        output.putInt("Heat", heat);
+        output.putInt("RedstoneMode", redstoneMode.ordinal());
+        output.putInt("ComparatorMode", comparatorMode.ordinal());
     }
 
     @Override
-    protected void readData(ReadView view) {
-        super.readData(view);
-        Inventories.readData(view, inventory);
-        energyStorage.amount = view.getLong("Energy", 0L);
-        burnTime = view.getInt("BurnTime", 0);
-        burnTimeTotal = view.getInt("BurnTimeTotal", 0);
-        heat = view.getInt("Heat", 0);
+    protected void loadAdditional(ValueInput input) {
+        super.loadAdditional(input);
+        ContainerHelper.loadAllItems(input, inventory);
+        energyStorage.setEnergy(input.getIntOr("Energy", 0));
+        burnTime = input.getIntOr("BurnTime", 0);
+        burnTimeTotal = input.getIntOr("BurnTimeTotal", 0);
+        heat = input.getIntOr("Heat", 0);
+        int rsOrd = input.getIntOr("RedstoneMode", RedstoneMode.HIGH_DISABLES.ordinal());
+        redstoneMode = rsOrd >= 0 && rsOrd < RedstoneMode.values().length
+                ? RedstoneMode.values()[rsOrd] : RedstoneMode.HIGH_DISABLES;
+        int cmpOrd = input.getIntOr("ComparatorMode", ComparatorMode.ENERGY.ordinal());
+        comparatorMode = cmpOrd >= 0 && cmpOrd < ComparatorMode.values().length
+                ? ComparatorMode.values()[cmpOrd] : ComparatorMode.ENERGY;
         lastComparator = getComparatorLevel();
     }
 
-    // --- ExtendedScreenHandlerFactory ---
+    // --- MenuProvider ---
 
     @Override
-    public Text getDisplayName() {
-        return Text.translatable(getCachedState().getBlock().getTranslationKey());
+    public Component getDisplayName() {
+        return Component.translatable(getBlockState().getBlock().getDescriptionId());
     }
 
     @Override
-    public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
-        return new NuclearReactorScreenHandler(syncId, playerInventory, this, propertyDelegate);
-    }
-
-    @Override
-    public BlockPos getScreenOpeningData(ServerPlayerEntity player) {
-        return this.pos;
+    public AbstractContainerMenu createMenu(int syncId, Inventory playerInventory, Player player) {
+        return new NuclearReactorScreenHandler(syncId, playerInventory, this.getBlockPos());
     }
 }
