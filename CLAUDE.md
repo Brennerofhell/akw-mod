@@ -52,5 +52,6 @@ Kurzreferenz für Claude/Entwickler. Sprache der Doku & Commits: **Deutsch**.
 - `ROADMAP.md` / `TODO.md` — Planung & offene Aufgaben (u. a. modularer Reaktor Phase A–C).
 
 ## Git
-- Aktiver Branch: `neoforge` (Port). Commits auf Deutsch, Conventional-Commit-Präfixe (`feat:`, `docs:`, `build:`).
-- Lokale Scratch-Verzeichnisse (`briefkasten/`, `codex/`, `tools/`, `releases/`) gehören nicht ins Repo.
+- Aktiver Branch: `neoforge` (Port). Commits auf Deutsch, Conventional-Commit-Präfixe (`feat:`, `docs:`, `build:`, `chore:`).
+- Lokale Scratch-Verzeichnisse (`briefkasten/`, `tools/`, `.codex/`, `releases/`) gehören nicht ins Repo und sind in `.gitignore` ausgeschlossen.
+- **`trash/`** — lokaler Sammelordner für ausgemistetes Gerümpel (ebenfalls gitignored). Beim Entrümpeln wird Entbehrliches reversibel hierher verschoben statt gelöscht; den Ordner selbst kann man jederzeit manuell leeren (`rm -rf trash/`). Die OneDrive-Build-Helfer (`gradlew-onedrive.bat`, `tools/prepare-onedrive.ps1`) liegen aktuell dort — bei OneDrive-Sync ggf. zurückholen (Hintergrund: `docs/ONEDRIVE-GRADLE-PROBLEM.md`).
