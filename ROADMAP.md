@@ -1,8 +1,11 @@
 # AKW Mod - Roadmap
 
-Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
+Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10 / NeoForge 21.10.64)
 
-## Status: v1.0.0 — Erster stabiler Release
+> Die Migration von Fabric auf NeoForge ist abgeschlossen (v1.1.0) — siehe
+> [docs/NEOFORGE-MIGRATION.md](docs/NEOFORGE-MIGRATION.md). Die folgenden Phasen sind plattformneutral.
+
+## Status: v1.2.0 — Bauroboter + konfigurierbare Redstone-/Komparator-Modi
 
 ---
 
@@ -18,10 +21,9 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 - [x] Mining-Tags (`mineable/pickaxe`, `needs_iron_tool`)
 - [x] Rezepte (Schmelzen/Schmelzofen → Barren, Crafting → Brennstab)
 - [x] Projekt-Doku (LICENSE, README, CHANGELOG)
-- [ ] Texturen (Items, Blöcke, Mod-Icon) — Specs in `briefkasten/ausgang/`
+- [x] Texturen (Items, Blöcke, Mod-Icon) — alle 6 Item- und 38 Block-Texturen sowie
+      `assets/akw/icon.png` (512×512) vorhanden
 - [x] Erz-Weltgenerierung (Worldgen) — Uranerz spawnt untertage (y -64…32)
-
-### Current: v0.7.0
 
 ---
 
@@ -31,7 +33,7 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 - [x] Nuclear Reactor Block mit GUI (**6 Typen**: Reaktor, Fortgeschritten,
       Elite, Brutreaktor, Thorium, Fusion)
   - [x] Fuel Rod-System (Verbrauch im Brennstoff-Slot)
-  - [x] Energie-Generierung (FE mit Team Reborn Energy, Abgabe an alle Seiten)
+  - [x] Energie-Generierung (FE über die NeoForge-Energie-Capability, Abgabe an alle Seiten)
   - [x] Kühlsystem-Logik (Hitzeaufbau, Kühlrohr-Kühlung, Drosselung, Überhitzung→Explosion, Hitzebalken im GUI)
 - [x] Energie-Kabel (FE-Transport zwischen Blöcken, Puffer 8 192 FE)
 - [x] Akku-Block (1 Mio FE Speicher, Komparator-Signal 0–15)
@@ -40,7 +42,7 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
   - [x] Spieler-Strahlungsexposition (8-Block-Radius, Stufen I/II je nach Hitze)
   - [x] Strahlungsschutz-Items (Blei-Block bereits vorhanden)
 
-### Zielversion: v0.2.0 ✅ (Reaktoren & Energie ausgeliefert)
+✅ Reaktoren & Energie ausgeliefert (v0.2.0).
 
 ---
 
@@ -64,12 +66,16 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 - [x] Uranium anreichern (2× Uran-Barren → Angereichertes Uran → Brennstab)
 - [x] Fuel Rod Crafting
 - [x] Abfallverarbeitung: Verbrauchter Brennstab (v0.7.0)
-- [ ] Reactor Assembly
+- [x] Reactor Assembly (Multiblock-Controller + Schraubenschlüssel, v0.6.0;
+      automatischer Bauroboter v1.2.0)
 - [ ] Nuklear-Abfall weiterverarbeiten (Recycling / Endlager)
 
 ### Automation
 - [x] Hopper-Kompatibilität (v0.7.0): oben → Brennstoff, unten → Abfall
 - [x] Redstone-Integration (v0.8.0): Komparator-Output + POWERED-Pause
+- [x] Konfigurierbare Redstone-Modi (4) + Komparator-Modi (4) im GUI (v1.2.0):
+      Ignoriert / Signal aktiviert / Signal deaktiviert / Not-Aus (SCRAM) bzw.
+      Energie / Temperatur / Brennstoff / Abfall
 - [ ] Pipe-Netzwerk für Ressourcentransport
 
 ### Zielversion: v0.4.0
@@ -79,14 +85,18 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 ## 📊 Phase 5: Quality & Polish
 
 ### Content
-- [ ] Vollständige Texturen (alle Blöcke & Items)
-- [x] Sounds & Effekte (v0.9.5 — Infrastruktur + Partikel; .ogg-Dateien ausstehend)
+- [x] Vollständige Texturen (alle Blöcke & Items)
+- [x] Sounds & Effekte (v0.9.5 — Infrastruktur + Partikel vorhanden)
+  - [ ] **`.ogg`-Sounddateien fehlen** — `sounds.json` definiert 3 Events
+        (`reactor_ambient`, `reactor_alert`, `reactor_meltdown`) mit leeren `sounds`-Arrays;
+        kein `assets/akw/sounds/`-Verzeichnis vorhanden
 - [x] Partikel für Radioaktivität (v0.9.5 — vanilla ELECTRIC_SPARK)
 - [x] Advancement/Achievement System (v0.9.5 — 9-stufige Kette)
 
 ### Dokumentation
+- [x] Technische Referenz (`docs/REFERENCE.md`, v1.2.0 — klassengenau) + Spieler-Guide
+      (`docs/GUIDE.md`), Architektur (`docs/ARCHITECTURE.md`)
 - [ ] In-Game-Wiki / Manual
-- [ ] Mod-Anleitung
 - [ ] Config-System für Balance-Einstellungen
 
 ### Zielversion: v1.0.0
@@ -97,6 +107,7 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 
 - [ ] Weitere Brennstoffe/Materialien
 - [x] Multiblock Strukturen (v0.6.0: 3×3×3, 5×5×5, 7×7×7)
+- [x] Bauroboter — automatischer 3×3×3-Multiblock-Aufbau aus Inventar + Energie (v1.2.0)
 - [ ] Netzwerk-System zwischen Reaktoren
 - [ ] Mod-Kompatibilität (andere Tech-Mods)
 - [ ] Mehrsprachige Erweiterung
@@ -120,8 +131,9 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10)
 
 ## 💡 Notizen
 
-- **Team Reborn Energy** ist bereits integriert → Energiesystem kann direkt in Phase 2 starten
-- **Resourcen-Resourcen** (Texturen/Sounds) sind aktuell nicht vorhanden → müssen für v1.0.0 erstellt werden
+- **Energiesystem** nutzt die NeoForge-eigene Energie-Capability (FE) → kein externer Energie-Dependency
+- **Ressourcen**: Texturen (Items/Blöcke) und Mod-Icon sind vollständig vorhanden;
+  einzig die `.ogg`-Sounddateien fehlen noch (Infrastruktur in `sounds.json` ist da)
 - **Modversion-Kompatibilität**: Dieses Mod fokussiert auf Minecraft 1.21.10 - Rückwärts-Kompatibilität wird später evaluiert
 
 ---

@@ -45,6 +45,31 @@ Uranerz abbauen → Roh-Uran → (schmelzen) → Uran-Barren → Brennstab
 > Ein voller Energiespeicher pausiert den Verbrauch — erst wenn wieder Platz ist,
 > wird ein neuer Brennstab gezündet. So verschwendest du keinen Brennstoff.
 
+### Steuerung im GUI: Redstone- & Komparator-Modus
+
+Links im Reaktor-GUI gibt es zwei Knöpfe (gelten für Einblock- **und** Multiblock-Reaktor):
+
+**Redstone-Modus** — wie der Reaktor auf ein Redstone-Signal reagiert:
+
+| Modus | Verhalten |
+|---|---|
+| Ignoriert | Redstone hat keinen Einfluss |
+| Signal aktiviert | Reaktor zündet nur bei anliegendem Signal |
+| Signal deaktiviert *(Standard)* | Reaktor zündet nur ohne Signal; laufender Stab brennt ab |
+| Not-Aus (SCRAM) | wie „Signal deaktiviert", aber ein Signal stoppt den laufenden Stab **sofort** |
+
+**Komparator-Modus** — was der Komparator-Ausgang (0–15) misst:
+
+| Modus | Signalquelle |
+|---|---|
+| Energie *(Standard)* | Energiefüllstand |
+| Temperatur | Hitze / maxHitze |
+| Brennstoff | Brennstoff-Slot |
+| Abfall | Abfall-Slot |
+
+> Beispiel-Automation: Komparator im Modus „Temperatur" → Signal bei Überhitzung →
+> Redstone-Leitung → benachbarter Reaktor im Modus „Signal deaktiviert" pausiert.
+
 ---
 
 ## 3. Kühlsystem
@@ -132,6 +157,24 @@ gefährlich.
 Eigene Energie-, Item- und Redstone-Ports sowie rechteckige Hüllen bis 9×9×9 sind für
 die nächste Multiblock-Ausbaustufe vorgesehen.
 
+### Bauroboter (automatischer Aufbau)
+
+Wer den 3×3×3-Multiblock nicht von Hand bauen will, nutzt den **Bauroboter-Controller**
+(`akw:reactor_builder_controller`). Er baut die komplette Struktur (Gehäuse, Kern, Controller)
+automatisch aus seinem Inventar zusammen.
+
+1. Platziere den Bauroboter-Controller. Vor seiner Vorderseite entsteht der Reaktor.
+2. **Rechtsklick** öffnet das 27-Slot-Inventar — fülle es mit **Reaktor-Gehäusen**,
+   **Reaktorkern** und einem **Multiblock-Controller**.
+3. Lade ihn mit **Energie** (Kabel/Akku an den Controller; **500 FE pro gesetztem Block**).
+4. **Shift-Rechtsklick** startet bzw. pausiert den Bau. Ein sichtbarer Roboter setzt alle
+   5 Ticks einen Block.
+5. Der Status erscheint in der Actionbar: fehlendes Material, Blockade, zu wenig Energie oder
+   „fertig". Ist die Struktur gültig, ist der Multiblock-Reaktor sofort assembliert.
+
+> Ein Redstone-Signal am Bauroboter **pausiert** den Bau. Der Komparator-Ausgang zeigt den
+> Baufortschritt (0–15). Beim Abbau wirft der Controller Inventar und Roboter wieder aus.
+
 ---
 
 ## 6. Energie-Infrastruktur
@@ -147,8 +190,9 @@ die nächste Multiblock-Ausbaustufe vorgesehen.
 - Gibt den **Füllstand als Redstone-Signal** (0–15) aus (Komparator direkt daneben).
 - Crafting: `ICI / RRR / ICI` (I = Eisenbarren, C = Kupferbarren, R = Redstone)
 
-**Create-Kompatibilität:** Beide Blöcke exponieren `EnergyStorage.SIDED` → automatisch
-kompatibel mit Create-FE-Brücken (kein extra Addon nötig).
+**FE-Kompatibilität:** Beide Blöcke nutzen das **NeoForge-eigene Energiesystem**
+(`Capabilities.Energy` / FE) und sind damit automatisch mit allen FE-kompatiblen Mods
+verbunden (kein extra Addon nötig).
 
 ---
 
@@ -200,15 +244,18 @@ kompatibel mit Create-FE-Brücken (kein extra Addon nötig).
 - **Reaktorkern**, **Steuerstab-Block** — Innenmodule des Multiblocks und
   Crafting-Bauteile der höheren Einblockreaktoren.
 - **Kühlrohr** — direkte Kühlung bei Einblockreaktoren; verbundenes Wärmenetz im Multiblock.
-- **Blei-Block** — als Strahlenschutz gedacht (derzeit dekorativ/Lager).
-- **Abfallbehälter** — Lager für verbrauchtes Material (dekorativ).
+- **Blei-Block** — funktionaler Strahlenschutz: ein Blei-Block auf der direkten Linie zwischen
+  Strahlungsquelle (Reaktor/Abfallbehälter) und Spieler blockt die Strahlung vollständig.
+- **Abfallbehälter** — vollwertiger 9-Slot-Speicher für Verbrauchte Brennstäbe (Rechtsklick öffnet
+  das GUI). Komparator-Ausgang 0–15; Hopper oben/seitlich einlagern, unten entnehmen; strahlt bei
+  Füllstand > 50 % schwach (Stufe 0, 5-Block-Radius).
 - **Angereicherter-Uran-Block** — kompaktes Uran-Lager (leuchtet schwach).
 
 ---
 
 ## 9. Strom nutzen
 
-Der erzeugte Strom ist **FE** (Forge Energy), bereitgestellt über die *Team Reborn
-Energy*-API. Platziere einen Verbraucher, ein **Energie-Kabel** oder einen **Akku-Block**
-direkt an eine beliebige Reaktorseite — der Transfer startet automatisch.
-Kompatibel mit FE-Maschinen aus Tech Reborn, Create (via FE-Brücke) und anderen Tech-Mods.
+Der erzeugte Strom ist **FE** (Forge Energy), bereitgestellt über das **NeoForge-eigene
+Energiesystem** (`Capabilities.Energy`). Platziere einen Verbraucher, ein **Energie-Kabel**
+oder einen **Akku-Block** direkt an eine beliebige Reaktorseite — der Transfer startet
+automatisch. Kompatibel mit FE-Maschinen anderer NeoForge-Tech-Mods (kein extra Addon nötig).

@@ -7,6 +7,13 @@ classes/
 # Lokales Jar-Archiv (alte Fabric-Releases), nicht ins Repo
 releases/
 
+# Ausgemistetes Gerümpel (Scratch-Verzeichnisse), bleibt lokal, nicht ins Repo
+trash/
+# Scratch-/Austauschordner gehören nicht ins Repo (siehe CLAUDE.md)
+briefkasten/
+tools/
+.codex/
+
 # Fabric Datagen-Cache (Inhalt von src/main/generated wird committed, der Cache nicht)
 src/main/generated/.cache/
 

@@ -1,4 +1,4 @@
-# Atomkraftwerk (AKW) — Minecraft Fabric Mod
+# Atomkraftwerk (AKW) — Minecraft NeoForge Mod
 
 Baue dein eigenes Atomkraftwerk: Uran abbauen, anreichern, Brennstäbe herstellen,
 Reaktor betreiben und FE-kompatiblen Strom erzeugen. Mit Radioaktivitätsmechanik,
@@ -7,12 +7,13 @@ Automation über Hopper und Redstone sowie einem Multiblock-Reaktorsystem.
 | | |
 |---|---|
 | **Minecraft** | 1.21.10 |
-| **Fabric Loader** | ≥ 0.19.3 |
-| **Fabric API** | 0.138.4+1.21.10 |
-| **Team Reborn Energy** | 4.1.0 |
+| **NeoForge** | 21.10.64 |
 | **Java** | 21 |
-| **Version** | 0.9.5 |
+| **Version** | 1.2.0 |
 | **Lizenz** | MIT |
+
+> Energie nutzt das **NeoForge-eigene Energiesystem** (`Capabilities.Energy` / FE) — kein externer
+> Energie-Dependency mehr. Der Mod war früher ein Fabric-Mod; Details zum Port: [docs/NEOFORGE-MIGRATION.md](docs/NEOFORGE-MIGRATION.md).
 
 ---
 
@@ -75,6 +76,7 @@ Innenvolumen. Der Controller besitzt Brennstoff- und Abfallslot, unterstützt Ho
 | Angereicherter-Uran-Block | `akw:enriched_uranium_block` | Kompaktlager (leuchtet schwach) |
 | Reaktor-Gehäuse | `akw:reactor_casing` | Multiblock-Wand |
 | Multiblock-Reaktor | `akw:multiblock_reactor_controller` | Controller für Multiblock-Reaktor |
+| Bauroboter | `akw:reactor_builder_controller` | Baut einen 3×3×3-Multiblock automatisch aus Inventar + Energie (500 FE/Block); Roboter setzt die Blöcke |
 
 ### Energie-Infrastruktur
 
@@ -86,10 +88,10 @@ Innenvolumen. Der Controller besitzt Brennstoff- und Abfallslot, unterstützt Ho
 ### Automation & Redstone
 
 - **Hopper-Support:** Hopper von oben/seitig → Brennstoff einlegen; Hopper von unten → Abfall (Verbrauchter Brennstab) entnehmen. Gilt auch für den Abfallbehälter.
-- **Komparator-Output:** Reaktoren und Abfallbehälter geben Füllstand 0–15 aus — verwendbar für automatische Lastverteilung.
-- **Redstone-Pause:** Redstone-Signal am Reaktor-Block stoppt das Zünden neuer Brennstäbe. Laufender Stab brennt noch ab, dann Standby.
+- **Komparator-Output (4 Modi):** Reaktoren geben wahlweise **Energie**, **Temperatur**, **Brennstoff** oder **Abfall** als Signal 0–15 aus (im GUI umschaltbar). Akku und Abfallbehälter geben ihren Füllstand 0–15 aus.
+- **Redstone-Modi (4):** Im Reaktor-GUI wählbar — *Ignoriert*, *Signal aktiviert*, *Signal deaktiviert* (Standard) und *Not-Aus (SCRAM)*. SCRAM stoppt den laufenden Brennstab sofort; sonst brennt er noch ab und der Reaktor geht in Standby.
 
-**Beispiel-Automation:** Komparator am Reaktor A → Signal wenn voll → Redstone → Reaktor B mit Redstone-Signal belegen → Reaktor B geht in Standby.
+**Beispiel-Automation:** Komparator (Modus „Temperatur") am Reaktor A → Signal bei Überhitzung → Redstone → Reaktor B im Modus „Signal deaktiviert" → Reaktor B geht in Standby.
 
 ### Radioaktivität
 
@@ -115,12 +117,9 @@ Uranabbau beginnt → Erstes Metall → Anreicherung → Brennstab bereit
 
 ## Installation
 
-1. Minecraft 1.21.10 + Fabric Loader ≥ 0.19.3 installieren
-2. In den `mods/`-Ordner legen:
-   - [Fabric API 0.138.4+1.21.10](https://modrinth.com/mod/fabric-api)
-   - [Team Reborn Energy 4.1.0](https://github.com/TechReborn/Energy)
-   - `akw-0.9.5.jar`
-3. Minecraft starten
+1. Minecraft 1.21.10 + [NeoForge 21.10.64](https://neoforged.net) installieren
+2. `akw-1.2.0.jar` in den `mods`-Ordner legen (kein weiterer Dependency nötig)
+3. Minecraft mit dem NeoForge-Profil starten
 
 ---
 
@@ -129,15 +128,20 @@ Uranabbau beginnt → Erstes Metall → Anreicherung → Brennstab bereit
 Voraussetzung: **JDK 21 oder neuer**; kompiliert wird weiterhin für Java 21.
 
 ```bash
-# Normale Arbeitskopie: Mod bauen (JAR unter build/libs/)
+# Mod bauen (JAR unter build/libs/neoforge/)
 ./gradlew build
 
-# Assets/Daten regenerieren
-./gradlew runDatagen
+# Assets/Daten regenerieren (Client = Modelle/Sprache, Server = Rezepte/Loot/Tags/Advancements)
+./gradlew runClientData
+./gradlew runServerData
 
 # Minecraft-Client zum Testen starten
 ./gradlew runClient
 ```
+
+> Hinweis: `runClientData` und `runServerData` schreiben beide nach `src/main/generated` und löschen
+> jeweils die Dateien des anderen Laufs. Für einen vollständigen Asset-Satz die `data/`-Ebene zwischen
+> den Läufen sichern — siehe [docs/NEOFORGE-MIGRATION.md](docs/NEOFORGE-MIGRATION.md) §6.
 
 **Windows und OneDrive:** Einmal `tools/prepare-onedrive.ps1` ausführen und danach
 `gradlew-onedrive.bat` statt `gradlew.bat` verwenden:
@@ -148,7 +152,7 @@ Voraussetzung: **JDK 21 oder neuer**; kompiliert wird weiterhin für Java 21.
 ```
 
 Quellen bleiben dabei in OneDrive. Gradle-Cache und Buildausgabe liegen unter
-`%LOCALAPPDATA%\AKWMod`, damit Files On-Demand keine Hash- und Loom-Caches auslagert.
+`%LOCALAPPDATA%\AKWMod`, damit Files On-Demand keine Hash- und Gradle-Caches auslagert.
 
 ---
 
@@ -156,17 +160,20 @@ Quellen bleiben dabei in OneDrive. Gradle-Cache und Buildausgabe liegen unter
 
 ```
 src/main/java/ch/danielt/akw/
-├─ AkwMod.java              — ModInitializer (Registry + Energie-Lookup)
-├─ AkwClient.java           — ClientModInitializer (Screen-Registrierung)
-├─ block/                   — Block-Klassen + BlockEntityProvider
-├─ block/entity/            — BlockEntity-Klassen (Reaktor, Kabel, Akku, Abfall)
+├─ AkwMod.java              — @Mod-Klasse (Registry + Energie-Capabilities)
+├─ AkwClient.java           — @EventBusSubscriber (Screen-Registrierung, Client)
+├─ block/                   — Block-Klassen (inkl. Multiblock-/Bauroboter-Controller)
+├─ block/entity/            — BlockEntity-Klassen + MutableEnergyStorage (Energie-Facade)
+├─ energy/                  — EnergyNet (FE-Verteilung über Capabilities.Energy)
+├─ reactor/                 — weltunabhängige Multiblock-Logik (Validator, Layout, Simulation)
 ├─ datagen/                 — Datagen-Provider (Rezept, Loot, Modell, Tag, Lang, Advancement)
-├─ screen/                  — ScreenHandler + Screen (GUI)
+├─ screen/                  — Menüs/Screens (GUI)
 ├─ registry/                — ModItems, ModBlocks, ModBlockEntities, ModSounds, …
 └─ worldgen/                — Uranerz-Weltgenerierung
 
 src/main/generated/         — Datagen-Ausgabe (committed; nicht von Hand bearbeiten)
-src/main/resources/         — fabric.mod.json, Texturen, sounds.json, Weltgen-JSON
+src/main/resources/         — META-INF/neoforge.mods.toml, Texturen, sounds.json, Weltgen-JSON
+build/libs/neoforge/        — gebautes Mod-Jar
 ```
 
 ---
@@ -178,6 +185,18 @@ src/main/resources/         — fabric.mod.json, Texturen, sounds.json, Weltgen-
 - **Akku-GUI:** kein GUI; Füllstand per Komparator-Ausgang ablesbar.
 
 Vollständiger Plan: [ROADMAP.md](ROADMAP.md) · [CHANGELOG.md](CHANGELOG.md)
+
+---
+
+## Dokumentation
+
+| Datei | Inhalt |
+|---|---|
+| [docs/GUIDE.md](docs/GUIDE.md) | Spieler-Anleitung (Progression, Bedienung, Rezepte) |
+| [docs/REFERENCE.md](docs/REFERENCE.md) | **Vollständige technische Referenz** — jede Klasse, Konstante, Formel, Blockstate, NBT-Key, Registry-ID |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Konzeptioneller Aufbau (Pakete, Datagen, Energiefluss, GUI-Kette) |
+| [docs/NEOFORGE-MIGRATION.md](docs/NEOFORGE-MIGRATION.md) | Fabric→NeoForge-API-Referenz |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Beitrags-/Dev-Guide |
 
 ---
 
