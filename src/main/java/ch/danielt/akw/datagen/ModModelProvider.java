@@ -26,6 +26,7 @@ public class ModModelProvider extends ModelProvider {
         blockModels.createTrivialCube(ModBlocks.REACTOR_BUILDER_CONTROLLER.get());
         blockModels.createTrivialCube(ModBlocks.REACTOR_ENERGY_PORT.get());
         blockModels.createTrivialCube(ModBlocks.REACTOR_ITEM_PORT.get());
+        blockModels.createTrivialCube(ModBlocks.DAMAGED_REACTOR_CORE.get());
 
         // Einfache Würfel-Blöcke
         blockModels.createTrivialCube(ModBlocks.URANIUM_ORE.get());

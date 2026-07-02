@@ -51,6 +51,7 @@ public class ModularReactorScreen extends AbstractContainerScreen<ModularReactor
     private Button comparatorButton;
     private Button enabledButton;
     private Button shutdownButton;
+    private Button safetyButton;
     private RodSlider rodSlider;
     private Button layerUpButton;
     private Button layerDownButton;
@@ -78,21 +79,25 @@ public class ModularReactorScreen extends AbstractContainerScreen<ModularReactor
         redstoneButton = addRenderableWidget(Button.builder(
                 Component.translatable(menu.getRedstoneMode().translationKey()),
                 btn -> sendButton(ModularReactorScreenHandler.BUTTON_REDSTONE))
-                .bounds(leftPos + 8, topPos + 56, 76, 18).build());
+                .bounds(leftPos + 8, topPos + 56, 76, 16).build());
         comparatorButton = addRenderableWidget(Button.builder(
                 Component.translatable(menu.getComparatorMode().translationKey()),
                 btn -> sendButton(ModularReactorScreenHandler.BUTTON_COMPARATOR))
-                .bounds(leftPos + 92, topPos + 56, 76, 18).build());
+                .bounds(leftPos + 92, topPos + 56, 76, 16).build());
         enabledButton = addRenderableWidget(Button.builder(
                 enabledLabel(),
                 btn -> sendButton(ModularReactorScreenHandler.BUTTON_ENABLED))
-                .bounds(leftPos + 8, topPos + 78, 76, 18).build());
+                .bounds(leftPos + 8, topPos + 74, 76, 16).build());
         shutdownButton = addRenderableWidget(Button.builder(
                 shutdownLabel(),
                 btn -> sendButton(ModularReactorScreenHandler.BUTTON_SHUTDOWN_TEMP))
-                .bounds(leftPos + 92, topPos + 78, 76, 18).build());
+                .bounds(leftPos + 92, topPos + 74, 76, 16).build());
+        safetyButton = addRenderableWidget(Button.builder(
+                safetyLabel(),
+                btn -> sendButton(ModularReactorScreenHandler.BUTTON_SAFETY))
+                .bounds(leftPos + 8, topPos + 92, 160, 16).build());
         rodSlider = addRenderableWidget(new RodSlider(
-                leftPos + 8, topPos + 104, 160, 20, menu.getControlRodInsertion() / 100.0));
+                leftPos + 8, topPos + 110, 160, 16, menu.getControlRodInsertion() / 100.0));
 
         layerUpButton = addRenderableWidget(Button.builder(Component.literal("▲"),
                 btn -> changeLayer(1))
@@ -119,6 +124,7 @@ public class ModularReactorScreen extends AbstractContainerScreen<ModularReactor
         comparatorButton.visible = control;
         enabledButton.visible = control;
         shutdownButton.visible = control;
+        safetyButton.visible = control;
         rodSlider.visible = control;
 
         boolean diagnostics = activeTab == Tab.DIAGNOSTICS;
@@ -142,6 +148,11 @@ public class ModularReactorScreen extends AbstractContainerScreen<ModularReactor
 
     private Component shutdownLabel() {
         return Component.translatable("akw.gui.shutdown_temp", menu.getShutdownTempPercent());
+    }
+
+    private Component safetyLabel() {
+        return Component.translatable(menu.isSafetyOverride()
+                ? "akw.gui.safety.off" : "akw.gui.safety.on");
     }
 
     @Nullable
@@ -231,10 +242,8 @@ public class ModularReactorScreen extends AbstractContainerScreen<ModularReactor
         graphics.drawString(font, Component.translatable("akw.gui.heat",
                 menu.getHeat(), menu.getMaxHeat()), 8, y, TEXT_COLOR, false);
         y += 12;
-        Component status = !menu.isEnabled() ? Component.translatable("akw.gui.status.off")
-                : menu.isBurning() ? Component.translatable("akw.gui.status.running")
-                : Component.translatable("akw.gui.status.idle");
-        graphics.drawString(font, status, 8, y, TEXT_COLOR, false);
+        graphics.drawString(font, Component.translatable("akw.gui.status",
+                Component.translatable(menu.getStatus().translationKey())), 8, y, TEXT_COLOR, false);
     }
 
     private void renderDiagnostics(GuiGraphics graphics) {
@@ -292,6 +301,7 @@ public class ModularReactorScreen extends AbstractContainerScreen<ModularReactor
         comparatorButton.setMessage(Component.translatable(menu.getComparatorMode().translationKey()));
         enabledButton.setMessage(enabledLabel());
         shutdownButton.setMessage(shutdownLabel());
+        safetyButton.setMessage(safetyLabel());
         rodSlider.syncFromServer();
         super.render(graphics, mouseX, mouseY, delta);
 

@@ -131,7 +131,9 @@ public final class ReactorValidator {
                         continue;
                     }
 
-                    if (state.isAir() || state.is(ModBlocks.LEAD_BLOCK.get())) {
+                    if (state.isAir() || state.is(ModBlocks.LEAD_BLOCK.get())
+                            || state.is(ModBlocks.DAMAGED_REACTOR_CORE.get())) {
+                        // Beschädigte Kerne sind inert (zählen nicht als Kern), aber gültig.
                         continue;
                     }
                     if (state.is(ModBlocks.REACTOR_CORE.get())) {

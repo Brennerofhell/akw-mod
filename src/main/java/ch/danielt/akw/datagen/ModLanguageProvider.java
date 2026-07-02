@@ -72,6 +72,7 @@ public class ModLanguageProvider {
             add("akw.multiblock.need_wrench", "Reaktor-Schraubenschlüssel benötigt.");
             addBlock(ModBlocks.REACTOR_ENERGY_PORT, "Reaktor-Energie-Port");
             addBlock(ModBlocks.REACTOR_ITEM_PORT, "Reaktor-Item-Port");
+            addBlock(ModBlocks.DAMAGED_REACTOR_CORE, "Beschädigter Reaktorkern");
             add("akw.item_port.mode.fuel_input", "Modus: Brennstoff-Eingang");
             add("akw.item_port.mode.waste_output", "Modus: Abfall-Ausgang");
             add("akw.item_port.mode.disabled", "Modus: Deaktiviert");
@@ -93,10 +94,15 @@ public class ModLanguageProvider {
             add("akw.gui.production",      "Erzeugung: %s FE/t");
             add("akw.gui.cooling",         "Kühlung: %s HU/t");
             add("akw.gui.heat",            "Hitze: %s / %s");
-            add("akw.gui.status.running",     "Status: In Betrieb");
-            add("akw.gui.status.idle",        "Status: Bereit");
-            add("akw.gui.status.off",         "Status: Ausgeschaltet");
+            add("akw.gui.status",             "Status: %s");
             add("akw.gui.status.unassembled", "Nicht assembliert — siehe Diagnose-Tab.");
+            add("akw.reactor.status.unassembled", "Nicht assembliert");
+            add("akw.reactor.status.offline",     "Bereit");
+            add("akw.reactor.status.starting",    "Anfahren…");
+            add("akw.reactor.status.running",     "In Betrieb");
+            add("akw.reactor.status.scram",       "SCRAM — Nachzerfallswärme");
+            add("akw.reactor.status.cooldown",    "Abkühlung");
+            add("akw.reactor.status.damaged",     "BESCHÄDIGT — Kerne reparieren");
             add("akw.gui.control_rods",    "Steuerstäbe: %s%%");
             add("akw.gui.enabled.on",      "Reaktor: AN");
             add("akw.gui.enabled.off",     "Reaktor: AUS");
@@ -104,6 +110,10 @@ public class ModLanguageProvider {
             add("akw.gui.no_errors",       "Keine Fehler.");
             add("akw.gui.more_errors",     "… und %s weitere Fehler.");
             add("akw.gui.layer",           "Schicht %s/%s");
+            add("akw.gui.safety.on",       "Sicherung: AN (keine Explosion)");
+            add("akw.gui.safety.off",      "Sicherung: ÜBERBRÜCKT ⚠");
+            add("akw.damaged_core.repaired", "Kern repariert.");
+            add("akw.damaged_core.too_hot",  "Reaktor noch zu heiß für die Reparatur.");
 
             // Redstone-Modi
             add("akw.redstone_mode.ignored",       "Ignoriert");
@@ -208,6 +218,7 @@ public class ModLanguageProvider {
             add("akw.multiblock.need_wrench", "Reactor Wrench required.");
             addBlock(ModBlocks.REACTOR_ENERGY_PORT, "Reactor Energy Port");
             addBlock(ModBlocks.REACTOR_ITEM_PORT, "Reactor Item Port");
+            addBlock(ModBlocks.DAMAGED_REACTOR_CORE, "Damaged Reactor Core");
             add("akw.item_port.mode.fuel_input", "Mode: Fuel input");
             add("akw.item_port.mode.waste_output", "Mode: Waste output");
             add("akw.item_port.mode.disabled", "Mode: Disabled");
@@ -229,10 +240,15 @@ public class ModLanguageProvider {
             add("akw.gui.production",      "Output: %s FE/t");
             add("akw.gui.cooling",         "Cooling: %s HU/t");
             add("akw.gui.heat",            "Heat: %s / %s");
-            add("akw.gui.status.running",     "Status: Running");
-            add("akw.gui.status.idle",        "Status: Ready");
-            add("akw.gui.status.off",         "Status: Off");
+            add("akw.gui.status",             "Status: %s");
             add("akw.gui.status.unassembled", "Not assembled — see Diagnostics tab.");
+            add("akw.reactor.status.unassembled", "Not assembled");
+            add("akw.reactor.status.offline",     "Ready");
+            add("akw.reactor.status.starting",    "Starting up…");
+            add("akw.reactor.status.running",     "Running");
+            add("akw.reactor.status.scram",       "SCRAM — decay heat");
+            add("akw.reactor.status.cooldown",    "Cooling down");
+            add("akw.reactor.status.damaged",     "DAMAGED — repair cores");
             add("akw.gui.control_rods",    "Control rods: %s%%");
             add("akw.gui.enabled.on",      "Reactor: ON");
             add("akw.gui.enabled.off",     "Reactor: OFF");
@@ -240,6 +256,10 @@ public class ModLanguageProvider {
             add("akw.gui.no_errors",       "No errors.");
             add("akw.gui.more_errors",     "… and %s more errors.");
             add("akw.gui.layer",           "Layer %s/%s");
+            add("akw.gui.safety.on",       "Failsafe: ON (no explosion)");
+            add("akw.gui.safety.off",      "Failsafe: OVERRIDDEN ⚠");
+            add("akw.damaged_core.repaired", "Core repaired.");
+            add("akw.damaged_core.too_hot",  "Reactor still too hot to repair.");
 
             // Redstone modes
             add("akw.redstone_mode.ignored",       "Ignored");

@@ -3,6 +3,7 @@ package ch.danielt.akw.screen;
 import ch.danielt.akw.block.entity.MultiblockReactorControllerBlockEntity;
 import ch.danielt.akw.block.entity.NuclearReactorBlockEntity;
 import ch.danielt.akw.reactor.ComparatorMode;
+import ch.danielt.akw.reactor.ReactorStatus;
 import ch.danielt.akw.reactor.RedstoneMode;
 import ch.danielt.akw.registry.ModItems;
 import ch.danielt.akw.registry.ModScreenHandlers;
@@ -28,6 +29,7 @@ public class ModularReactorScreenHandler extends AbstractContainerMenu {
     public static final int BUTTON_COMPARATOR = 1;
     public static final int BUTTON_ENABLED = 2;
     public static final int BUTTON_SHUTDOWN_TEMP = 3;
+    public static final int BUTTON_SAFETY = 4;
     /** Button-IDs {@code BUTTON_ROD_BASE + n} setzen den Steuerstabwert auf n % (0–100). */
     public static final int BUTTON_ROD_BASE = 100;
     private static final int SHUTDOWN_TEMP_STEP = 5;
@@ -195,6 +197,16 @@ public class ModularReactorScreenHandler extends AbstractContainerMenu {
         return getSizeX() >= 3;
     }
 
+    public ReactorStatus getStatus() {
+        return ReactorStatus.byOrdinal(
+                propertyDelegate.get(MultiblockReactorControllerBlockEntity.IDX_STATUS),
+                ReactorStatus.UNASSEMBLED);
+    }
+
+    public boolean isSafetyOverride() {
+        return propertyDelegate.get(MultiblockReactorControllerBlockEntity.IDX_SAFETY) != 0;
+    }
+
     // --- Buttons (laufen serverseitig) ---
 
     @Override
@@ -222,6 +234,11 @@ public class ModularReactorScreenHandler extends AbstractContainerMenu {
                 next = MultiblockReactorControllerBlockEntity.MIN_SHUTDOWN_TEMP;
             }
             propertyDelegate.set(MultiblockReactorControllerBlockEntity.IDX_SHUTDOWN_TEMP, next);
+            return true;
+        }
+        if (id == BUTTON_SAFETY) {
+            propertyDelegate.set(MultiblockReactorControllerBlockEntity.IDX_SAFETY,
+                    isSafetyOverride() ? 0 : 1);
             return true;
         }
         if (id >= BUTTON_ROD_BASE && id <= BUTTON_ROD_BASE + 100) {

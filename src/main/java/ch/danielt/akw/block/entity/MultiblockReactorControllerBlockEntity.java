@@ -4,6 +4,7 @@ import ch.danielt.akw.block.MultiblockReactorControllerBlock;
 import ch.danielt.akw.reactor.ComparatorMode;
 import ch.danielt.akw.reactor.ReactorLayout;
 import ch.danielt.akw.reactor.ReactorSimulation;
+import ch.danielt.akw.reactor.ReactorStatus;
 import ch.danielt.akw.reactor.ReactorValidator;
 import ch.danielt.akw.reactor.RedstoneMode;
 import ch.danielt.akw.reactor.ValidationError;
@@ -73,7 +74,14 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
     public static final int IDX_SIZE_X = 15;
     public static final int IDX_SIZE_Y = 16;
     public static final int IDX_SIZE_Z = 17;
-    public static final int MB_PROPERTY_COUNT = 18;
+    public static final int IDX_STATUS = 18;
+    public static final int IDX_SAFETY = 19;
+    public static final int MB_PROPERTY_COUNT = 20;
+
+    /** Anlaufzeit vor dem Zünden (Ticks). */
+    private static final int STARTUP_TICKS = 40;
+    /** Dauer der Nachzerfallswärme nach einem SCRAM (Ticks). */
+    public static final int DECAY_TICKS = 200;
 
     /** Untere/obere Grenze der einstellbaren Abschalttemperatur (Prozent der Maximalhitze). */
     public static final int MIN_SHUTDOWN_TEMP = 50;
@@ -104,6 +112,16 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
     private boolean enabled = true;
     /** Auto-Drosselschwelle in Prozent der Maximalhitze. */
     private int shutdownTempPercent = 90;
+    /** Betriebszustand (Zustandsautomat im Tick). */
+    private ReactorStatus status = ReactorStatus.UNASSEMBLED;
+    /** Restliche Anlauf-Ticks im Zustand STARTING. */
+    private int startupTimer;
+    /** Nachzerfallswärme-Basis (HU/t zum SCRAM-Zeitpunkt × 20 %). */
+    private int decayHeatBase;
+    /** Restliche Nachzerfalls-Ticks (läuft von {@link #DECAY_TICKS} auf 0). */
+    private int decayTicksLeft;
+    /** Sicherung überbrückt: bei 100 % Hitze explodiert der Reaktor statt Kerne zu beschädigen. */
+    private boolean safetyOverride;
     /** Innenraum-Schnitt für die Schichtansicht (nur Client, per Update-Tag befüllt). */
     private int @Nullable [] clientInteriorGrid;
 
@@ -129,6 +147,8 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
                 case IDX_SIZE_X -> layout.sizeX();
                 case IDX_SIZE_Y -> layout.sizeY();
                 case IDX_SIZE_Z -> layout.sizeZ();
+                case IDX_STATUS -> status.ordinal();
+                case IDX_SAFETY -> safetyOverride ? 1 : 0;
                 default -> 0;
             };
         }
@@ -162,6 +182,10 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
                 }
                 case IDX_SHUTDOWN_TEMP -> {
                     shutdownTempPercent = Math.clamp(value, MIN_SHUTDOWN_TEMP, MAX_SHUTDOWN_TEMP);
+                    setChanged();
+                }
+                case IDX_SAFETY -> {
+                    safetyOverride = value != 0;
                     setChanged();
                 }
                 default -> { }
@@ -219,6 +243,7 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
         level.setBlock(pos, state.setValue(MultiblockReactorControllerBlock.ASSEMBLED, true),
                 Block.UPDATE_ALL);
         updatePortLinks(level, true);
+        status = ReactorStatus.OFFLINE;
         setChanged();
         syncToClient(level);
         return true;
@@ -230,6 +255,8 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
         activeCores = 0;
         burnTime = 0;
         heat = 0;
+        status = ReactorStatus.UNASSEMBLED;
+        decayTicksLeft = 0;
         level.setBlock(pos,
                 state.setValue(MultiblockReactorControllerBlock.ASSEMBLED, false)
                         .setValue(MultiblockReactorControllerBlock.LIT, false),
@@ -288,10 +315,22 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
 
     public static void tick(Level level, BlockPos pos, BlockState state,
                             MultiblockReactorControllerBlockEntity be) {
-        if (level.isClientSide() || !state.getValue(MultiblockReactorControllerBlock.ASSEMBLED)) {
+        if (level.isClientSide()) {
             return;
         }
+        if (!state.getValue(MultiblockReactorControllerBlock.ASSEMBLED)) {
+            if (be.status != ReactorStatus.UNASSEMBLED) {
+                be.status = ReactorStatus.UNASSEMBLED;
+                be.setChanged();
+            }
+            return;
+        }
+        if (be.status == ReactorStatus.UNASSEMBLED) {
+            // Assemblierter Reaktor aus einer Welt ohne persistierten Status geladen.
+            be.status = ReactorStatus.OFFLINE;
+        }
 
+        // Revalidierung alle 100 Ticks über die gespeicherten Grenzen
         if (++be.revalidateTimer >= 100) {
             be.revalidateTimer = 0;
             ReactorValidator.Result result = ReactorValidator.validateBounds(
@@ -299,7 +338,12 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
             boolean errorsChanged = !result.errors().equals(be.lastErrors);
             be.lastErrors = result.errors();
             if (!result.valid()) {
-                be.disassemble(level, pos, state);
+                // Zerstörte Hülle an einem heißen Kern → Explosion
+                if (be.heat >= be.effectiveMaxHeat() * 3 / 4) {
+                    be.explode(level, pos, state);
+                } else {
+                    be.disassemble(level, pos, state);
+                }
                 return;
             }
             if (errorsChanged) {
@@ -311,83 +355,125 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
             be.updatePortLinks(level, true);
         }
 
-        boolean wasBurning = be.burnTime > 0;
-        boolean dirty = false;
+        ReactorStatus oldStatus = be.status;
         boolean powered = state.getValue(MultiblockReactorControllerBlock.POWERED);
-
-        // EMERGENCY_STOP oder manuell ausgeschaltet: laufenden Brennzyklus sofort beenden
-        boolean forceStop = !be.enabled
-                || (powered && be.redstoneMode == RedstoneMode.EMERGENCY_STOP);
-        if (forceStop && be.burnTime > 0) {
-            be.burnTime = 0;
-            be.activeCores = 0;
-            dirty = true;
-        }
-
-        ReactorSimulation.ReactorStats stats = be.currentStats();
-
-        if (be.burnTime > 0) {
-            be.burnTime--;
-            if (be.energyStorage.getEnergyStored() < stats.capacity()) {
-                be.energyStorage.setEnergy(Math.min(stats.capacity(),
-                        be.energyStorage.getEnergyStored() + stats.generationPerTick()));
-            }
-            dirty = true;
-        }
-
         boolean canIgnite = be.enabled && switch (be.redstoneMode) {
             case IGNORED -> true;
             case HIGH_ENABLES -> powered;
             case HIGH_DISABLES, EMERGENCY_STOP -> !powered;
         };
-        if (be.burnTime <= 0 && be.energyStorage.getEnergyStored() < be.effectiveCapacity() && canIgnite) {
-            int startedCores = be.consumeFuelBatch();
-            if (startedCores > 0) {
-                be.activeCores = startedCores;
-                be.burnTime = ReactorSimulation.BURN_TICKS;
-                be.burnTimeTotal = ReactorSimulation.BURN_TICKS;
-                stats = be.currentStats();
-                dirty = true;
-            } else {
-                be.activeCores = 0;
+        boolean forceStop = !be.enabled
+                || (powered && be.redstoneMode == RedstoneMode.EMERGENCY_STOP);
+        boolean dirty = false;
+        int oldHeat = be.heat;
+        ReactorSimulation.ReactorStats stats = be.currentStats();
+
+        switch (be.status) {
+            case OFFLINE -> {
+                if (canIgnite && be.energyStorage.getEnergyStored() < be.effectiveCapacity()
+                        && be.hasIgnitableFuel()) {
+                    be.status = ReactorStatus.STARTING;
+                    be.startupTimer = STARTUP_TICKS;
+                }
             }
+            case STARTING -> {
+                if (!canIgnite) {
+                    be.status = ReactorStatus.OFFLINE;
+                } else if (--be.startupTimer <= 0) {
+                    int startedCores = be.consumeFuelBatch();
+                    if (startedCores > 0) {
+                        be.activeCores = startedCores;
+                        be.burnTime = ReactorSimulation.BURN_TICKS;
+                        be.burnTimeTotal = ReactorSimulation.BURN_TICKS;
+                        be.status = ReactorStatus.RUNNING;
+                        stats = be.currentStats();
+                    } else {
+                        be.status = ReactorStatus.OFFLINE;
+                    }
+                    dirty = true;
+                }
+            }
+            case RUNNING -> {
+                if (forceStop) {
+                    be.scram();
+                } else {
+                    be.burnTime--;
+                    if (be.energyStorage.getEnergyStored() < stats.capacity()) {
+                        be.energyStorage.setEnergy(Math.min(stats.capacity(),
+                                be.energyStorage.getEnergyStored() + stats.generationPerTick()));
+                    }
+                    be.heat += stats.heatPerTick();
+                    if (be.burnTime <= 0) {
+                        // Zyklus beendet: nahtlos neu zünden, wenn möglich
+                        int startedCores = canIgnite
+                                && be.energyStorage.getEnergyStored() < be.effectiveCapacity()
+                                ? be.consumeFuelBatch() : 0;
+                        if (startedCores > 0) {
+                            be.activeCores = startedCores;
+                            be.burnTime = ReactorSimulation.BURN_TICKS;
+                            be.burnTimeTotal = ReactorSimulation.BURN_TICKS;
+                        } else {
+                            be.activeCores = 0;
+                            be.status = ReactorStatus.COOLDOWN;
+                        }
+                    }
+                }
+                dirty = true;
+            }
+            case SCRAM -> {
+                // Nachzerfallswärme: 20 % der letzten Kernwärme, linear auf 0 über DECAY_TICKS
+                if (be.decayTicksLeft > 0) {
+                    be.heat += Math.round((float) be.decayHeatBase * be.decayTicksLeft / DECAY_TICKS);
+                    be.decayTicksLeft--;
+                    dirty = true;
+                } else {
+                    be.status = ReactorStatus.COOLDOWN;
+                }
+            }
+            case COOLDOWN -> {
+                if (be.heat < be.effectiveMaxHeat() * 5 / 100) {
+                    be.status = ReactorStatus.OFFLINE;
+                }
+            }
+            case DAMAGED, UNASSEMBLED -> { }
         }
 
-        int oldHeat = be.heat;
-        if (wasBurning) {
-            be.heat += stats.heatPerTick();
-        }
+        // Kühlung wirkt in jedem Zustand
         be.heat = Math.max(0, be.heat - stats.coolingPerTick());
         if (be.heat != oldHeat) {
             dirty = true;
         }
 
+        // Überhitzung: Kerne beschädigen statt explodieren — außer die Sicherung ist überbrückt
         if (be.heat >= be.effectiveMaxHeat()) {
-            be.explode(level, pos, state);
-            return;
-        }
-        if (be.heat >= (long) be.effectiveMaxHeat() * be.shutdownTempPercent / 100 && be.burnTime > 0) {
-            be.burnTime = 0;
-            be.activeCores = 0;
+            if (be.safetyOverride) {
+                be.explode(level, pos, state);
+                return;
+            }
+            if (level instanceof ServerLevel serverLevel) {
+                be.damageCores(serverLevel, pos);
+            }
+        } else if (be.status == ReactorStatus.RUNNING
+                && be.heat >= (long) be.effectiveMaxHeat() * be.shutdownTempPercent / 100) {
+            be.scram();
             dirty = true;
         }
 
-        // FE-Abgabe läuft ausschließlich über die Energie-Ports der Hülle.
-
-        if (be.burnTime > 0 && level instanceof ServerLevel serverLevel) {
+        if ((be.status == ReactorStatus.RUNNING || be.status == ReactorStatus.DAMAGED)
+                && level instanceof ServerLevel serverLevel) {
             be.applyRadiation(serverLevel, pos);
         }
-        if (wasBurning && level instanceof ServerLevel serverLevel
+        if (be.status == ReactorStatus.RUNNING && level instanceof ServerLevel serverLevel
                 && serverLevel.getGameTime() % 10 == 0) {
             serverLevel.sendParticles(ParticleTypes.ELECTRIC_SPARK,
                     pos.getX() + 0.5, pos.getY() + 1.1, pos.getZ() + 0.5,
                     Math.min(12, 2 + be.activeCores), 0.3, 0.3, 0.3, 0.01);
         }
 
-        boolean nowBurning = be.burnTime > 0;
-        if (nowBurning != wasBurning) {
+        boolean lit = be.status == ReactorStatus.RUNNING;
+        if (state.getValue(MultiblockReactorControllerBlock.LIT) != lit) {
             level.setBlock(pos,
-                    state.setValue(MultiblockReactorControllerBlock.LIT, nowBurning),
+                    state.setValue(MultiblockReactorControllerBlock.LIT, lit),
                     Block.UPDATE_ALL);
             dirty = true;
         }
@@ -398,9 +484,63 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
             level.updateNeighbourForOutputSignal(pos, state.getBlock());
         }
 
-        if (dirty) {
+        if (be.status != oldStatus || dirty) {
             be.setChanged();
         }
+    }
+
+    /** Not-Abschaltung: Brennzyklus stoppen und Nachzerfallswärme initialisieren. */
+    private void scram() {
+        ReactorSimulation.ReactorStats stats = currentStats();
+        decayHeatBase = Math.max(1, Math.round(stats.heatPerTick() * 0.2f));
+        decayTicksLeft = DECAY_TICKS;
+        burnTime = 0;
+        burnTimeTotal = 0;
+        activeCores = 0;
+        status = ReactorStatus.SCRAM;
+    }
+
+    /** Prüft, ob ein Zündversuch Brennstoff verbrauchen könnte (ohne zu verbrauchen). */
+    private boolean hasIgnitableFuel() {
+        if (layout.coreCount() <= 0 || !inventory.get(FUEL_SLOT).is(ModItems.FUEL_ROD)) {
+            return false;
+        }
+        ItemStack waste = inventory.get(WASTE_SLOT);
+        return waste.isEmpty()
+                || (waste.is(ModItems.SPENT_FUEL_ROD) && waste.getCount() < waste.getMaxStackSize());
+    }
+
+    /** Bei 100 % Hitze: 1–3 zufällige Kerne werden zu beschädigten Kernen; Status → DAMAGED. */
+    private void damageCores(ServerLevel level, BlockPos pos) {
+        List<BlockPos> cores = new ArrayList<>();
+        BlockPos min = layout.boundsMin(pos).offset(1, 1, 1);
+        BlockPos max = layout.boundsMax(pos).offset(-1, -1, -1);
+        for (BlockPos current : BlockPos.betweenClosed(min, max)) {
+            if (level.getBlockState(current).is(ModBlocks.REACTOR_CORE.get())) {
+                cores.add(current.immutable());
+            }
+        }
+        int toDamage = Math.min(cores.size(), 1 + level.random.nextInt(3));
+        for (int i = 0; i < toDamage; i++) {
+            BlockPos target = cores.remove(level.random.nextInt(cores.size()));
+            level.setBlock(target, ModBlocks.DAMAGED_REACTOR_CORE.get().defaultBlockState(),
+                    Block.UPDATE_ALL);
+        }
+        burnTime = 0;
+        burnTimeTotal = 0;
+        activeCores = 0;
+        decayTicksLeft = 0;
+        heat = effectiveMaxHeat() * 3 / 4;
+        status = ReactorStatus.DAMAGED;
+        // Layout zeitnah neu einlesen (Kernanzahl hat sich geändert)
+        revalidateTimer = 90;
+        setChanged();
+        syncToClient(level);
+    }
+
+    /** Für die Reparatur beschädigter Kerne: Reaktor muss erst abkühlen. */
+    public boolean isTooHotForRepair() {
+        return layout.isAssembled() && heat >= effectiveMaxHeat() * 5 / 100;
     }
 
     private int consumeFuelBatch() {
@@ -530,6 +670,11 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
         output.putInt("ControlRodInsertion", controlRodInsertion);
         output.putBoolean("Enabled", enabled);
         output.putInt("ShutdownTemp", shutdownTempPercent);
+        output.putInt("Status", status.ordinal());
+        output.putInt("StartupTimer", startupTimer);
+        output.putInt("DecayHeatBase", decayHeatBase);
+        output.putInt("DecayTicksLeft", decayTicksLeft);
+        output.putBoolean("SafetyOverride", safetyOverride);
     }
 
     @Override
@@ -550,6 +695,13 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
         enabled = input.getBooleanOr("Enabled", true);
         shutdownTempPercent = Math.clamp(input.getIntOr("ShutdownTemp", 90),
                 MIN_SHUTDOWN_TEMP, MAX_SHUTDOWN_TEMP);
+        status = ReactorStatus.byOrdinal(
+                input.getIntOr("Status", ReactorStatus.UNASSEMBLED.ordinal()),
+                ReactorStatus.UNASSEMBLED);
+        startupTimer = Math.max(0, input.getIntOr("StartupTimer", 0));
+        decayHeatBase = Math.max(0, input.getIntOr("DecayHeatBase", 0));
+        decayTicksLeft = Math.clamp(input.getIntOr("DecayTicksLeft", 0), 0, DECAY_TICKS);
+        safetyOverride = input.getBooleanOr("SafetyOverride", false);
         layout = loadLayout(input);
         activeCores = Math.min(activeCores, layout.coreCount());
         energyStorage.setEnergy(Math.min(Math.max(0, input.getIntOr("Energy", 0)),

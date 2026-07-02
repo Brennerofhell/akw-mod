@@ -1,6 +1,7 @@
 package ch.danielt.akw.registry;
 
 import ch.danielt.akw.AkwMod;
+import ch.danielt.akw.block.DamagedReactorCoreBlock;
 import ch.danielt.akw.block.EnergyBatteryBlock;
 import ch.danielt.akw.block.EnergyCableBlock;
 import ch.danielt.akw.block.MultiblockReactorControllerBlock;
@@ -82,6 +83,9 @@ public class ModBlocks {
     public static final DeferredBlock<ReactorItemPortBlock> REACTOR_ITEM_PORT =
             registerWithItem("reactor_item_port", ReactorItemPortBlock::new,
                     BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5f, 1200f));
+    public static final DeferredBlock<DamagedReactorCoreBlock> DAMAGED_REACTOR_CORE =
+            registerWithItem("damaged_reactor_core", DamagedReactorCoreBlock::new,
+                    metal().lightLevel(s -> 3));
 
     // --- Energie-Infrastruktur ---
     public static final DeferredBlock<EnergyCableBlock> ENERGY_CABLE =
