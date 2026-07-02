@@ -117,17 +117,23 @@ Reaktor. Seine Leistung hängt von den wirklich eingebauten Modulen ab.
 
 ### Hülle bauen
 
-1. Baue einen hohlen Würfel mit Außenmaß **3×3×3**, **5×5×5** oder **7×7×7**.
-2. Die Außenwand muss vollständig aus **Reaktor-Gehäusen** bestehen.
-3. Ersetze den mittleren Block einer Seitenwand durch genau einen
-   **Multiblock-Controller**. Der Innenraum liegt hinter seiner Vorderseite.
-4. Setze mindestens einen **Reaktorkern** in den Innenraum.
-5. Erlaubt sind innen Luft, Reaktorkerne, Steuerstäbe, Kühlrohre und Blei-Blöcke.
-6. Rechtsklicke den Controller mit dem **Reaktor-Schraubenschlüssel**.
+1. Baue einen hohlen **rechteckigen Quader** mit **3 bis 9 Blöcken je Achse** —
+   vom klassischen 3×3×3-Würfel bis z. B. 5×4×7 oder maximal 9×9×9.
+2. Die Außenwand besteht aus **Reaktor-Gehäusen**, **Energie-Ports** und **Item-Ports**.
+3. Ersetze **genau einen** Wandblock durch den **Multiblock-Controller** — er darf an
+   **beliebiger Stelle** der Hülle sitzen (Wand, Kante oder Ecke).
+4. Setze **mindestens einen Reaktor-Energie-Port** in die Hülle — ohne ihn lässt sich
+   der Reaktor nicht assemblieren (Meldung „Kein Energie-Port in der Hülle.").
+5. Setze mindestens einen **Reaktorkern** in den Innenraum.
+6. Erlaubt sind innen Luft, Reaktorkerne, Steuerstäbe, Kühlrohre und Blei-Blöcke.
+7. Rechtsklicke den Controller mit dem **Reaktor-Schraubenschlüssel**.
 
-Der Controller meldet, ob die Hülle unvollständig ist, ein Kern fehlt oder ein
-ungültiger Block im Innenraum steht. Er prüft die Struktur während des Betriebs alle
-100 Ticks erneut.
+Schlägt die Assemblierung fehl, meldet der Controller „Ungültige Struktur" und listet
+bis zu **8 Fehler mit Koordinaten im Chat** auf — z. B. Lücke in der Hülle, ungültiger
+Block, fehlender Kern, fehlender Energie-Port oder zu große Hülle. Kühlrohre ohne
+Verbindung zur Hülle erscheinen nur als Warnung und verhindern die Assemblierung nicht.
+Der Controller prüft die Struktur während des Betriebs alle 100 Ticks (5 Sekunden)
+erneut und deaktiviert sich bei Beschädigung selbst.
 
 ### Innenmodule
 
@@ -147,15 +153,31 @@ verbrauchter Brennstab erzeugt. Bei 90 Prozent Maximaltemperatur erfolgt eine
 automatische Abschaltung; bei weiterem Temperaturanstieg bleibt die Kernschmelze
 gefährlich.
 
-### Anschlüsse im aktuellen MVP
+### Anschlüsse: Energie- und Item-Ports
 
-- Rechtsklick auf den assemblierten Controller öffnet das bekannte Reaktor-GUI.
-- Hopper von oben liefern Brennstäbe; Hopper von unten entnehmen Abfall.
-- FE wird über angrenzende Kabel, Akkus oder Verbraucher ausgegeben.
-- Ein Redstone-Signal am Controller verhindert den Start eines neuen Brennzyklus.
+- **Reaktor-Energie-Port** (`akw:reactor_energy_port`) — der **einzige** FE-Ausgang des
+  Multiblocks; der Controller selbst gibt keinen Strom ab. Kabel, Akku oder Verbraucher
+  direkt an den Port setzen. Mehrere Ports pro Hülle sind erlaubt.
+  Rezept: **Energie-Kabel über Reaktor-Gehäuse** (senkrecht, 2 Felder).
+- **Reaktor-Item-Port** (`akw:reactor_item_port`) — der Hopper-Anschluss des Multiblocks.
+  Rezept: **Trichter über Reaktor-Gehäuse**. **Rechtsklick ohne Schraubenschlüssel**
+  schaltet den Modus um (Meldung in der Actionbar):
 
-Eigene Energie-, Item- und Redstone-Ports sowie rechteckige Hüllen bis 9×9×9 sind für
-die nächste Multiblock-Ausbaustufe vorgesehen.
+  | Modus | Verhalten |
+  |---|---|
+  | Brennstoff-Eingang *(Standard)* | Hopper füllen Brennstäbe in den Brennstoff-Slot |
+  | Abfall-Ausgang | Hopper entnehmen verbrauchte Brennstäbe aus dem Abfall-Slot |
+  | Deaktiviert | keine Item-Bewegung |
+
+- Hopper **direkt am Controller** funktionieren nicht mehr — Brennstoff und Abfall laufen
+  ausschließlich über Item-Ports (die Ports wirken nur am assemblierten Reaktor).
+- Rechtsklick auf den assemblierten Controller öffnet weiterhin das bekannte Reaktor-GUI;
+  ein Redstone-Signal am Controller wirkt je nach eingestelltem Redstone-Modus.
+
+> **Migration alter Welten:** Vor diesem Update assemblierte Reaktoren besitzen noch
+> keinen Energie-Port. Sie deaktivieren sich nach dem Update binnen ~5 Sekunden mit der
+> Meldung „Kein Energie-Port in der Hülle." — einfach einen Energie-Port (und bei Bedarf
+> Item-Ports) in die Hülle einsetzen und mit dem Schraubenschlüssel neu assemblieren.
 
 ### Bauroboter (automatischer Aufbau)
 
@@ -170,10 +192,15 @@ automatisch aus seinem Inventar zusammen.
 4. **Shift-Rechtsklick** startet bzw. pausiert den Bau. Ein sichtbarer Roboter setzt alle
    5 Ticks einen Block.
 5. Der Status erscheint in der Actionbar: fehlendes Material, Blockade, zu wenig Energie oder
-   „fertig". Ist die Struktur gültig, ist der Multiblock-Reaktor sofort assembliert.
+   „fertig".
 
 > Ein Redstone-Signal am Bauroboter **pausiert** den Bau. Der Komparator-Ausgang zeigt den
 > Baufortschritt (0–15). Beim Abbau wirft der Controller Inventar und Roboter wieder aus.
+
+> **Wichtig:** Der Bauroboter baut nur die reine 3×3×3-Hülle **ohne Ports** — „fertig"
+> gilt auch ohne Energie-Port. Setze anschließend von Hand mindestens einen
+> **Reaktor-Energie-Port** (und bei Bedarf Item-Ports) in die Hülle und assembliere den
+> Reaktor mit dem **Schraubenschlüssel**.
 
 ---
 

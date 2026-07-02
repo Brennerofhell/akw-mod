@@ -15,7 +15,7 @@ Fabric→NeoForge-API-Tabellen [NEOFORGE-MIGRATION.md](NEOFORGE-MIGRATION.md).
 | **Minecraft** | 1.21.10 |
 | **NeoForge** | 21.10.64 (`loaderVersion = "[4,)"`, Dependency `neoforge [21.10,)`, `minecraft [1.21.10,1.22)`) |
 | **Java** | 21 (Mojang-Mappings) |
-| **Mod-Version** | 1.2.0 (`gradle.properties` → `mod_version`) |
+| **Mod-Version** | 1.2.0 (`gradle.properties` → `mod_version`); Codestand enthält bereits die unveröffentlichten 1.3.0-Änderungen (Multiblock-Phase A) |
 | **Lizenz** | MIT |
 
 > **Wahrheitsquelle der Balance-Werte:** Reaktor-Tier-Werte stehen ausschließlich in
@@ -60,9 +60,10 @@ ModItems → ModBlocks → ModEffects → ModSounds → ModBlockEntities
 - `MOD_ID = "akw"`, `LOGGER = LoggerFactory.getLogger("akw")`.
 
 `registerCapabilities(RegisterCapabilitiesEvent)` meldet `Capabilities.Energy.BLOCK` für fünf
-BE-Typen an, Provider jeweils `(be, side) -> be.energyStorage`:
-`NUCLEAR_REACTOR`, `MULTIBLOCK_REACTOR_CONTROLLER`, `REACTOR_BUILDER_CONTROLLER`,
-`ENERGY_CABLE`, `ENERGY_BATTERY`.
+BE-Typen an: `NUCLEAR_REACTOR`, `REACTOR_BUILDER_CONTROLLER`, `ENERGY_CABLE`, `ENERGY_BATTERY`
+(Provider jeweils `(be, side) -> be.energyStorage`) sowie `REACTOR_ENERGY_PORT`
+(Provider `(be, side) -> be.resolveControllerEnergy()`). Der `MULTIBLOCK_REACTOR_CONTROLLER`
+ist **bewusst nicht** registriert — FE fließt beim Multiblock ausschließlich über Energie-Ports.
 
 ### `AkwClient` (`@EventBusSubscriber(value = Dist.CLIENT)`)
 `onRegisterScreens(RegisterMenuScreensEvent)` bindet beide MenuTypes an `NuclearReactorScreen`:
@@ -109,6 +110,8 @@ BlockItems werden über `ITEMS.registerSimpleBlockItem(name, block)` erzeugt (so
 | `REACTOR_CASING` | `akw:reactor_casing` | `ReactorCasingBlock` | `strength(5, 1200)` |
 | `MULTIBLOCK_REACTOR_CONTROLLER` | `akw:multiblock_reactor_controller` | `MultiblockReactorControllerBlock` | `lightLevel 13` bei `LIT` |
 | `REACTOR_BUILDER_CONTROLLER` | `akw:reactor_builder_controller` | `ReactorBuilderControllerBlock` | `lightLevel 7` bei `ACTIVE` |
+| `REACTOR_ENERGY_PORT` | `akw:reactor_energy_port` | `ReactorEnergyPortBlock` | `strength(5, 1200)`; einziger FE-Abgabepunkt des Multiblocks |
+| `REACTOR_ITEM_PORT` | `akw:reactor_item_port` | `ReactorItemPortBlock` | `strength(5, 1200)`; Property `mode` (Hopper-Anschluss) |
 | `ENERGY_CABLE` | `akw:energy_cable` | `EnergyCableBlock` | FE-Transport |
 | `ENERGY_BATTERY` | `akw:energy_battery` | `EnergyBatteryBlock` | FE-Speicher |
 | 6× Reaktoren | siehe §4 | `NuclearReactorBlock` | `lightLevel 13` bei `LIT` |
@@ -189,42 +192,66 @@ eingebauten Kernen**, nicht mit dem leeren Innenvolumen.
 ### Weltunabhängige Logik (`reactor/`)
 
 #### `ReactorLayout` (record, immutable)
-Vorberechneter Innenraum-Snapshot. Komponenten (alle `int`):
-`outerSize, coreCount, controlRodCount, coolingPipeCount, connectedCoolingPipeCount,
-coreNeighborContacts, coreControlRodContacts, coreCoolingContacts`.
-- `EMPTY = new ReactorLayout(0,0,0,0,0,0,0,0)`.
-- `isAssembled()` → `outerSize ≥ 3 && coreCount > 0`.
+Vorberechneter Innenraum-Snapshot; die Hülle ist ein **rechteckiger Quader**. Komponenten
+(alle `int`): `relMinX, relMinY, relMinZ` (Minimal-Ecke relativ zur Controller-Position),
+`sizeX, sizeY, sizeZ`, `coreCount, controlRodCount, coolingPipeCount,
+connectedCoolingPipeCount, coreNeighborContacts, coreControlRodContacts, coreCoolingContacts,
+energyPortCount, itemPortCount`.
+- `EMPTY` (alle 15 Komponenten 0).
+- `isAssembled()` → `sizeX ≥ 3 && sizeY ≥ 3 && sizeZ ≥ 3 && coreCount > 0`.
+- `maxDimension()` → größte Kantenlänge (u. a. für den Explosionsradius).
+- `boundsMin(controllerPos)` / `boundsMax(controllerPos)` → Hüllenecken in Weltkoordinaten.
 
 > `coreNeighborContacts` zählt jedes Kern-Kern-Paar doppelt (pro Kern in alle 6 Richtungen geprüft).
 > `connectedCoolingPipeCount`/`coreCoolingContacts` zählen **nur** per Flood-Fill mit der Hülle
 > verbundene Rohre — isolierte Rohre kühlen nicht.
 
 #### `ReactorValidator` (statisch)
-Prüft eine zentrierte Hülle der Größe 3/5/7. Koordinaten relativ zum Controller:
-`forward = facing.getOpposite()`, `right = facing.getClockWise()`, `half = outerSize/2`.
-Der Controller sitzt in der **Mitte der zugewandten Fläche** (dz=0), nicht im geometrischen Zentrum.
+Erkennt **rechteckige Hüllen mit 3–9 Blöcken je Achse** per BFS über zusammenhängende
+Hüllenblöcke (`isShellBlock`: Reaktor-Gehäuse, Controller, Energie-Port, Item-Port).
+Der Controller darf an **beliebiger Hüllenposition** sitzen (Wand, Kante oder Ecke).
 
-- `find(level, pos, facing)` — probiert Größen **7 → 5 → 3**, gibt die erste gültige zurück;
-  merkt den spezifischsten Fehler (≠ `MISSING_CASING`) als „nützlichsten".
-- `validate(level, pos, facing, outerSize)` — iteriert den Würfel, klassifiziert jede Position:
-  - **Hülle** (`|dx|=half || |dy|=half || dz∈{0, outerSize−1}`): Controller-Position muss der
-    Controller sein, sonst `REACTOR_CASING` — andernfalls `MISSING_CASING`.
-  - **Innenraum:** Luft/`LEAD_BLOCK` erlaubt (zählt nichts); `REACTOR_CORE`/`CONTROL_ROD_BLOCK`/
-    `COOLING_PIPE` werden gezählt; alles andere → `INVALID_INTERIOR`.
-  - Keine Kerne → `MISSING_CORE`.
+**Konstanten:** `MAX_EDGE = 9` (max. Kantenlänge), `MAX_VOLUME = 729` (9×9×9,
+BFS-Obergrenze besuchter Hüllenblöcke), `MAX_ERRORS = 8` (max. gesammelte Fehler).
+
+- `find(level, controllerPos)` — BFS ab der Controller-Position über alle 6-Nachbarn, die
+  Hüllenblöcke sind; ermittelt die Bounding-Box. Überschreitet eine Kante 9 oder die
+  Blockanzahl 729 → sofortiger Abbruch mit `TOO_LARGE`. Danach `validateBounds(...)`.
+- `validateBounds(level, controllerPos, min, max)` — validiert eine **bekannte** Box
+  vollständig; wird auch von der Tick-Revalidierung mit den **gespeicherten Grenzen**
+  genutzt (kein `facing`-Parameter mehr). Kanten < 3 → `GAP`; > 9 → `TOO_LARGE`. Dann:
+  - **Oberfläche:** erlaubt sind genau ein Controller (an `controllerPos`; jeder weitere →
+    `FOREIGN_BLOCK`), `REACTOR_CASING`, `REACTOR_ENERGY_PORT`, `REACTOR_ITEM_PORT`
+    (Ports werden gezählt); Luft → `GAP`, alles andere → `FOREIGN_BLOCK`.
+  - **Innenraum:** Luft/`LEAD_BLOCK` erlaubt (zählt nichts); `REACTOR_CORE`/
+    `CONTROL_ROD_BLOCK`/`COOLING_PIPE` werden gezählt; alles andere → `FOREIGN_BLOCK`.
+  - Kein Kern → `NO_CORE`; kein Energie-Port → `NO_ENERGY_PORT`.
+  - Nicht mit der Hülle verbundene Rohre → `DISCONNECTED_PIPE` je Rohrposition
+    (**Warnung**, blockiert nicht).
 - `findPipesConnectedToShell(...)` — Zwei-Phasen-BFS: Rohre mit Hüllenkontakt markieren, dann über
   benachbarte Rohre ausbreiten.
 
-**Enum `Error`** → Translation-Key:
+**Record `Result(layout, errors)`** — `failure(errors)` (Layout = `EMPTY`);
+`valid()` = kein Fehler mit `blocksAssembly()` (Warnungen sind erlaubt).
 
-| Wert | Key |
-|---|---|
-| `NONE` | `akw.multiblock.assembled` |
-| `MISSING_CASING` | `akw.multiblock.error.casing` |
-| `MISSING_CORE` | `akw.multiblock.error.core` |
-| `INVALID_INTERIOR` | `akw.multiblock.error.interior` |
+#### `ValidationError` (record `(Type type, BlockPos pos)`)
+`toComponent()` → `Component.translatable(key, x, y, z)`. **Enum `Type`:**
 
-**Record `Result(layout, error)`** — `success(layout)`, `error(error)`, `valid()`.
+| Wert | Translation-Key | blockiert Assemblierung |
+|---|---|---|
+| `GAP` | `akw.reactor.error.gap` | ja |
+| `FOREIGN_BLOCK` | `akw.reactor.error.foreign_block` | ja |
+| `NO_CORE` | `akw.reactor.error.no_core` | ja |
+| `NO_ENERGY_PORT` | `akw.reactor.error.no_energy_port` | ja |
+| `TOO_LARGE` | `akw.reactor.error.too_large` | ja |
+| `DISCONNECTED_PIPE` | `akw.reactor.error.disconnected_pipe` | **nein** (Warnung) |
+
+Die alten Keys `akw.multiblock.error.*` (casing/core/interior) sind **entfernt**.
+
+#### `ItemPortMode` (enum, `StringRepresentable`)
+Werte der BlockState-Property `mode` des Item-Ports: `FUEL_INPUT("fuel_input")`,
+`WASTE_OUTPUT("waste_output")`, `DISABLED("disabled")`. `next()` schaltet zyklisch;
+`translationKey()` = `akw.item_port.mode.<serializedName>`.
 
 #### `ReactorSimulation` (statisch, reine Balance-Mathematik)
 
@@ -258,7 +285,8 @@ Sonderfall (nicht assembliert oder `activeCores ≤ 0`): `(0, 0, 2, capacity, ma
 - `useWithoutItem`:
   - **mit `REACTOR_WRENCH`:** `ASSEMBLED` → `disassemble` (Meldung `akw.multiblock.disassembled`);
     sonst `tryAssemble` (Erfolg: `akw.multiblock.assembled` mit coreCount + connectedCoolingPipeCount;
-    Fehler: `getLastAssemblyError()`).
+    Fehler: `akw.multiblock.invalid` in der Actionbar + alle Zeilen aus
+    `getLastErrorComponents()` — max. 8, mit Koordinaten — als **Chat-Zeilen**).
   - **ohne Wrench:** `ASSEMBLED` → GUI öffnen; sonst Meldung `akw.multiblock.need_wrench`.
 
 ### `block/entity/MultiblockReactorControllerBlockEntity`
@@ -266,30 +294,67 @@ Sonderfall (nicht assembliert oder `activeCores ≤ 0`): `(0, 0, 2, capacity, ma
 Energiespeicher `MutableEnergyStorage(20 000 000, 0, 32 768)` — effektive Kapazität wird per Layout
 über `effectiveCapacity()` = `ReactorSimulation.capacity(layout)` begrenzt.
 
-Zustand: `layout`, `lastAssemblyError`, `activeCores`, `burnTime`, `burnTimeTotal`, `heat`,
-`revalidateTimer`, `redstoneMode`, `comparatorMode`.
+Zustand: `layout`, `lastErrors` (transient, `List<ValidationError>` — für Wrench-Klick/GUI;
+`getLastErrorComponents()` liefert die übersetzten Zeilen), `activeCores`, `burnTime`,
+`burnTimeTotal`, `heat`, `revalidateTimer`, `lastComparator`, `redstoneMode`, `comparatorMode`.
 
-- `tryAssemble` → `ReactorValidator.find`; bei Erfolg `layout` setzen, `heat=0`, `ASSEMBLED=true`.
-- `disassemble` → `layout=EMPTY`, alle Laufzeitwerte 0, `ASSEMBLED=LIT=false`.
+- `tryAssemble` → `ReactorValidator.find`; bei Erfolg `layout` setzen, `heat=0`, Energie auf
+  `effectiveCapacity()` gedeckelt, `ASSEMBLED=true`, `updatePortLinks(link=true)`.
+- `disassemble` → Ports entlinken, `layout=EMPTY`, alle Laufzeitwerte 0, `ASSEMBLED=LIT=false`.
+- `updatePortLinks(level, link)` — verlinkt/entlinkt alle Energie-/Item-Port-BEs auf der
+  Hüllenoberfläche mit diesem Controller (idempotent; bei Assemble, erfolgreicher
+  Revalidierung und Disassemble). `preRemoveSideEffects` entlinkt zusätzlich beim Abbau
+  des Controllers (super droppt das Inventar).
 - **`tick`** (nur wenn `ASSEMBLED`):
-  - Alle **100 Ticks** Revalidierung (`ReactorValidator.validate` mit aktueller `outerSize`);
-    schlägt sie fehl → `disassemble` (Selbstabschaltung).
+  - Alle **100 Ticks** Revalidierung: `ReactorValidator.validateBounds` mit den
+    **gespeicherten Grenzen** (`layout.boundsMin/boundsMax`); schlägt sie fehl →
+    `disassemble` (Selbstabschaltung — so disassemblieren z. B. Alt-Reaktoren ohne
+    Energie-Port nach dem Update binnen ~5 s mit `akw.reactor.error.no_energy_port`).
+    Bei Erfolg: Layout übernehmen, Energie deckeln, `updatePortLinks(true)`.
   - `EMERGENCY_STOP` analog Einblock-Reaktor (`burnTime=0`, `activeCores=0`).
   - **Brennen:** Energie += `stats.generationPerTick()` (gedeckelt auf `stats.capacity()`).
   - **Zünden** (`canIgnite`): `consumeFuelBatch()` startet so viele Kerne, wie Brennstäbe **und**
     freier Abfallplatz vorhanden sind (`min(coreCount, fuelCount, wasteRoom)`); verbraucht
     so viele Brennstäbe und erzeugt so viele Spent-Rods. `burnTime = BURN_TICKS (2400)`.
   - **Hitze:** `heat += stats.heatPerTick()` (wenn vorher aktiv); `heat -= stats.coolingPerTick()`.
-  - **Explosion:** bei `heat ≥ effectiveMaxHeat()` → `explode` (Stärke `4 + outerSize`, disassembliert).
+  - **Explosion:** bei `heat ≥ effectiveMaxHeat()` → `explode` (Stärke `4 + layout.maxDimension()`,
+    disassembliert).
   - **Auto-Abschaltung** bei `heat ≥ effectiveMaxHeat·9/10` (90 %): `burnTime=0`, `activeCores=0`.
-  - **Abgabe:** `EnergyNet.pushToNeighbors(..., max(160, generationPerTick·2))`.
+  - **Keine direkte FE-Abgabe** — FE fließt ausschließlich über die Energie-Ports der Hülle
+    (der Controller hat auch keine Energie-Capability, siehe §1).
   - **Strahlung:** Radius 8, `radLevel = heat ≥ maxHeat/2 ? 1 : 0`, Blei schützt (gemeinsame
     `hasLeadShielding`). **Partikel:** `ELECTRIC_SPARK`, Anzahl `min(12, 2+activeCores)`.
-- **WorldlyContainer:** `UP`→Brennstoff (nur `FUEL_ROD`), `DOWN`→Abfall; `stillValid` ≤ 64 Blöcke².
+- **WorldlyContainer:** vollständig **gesperrt** (`getSlotsForFace` → leer,
+  `canPlace/canTakeItemThroughFace` → `false`) — Hopper laufen ausschließlich über
+  Item-Ports. `stillValid` ≤ 64 Blöcke².
 - **Menü:** `MultiblockReactorScreenHandler(syncId, inv, this, propertyDelegate)`.
 
 NBT speichert zusätzlich zum Laufzeitzustand das gesamte Layout (siehe §17), sodass nach Reload kein
-erneutes Assemblieren nötig ist.
+erneutes Assemblieren nötig ist. **Migration:** Fehlt `SizeX`, wird das alte zentrierte
+`ReactorSize`-Format erkannt und über das Blockstate-`FACING` in `relMin*/size*` umgerechnet
+(Port-Zähler = 0 → beim nächsten Revalidieren korrigiert bzw. ohne Energie-Port disassembliert).
+
+### `block/ReactorEnergyPortBlock` + `entity/ReactorEnergyPortBlockEntity`
+Einziger FE-Abgabepunkt der Hülle. Die BE hält **keinen eigenen Speicher**, nur die
+Controller-Position; `setController(pos|null)` wird ausschließlich vom Controller
+aufgerufen und invalidiert den Capability-Cache.
+- `resolveControllerEnergy()` → `MutableEnergyStorage` des verlinkten Controllers, aber nur
+  wenn dessen Blockstate `ASSEMBLED=true` ist — sonst `null` (Capability liefert nichts).
+- `tick` (server-only): bei vorhandenem Speicher mit Energie
+  `EnergyNet.pushToNeighbors(storage, level, pos, storage.getMaxExtract())` (32 768 FE/t je Seite).
+- NBT: `Controller` (Long, `BlockPos.asLong()`; Sentinel `Long.MIN_VALUE` = unverlinkt).
+
+### `block/ReactorItemPortBlock` + `entity/ReactorItemPortBlockEntity`
+**Blockstate:** `mode` (`EnumProperty<ItemPortMode>`, Default `fuel_input`).
+- `useWithoutItem`: mit `REACTOR_WRENCH` in der Haupthand → `PASS` (Assemblierung läuft über
+  den Controller); sonst Modus zyklisch weiterschalten + Actionbar-Meldung
+  (`akw.item_port.mode.*`).
+- BE `implements WorldlyContainer`, **kein eigenes Inventar** — vollständige Delegation an
+  die verlinkte, **assemblierte** Controller-BE:
+  - `FUEL_INPUT` → nur Slot 0 (Brennstoff) erreichbar; einsetzbar nur `FUEL_ROD`.
+  - `WASTE_OUTPUT` → nur Slot 1 (Abfall) erreichbar; nur Entnahme.
+  - `DISABLED` oder unverlinkt/nicht assembliert → keine Slots (leerer, gesperrter Container).
+- NBT: `Controller` (Long, Sentinel `Long.MIN_VALUE`).
 
 ---
 
@@ -323,8 +388,10 @@ Roboter (ArmorStand) setzt Block für Block.
 - `tick` (wenn `building` && nicht `POWERED`): alle 5 Ticks `buildNext` — platziert **genau einen**
   Block, kostet ein passendes Item + 500 FE, bewegt den Roboter, aktualisiert Komparator.
   Stop-Gründe: Blockade, fehlendes Material, zu wenig Energie.
-- `finish`: validiert die fertige Struktur (`ReactorValidator.validate(..., 3)`) → Status `complete`
-  oder `invalid`.
+- `finish`: validiert die fertige Struktur per `ReactorValidator.find(level, controllerPos)`;
+  ein fehlender Energie-Port (`NO_ENERGY_PORT`) zählt **nicht** als Baufehler — der Roboter
+  baut nur die 3×3×3-Casing-Hülle, Ports rüstet der Spieler nach → Status `complete`
+  oder `invalid`. Der Reaktor wird dabei **nicht** assembliert (Wrench-Klick nötig).
 - **Komparator:** `0` vor Start, sonst `min(15, max(1, buildIndex·15/27))`.
 
 **Status-Keys** (`statusKey`, init `akw.builder.status.idle`):
@@ -560,6 +627,8 @@ Ausgabe → `src/main/generated/` (committet). Texturen werden in `src/main/reso
 | `reactor_wrench` | ` I`/`IS` | I=Eisen, S=Stock | 1 |
 | `reactor_casing` | `ILI`/`LIL`/`ILI` | I=Eisen, L=Blei-Block | 4 |
 | `multiblock_reactor_controller` | `CRC`/`RNR`/`CRC` | C=Reaktor-Gehäuse, R=Redstone-Block, N=Reaktor | 1 |
+| `reactor_energy_port` | `E`/`C` | E=Energie-Kabel, C=Reaktor-Gehäuse | 1 |
+| `reactor_item_port` | `H`/`C` | H=Trichter, C=Reaktor-Gehäuse | 1 |
 | `reactor_builder_controller` | `CRC`/`EBE`/`CRC` | C=Gehäuse, R=Redstone-Block, E=Kabel, B=Akku | 1 |
 | `energy_cable` | `CRC` | C=Kupfer, R=Redstone | 3 |
 | `energy_battery` | `ICI`/`RRR`/`ICI` | I=Eisen, C=Kupfer, R=Redstone | 1 |
@@ -583,14 +652,17 @@ plus Challenges `elite_reactor`, `fusion_reactor`, `multiblock`.
 
 ### `registry/ModItemGroups`
 Tab `akw:akw`, Icon `RAW_URANIUM`, Titel `itemgroup.akw`. Inhalt: Items, dann Multiblock-/Builder-
-Controller, Erze, `REACTORS`, `DECOR`, Kabel, Akku. Zusätzlich Injektion in Vanilla-Tabs:
-`INGREDIENTS` (Items), `FUNCTIONAL_BLOCKS` (Controller + Reaktoren), `NATURAL_BLOCKS` (Erze),
-`BUILDING_BLOCKS` (`DECOR`), `REDSTONE_BLOCKS` (Kabel, Akku).
+Controller, Energie-/Item-Port, Erze, `REACTORS`, `DECOR`, Kabel, Akku. Zusätzlich Injektion in
+Vanilla-Tabs: `INGREDIENTS` (Items), `FUNCTIONAL_BLOCKS` (Controller + Ports + Reaktoren),
+`NATURAL_BLOCKS` (Erze), `BUILDING_BLOCKS` (`DECOR`), `REDSTONE_BLOCKS` (Kabel, Akku).
 
 ### `datagen/ModLanguageProvider`
 Inner-Klassen `German` (`de_de`) / `English` (`en_us`). Liefert Namen aller Items/Blöcke,
-Redstone-/Komparator-Modi, Builder-Status, Multiblock-Meldungen, Sound-Untertitel und die 9
-Advancement-Paare `advancements.akw.<id>.{title,desc}`.
+Redstone-/Komparator-Modi, Builder-Status, Multiblock-Meldungen, Item-Port-Modi
+(`akw.item_port.mode.{fuel_input, waste_output, disabled}`), Validierungsfehler
+(`akw.reactor.error.{gap, foreign_block, no_core, no_energy_port, too_large,
+disconnected_pipe}` — Koordinaten-Platzhalter bei gap/foreign_block/disconnected_pipe),
+Sound-Untertitel und die 9 Advancement-Paare `advancements.akw.<id>.{title,desc}`.
 
 ---
 
@@ -599,12 +671,14 @@ Advancement-Paare `advancements.akw.<id>.{title,desc}`.
 | BlockEntity | Keys |
 |---|---|
 | `NuclearReactorBlockEntity` | `Items` (Inventar), `Energy`, `BurnTime`, `BurnTimeTotal`, `Heat`, `RedstoneMode`, `ComparatorMode` |
-| `MultiblockReactorControllerBlockEntity` | wie oben + `ActiveCores`, `ReactorSize`, `CoreCount`, `ControlRodCount`, `CoolingPipeCount`, `ConnectedCoolingPipeCount`, `CoreNeighborContacts`, `CoreControlRodContacts`, `CoreCoolingContacts` |
+| `MultiblockReactorControllerBlockEntity` | wie oben + `ActiveCores`, `RelMinX`, `RelMinY`, `RelMinZ`, `SizeX`, `SizeY`, `SizeZ`, `CoreCount`, `ControlRodCount`, `CoolingPipeCount`, `ConnectedCoolingPipeCount`, `CoreNeighborContacts`, `CoreControlRodContacts`, `CoreCoolingContacts`, `EnergyPortCount`, `ItemPortCount` — Legacy-Key `ReactorSize` (altes zentriertes Format) wird beim Laden über das Blockstate-`FACING` migriert |
+| `ReactorEnergyPortBlockEntity` / `ReactorItemPortBlockEntity` | `Controller` (Long, `BlockPos.asLong()`; Sentinel `Long.MIN_VALUE` = unverlinkt) |
 | `ReactorBuilderControllerBlockEntity` | `Items`, `Energy`, `BuildIndex`, `BuildCooldown`, `Building`, `StatusKey`, `RobotUuidMost`, `RobotUuidLeast` |
 | `EnergyCableBlockEntity` / `EnergyBatteryBlockEntity` | `Energy` |
 | `WasteContainerBlockEntity` | `Items` |
 
 ---
 
-*Diese Referenz spiegelt den Codestand von Mod-Version 1.2.0. Bei Code-Änderungen die betroffenen
-Abschnitte mitführen — insbesondere Tier-Werte (§4), Simulationsformeln (§5) und NBT-Keys (§17).*
+*Diese Referenz spiegelt den Codestand nach Multiblock-Phase A (kommende Version 1.3.0;
+`gradle.properties` steht noch auf 1.2.0). Bei Code-Änderungen die betroffenen Abschnitte
+mitführen — insbesondere Tier-Werte (§4), Simulationsformeln (§5) und NBT-Keys (§17).*

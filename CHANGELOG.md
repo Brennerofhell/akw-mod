@@ -5,6 +5,61 @@ Alle nennenswerten Änderungen an der AKW-Mod werden hier dokumentiert.
 Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.3.0] — Unveröffentlicht
+
+Multiblock-Phase A: Energie- und Item-Ports, rechteckige Hüllen 3–9 je Achse, präzise Fehlerliste.
+
+### ⚠️ Breaking Changes
+- **FE-Abgabe nur noch über Energie-Ports:** Der Multiblock-Controller besitzt **keine
+  Energie-Capability mehr** und gibt selbst kein FE mehr ab. Jede Hülle braucht mindestens
+  einen **Reaktor-Energie-Port** (`akw:reactor_energy_port`), sonst schlägt die Validierung
+  mit `akw.reactor.error.no_energy_port` fehl. **Bestehende Reaktoren ohne Energie-Port
+  disassemblieren nach dem Update binnen ~5 s** (Revalidierung alle 100 Ticks) — Port in die
+  Hülle einsetzen und mit dem Schraubenschlüssel neu assemblieren.
+- **Hopper am Controller funktionieren nicht mehr:** Brennstoffzufuhr und Abfallentnahme
+  laufen ausschließlich über den **Reaktor-Item-Port** (`akw:reactor_item_port`).
+- Sprach-Keys `akw.multiblock.error.*` entfernt (ersetzt durch `akw.reactor.error.*`).
+
+### Hinzugefügt
+- **Reaktor-Energie-Port** (`akw:reactor_energy_port`): einziger FE-Abgabepunkt der Hülle.
+  Hält keinen eigenen Speicher, sondern delegiert an den Controller und schiebt pro Tick
+  aktiv bis 32 768 FE je Seite an angrenzende Verbraucher. Rezept: **Energie-Kabel über
+  Reaktor-Gehäuse** (shaped, 1×2 senkrecht).
+- **Reaktor-Item-Port** (`akw:reactor_item_port`): Hopper-Anschluss des Multiblocks mit
+  BlockState-Property `mode` (*fuel_input* / *waste_output* / *disabled*); **Rechtsklick ohne
+  Schraubenschlüssel** schaltet den Modus um (Actionbar-Meldung). Delegiert je nach Modus auf
+  den Brennstoff- bzw. Abfall-Slot des Controllers. Rezept: **Trichter über Reaktor-Gehäuse**.
+- **Rechteckige Reaktorhüllen 3–9 Blöcke je Achse** (bis 9×9×9): Erkennung per BFS ab der
+  Controller-Position; der Controller darf an **beliebiger Hüllenposition** sitzen
+  (Wand, Kante oder Ecke).
+- **Präzise Fehlerliste**: `ValidationError`-Typen `GAP`, `FOREIGN_BLOCK`, `NO_CORE`,
+  `NO_ENERGY_PORT`, `TOO_LARGE`, `DISCONNECTED_PIPE` (letzterer nicht-blockierende Warnung);
+  max. 8 Fehler pro Validierung. Der Wrench-Klick zeigt `akw.multiblock.invalid` in der
+  Actionbar und alle Fehler als **Chat-Zeilen mit Koordinaten** (`akw.reactor.error.*`).
+
+### Technisch
+- `ReactorValidator` neu: `find()` (BFS) + `validateBounds()` — die Tick-Revalidierung alle
+  100 Ticks läuft über die **gespeicherten Grenzen** (kein `facing`-Parameter mehr).
+  Konstanten `MAX_EDGE=9`, `MAX_VOLUME=729`, `MAX_ERRORS=8`.
+- `ReactorLayout`: `relMinX/Y/Z` + `sizeX/Y/Z` + `energyPortCount`/`itemPortCount` statt
+  `outerSize`; `maxDimension()` (u. a. Explosionsstärke `4 + maxDimension`).
+- Controller-NBT: neue Keys `RelMinX/Y/Z`, `SizeX/Y/Z`, `EnergyPortCount`, `ItemPortCount`;
+  **Migration** vom alten zentrierten `ReactorSize`-Feld beim Laden (Umrechnung über das
+  Blockstate-`FACING`).
+- Neue BlockEntities `akw:reactor_energy_port` / `akw:reactor_item_port` ohne eigenen
+  Speicher/Inventar; NBT-Key `Controller` (Long, Sentinel `Long.MIN_VALUE`); Verlinkung
+  ausschließlich durch den Controller (Assemble / erfolgreiche Revalidierung / Disassemble,
+  `updatePortLinks`). Energie-Capability des Ports liefert `resolveControllerEnergy()`
+  (nur bei `ASSEMBLED`).
+- Bauroboter: `finish()` validiert per `ReactorValidator.find()`; ein fehlender Energie-Port
+  zählt **nicht** als Baufehler — der Roboter baut weiterhin nur die 3×3×3-Casing-Hülle,
+  Ports rüstet der Spieler nach (bekannte Einschränkung).
+- GUI-Fehlerliste bewusst nach Phase B verschoben (GUI öffnet nur bei `ASSEMBLED`).
+- Datagen: Modelle, Blockstates, Loot-Tabellen, `mineable/pickaxe`-Tag, Rezepte und
+  Sprache (de/en) für beide Ports; Ports im Creative-Tab und in `FUNCTIONAL_BLOCKS`.
+
+---
+
 ## [1.2.0] — 2026-06-29
 
 ### Hinzugefügt

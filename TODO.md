@@ -1,78 +1,97 @@
 # TODO
 
-Aktualisiert: 2026-06-29
+Aktualisiert: 2026-07-02
 
 ## Aktueller Stand (Kurzfassung)
 
 - **Läuft:** Port auf NeoForge 21.10.64 abgeschlossen; sechs Einblockreaktoren; Energie
-  (FE-Kabel, Akku); Strahlung; MVP-Multiblock-Reaktor (3×3×3/5×5×5/7×7×7, Energie über alle
-  6 Seiten, Hopper-Brennstoff/-Abfall, Auto-Abschaltung); **Bauroboter** (automatischer
-  3×3×3-Aufbau aus Inventar + Energie); **konfigurierbare Redstone-Modi (4) und
-  Komparator-Modi (4)** im Reaktor-GUI (v1.2.0).
+  (FE-Kabel, Akku); Strahlung; Multiblock-Reaktor mit **rechteckigen Hüllen 3–9 je Achse**
+  (BFS-Erkennung, Controller an beliebiger Hüllenposition), **Energie-Ports** (einziger
+  FE-Abgabepunkt) und **Item-Ports** (Brennstoff/Abfall, Modus per Rechtsklick) sowie
+  **präziser Fehlerliste mit Koordinaten** (Multiblock-Phase A, 2026-07-02); **Bauroboter**
+  (automatischer 3×3×3-Aufbau aus Inventar + Energie); **konfigurierbare Redstone-Modi (4)
+  und Komparator-Modi (4)** im Reaktor-GUI (v1.2.0).
 - **Fertig (Doku war veraltet):** alle Item- und Block-Texturen sowie das Mod-Icon vorhanden;
   klassengenaue technische Referenz `docs/REFERENCE.md`.
-- **Offen:** `.ogg`-Sounddateien; Multiblock-Phasen A–C (Ports, rechteckige Hülle, präzise
-  Fehler, Steuerstab-Regler, eigenständiges Controller-GUI, Zustandsautomat); Unit-/GameTests;
-  Balance.
+- **Offen:** `.ogg`-Sounddateien; Multiblock-Phasen B–C (Steuerstab-Regler, eigenständiges
+  Controller-GUI inkl. Fehlerliste, Zustandsautomat); Unit-/GameTests; Balance.
+- **Bekannte Einschränkungen (nach Phase A):**
+  - Der **Bauroboter** baut weiterhin nur die reine 3×3×3-Casing-Hülle **ohne Ports**;
+    sein „fertig"-Status toleriert den fehlenden Energie-Port bewusst — der Spieler rüstet
+    Ports nach und assembliert mit dem Schraubenschlüssel.
+  - **GUI-Fehlerliste** bewusst nach **Phase B** verschoben (GUI öffnet nur bei `ASSEMBLED`);
+    bis dahin zeigt der Wrench-Klick die Fehler als Chat-Zeilen.
 
 ## Empfohlene Reihenfolge
 
-1. **Smoke-Tests** des bestehenden MVP (Abschnitt „Sofort") — Basis verifizieren.
-2. **Phase A** — MVP-Lücken schließen (Ports, rechteckige Hülle 3–9, präzise Fehler).
+1. **Smoke-Tests** des bestehenden Stands (Abschnitt „Sofort") — Basis verifizieren.
+2. ✅ **Phase A** — erledigt (2026-07-02): Ports, rechteckige Hülle 3–9, präzise Fehler.
 3. **Phase B** — Steuerstab-Regler, Controller-GUI, Redstone-Port.
 4. **Phase C** — Zustandsautomat, Nachzerfallswärme, beschädigte Kerne.
 5. **Polish/Release** — `.ogg`-Sounds, Unit-/GameTests, Guide/ROADMAP nachziehen → v1.0.0.
 
-## Sofort (Smoke-Tests des bestehenden MVP)
+## Sofort (Smoke-Tests des aktuellen Stands)
 
-- [ ] Modularen Reaktor im Spiel mit 3×3×3-, 5×5×5- und 7×7×7-Hülle testen.
+- [ ] Modularen Reaktor im Spiel mit 3×3×3-, 5×5×5- und einer rechteckigen Hülle
+      (z. B. 3×4×6) testen; Controller auch an Kante/Ecke platzieren.
 - [ ] Prüfen, ob Assemblierung, erneute Prüfung nach 100 Ticks und Disassemblierung
-      bei beschädigter Hülle korrekt funktionieren.
-- [ ] Brennstoffzufuhr von oben und Abfallentnahme von unten mit Hoppern testen.
-- [ ] FE-Ausgabe an Kabel, Akku und mindestens einen externen Verbraucher testen.
+      bei beschädigter Hülle korrekt funktionieren (inkl. Fehlerliste im Chat).
+- [ ] Brennstoffzufuhr und Abfallentnahme über **Item-Ports** in allen drei Modi testen
+      (Hopper am Controller dürfen nichts mehr bewegen).
+- [ ] FE-Ausgabe über den **Energie-Port** an Kabel, Akku und mindestens einen externen
+      Verbraucher testen (Controller selbst darf kein FE mehr abgeben).
+- [ ] Migration testen: alte Welt ohne Energie-Port → Reaktor disassembliert binnen ~5 s
+      mit Meldung „Kein Energie-Port in der Hülle."
 
 ---
 
-## Phase A — MVP-Lücken schließen
+## Phase A — MVP-Lücken schließen ✅ (erledigt 2026-07-02)
 
 *Ziel: Energie nur über Ports; Item-Ports statt Hopper-Heuristik;
 rechteckige Hüllen von 3×3×3 bis 9×9×9.*
 
+> **Abgeschlossen** (Commits `fd3fe00`, `1d10eb2`, `9a3d11c`; kommende v1.3.0).
+> Einzig die GUI-Fehlerliste (letzter A4-Punkt) ist bewusst nach Phase B verschoben.
+
 ### A3 — Rechteckige Hülle (3–9 Blöcke je Achse)
-- [ ] `ReactorValidator.find()` auf BFS-basierte Grenzerkennung umstellen
+- [x] `ReactorValidator.find()` auf BFS-basierte Grenzerkennung umstellen
       (statt hartkodierter 3/5/7-Würfel-Versuche).
-- [ ] `ReactorLayout` um `relMinX/Y/Z` und `sizeX/Y/Z` erweitern;
+- [x] `ReactorLayout` um `relMinX/Y/Z` und `sizeX/Y/Z` erweitern;
       `outerSize`-Feld entfernen.
-- [ ] Maximale Suchgrenze: 729 Blöcke (9×9×9).
-- [ ] Revalidierung im Tick-Loop auf gespeicherte Grenzen umstellen
-      (kein `facing`-Parameter mehr nötig).
-- [ ] NBT-Migration: altes `ReactorSize`-Feld beim Laden erkennen und in neue
-      Felder umrechnen (rückwärtskompatibel).
+- [x] Maximale Suchgrenze: 729 Blöcke (9×9×9) — `MAX_EDGE=9`, `MAX_VOLUME=729`.
+- [x] Revalidierung im Tick-Loop auf gespeicherte Grenzen umstellen
+      (`validateBounds`, kein `facing`-Parameter mehr nötig).
+- [x] NBT-Migration: altes `ReactorSize`-Feld beim Laden erkennen und in neue
+      Felder umrechnen (rückwärtskompatibel, über Blockstate-`FACING`).
 
 ### A1 — `reactor_energy_port` (neuer Block)
-- [ ] Block und BlockEntity registrieren (`ModBlocks`, `ModBlockEntities`).
-- [ ] BlockEntity delegiert FE-Zugriff an Controller-BE; kein eigener Speicher.
-- [ ] Controller-BE: Direktabgabe über alle 6 Seiten entfernen; FE nur noch über
-      Energie-Ports.
-- [ ] `ReactorValidator` akzeptiert Energie-Port als gültigen Hüllenblock.
-- [ ] Datagen: Modell, Blockstate, Loot-Tabelle, Sprache (de/en), pickaxe-Tag.
+- [x] Block und BlockEntity registrieren (`ModBlocks`, `ModBlockEntities`).
+- [x] BlockEntity delegiert FE-Zugriff an Controller-BE; kein eigener Speicher.
+- [x] Controller-BE: Direktabgabe über alle 6 Seiten entfernen; FE nur noch über
+      Energie-Ports (Controller hat keine Energie-Capability mehr).
+- [x] `ReactorValidator` akzeptiert Energie-Port als gültigen Hüllenblock
+      (und verlangt mindestens einen: `NO_ENERGY_PORT`).
+- [x] Datagen: Modell, Blockstate, Loot-Tabelle, Sprache (de/en), pickaxe-Tag.
 
 ### A2 — `reactor_item_port` (neuer Block)
-- [ ] Block mit `BlockState`-Property `ItemPortMode` (FUEL_INPUT, WASTE_OUTPUT, DISABLED).
-- [ ] Rechtsklick ohne Schraubenschlüssel wechselt den Modus.
-- [ ] BlockEntity delegiert Slot-Zugriff an Controller-BE (Slot 0 = Brennstoff,
+- [x] Block mit `BlockState`-Property `ItemPortMode` (FUEL_INPUT, WASTE_OUTPUT, DISABLED).
+- [x] Rechtsklick ohne Schraubenschlüssel wechselt den Modus.
+- [x] BlockEntity delegiert Slot-Zugriff an Controller-BE (Slot 0 = Brennstoff,
       Slot 1 = Abfall).
-- [ ] Hopper-Regelung am Controller-BE entfernen (läuft jetzt über Ports).
-- [ ] `ReactorValidator` akzeptiert Item-Port als gültigen Hüllenblock.
-- [ ] Datagen wie bei A1.
+- [x] Hopper-Regelung am Controller-BE entfernen (läuft jetzt über Ports).
+- [x] `ReactorValidator` akzeptiert Item-Port als gültigen Hüllenblock.
+- [x] Datagen wie bei A1.
 
 ### A4 — Präzise Fehlermeldungen
-- [ ] `ReactorValidator` gibt Liste von `ValidationError(type, BlockPos)` zurück
-      statt einzelnem Enum-Wert.
-- [ ] Sprach-Einträge: `akw.reactor.error.gap`, `akw.reactor.error.no_energy_port`,
+- [x] `ReactorValidator` gibt Liste von `ValidationError(type, BlockPos)` zurück
+      statt einzelnem Enum-Wert (max. 8 Fehler; `DISCONNECTED_PIPE` nicht-blockierend;
+      Anzeige beim Wrench-Klick als Chat-Zeilen mit Koordinaten).
+- [x] Sprach-Einträge: `akw.reactor.error.gap`, `akw.reactor.error.no_energy_port`,
       `akw.reactor.error.no_core`, `akw.reactor.error.disconnected_pipe`,
-      `akw.reactor.error.foreign_block` — jeweils mit Koordinaten-Platzhalter.
-- [ ] GUI zeigt alle Fehler in der Diagnose-Liste.
+      `akw.reactor.error.foreign_block` (+ `akw.reactor.error.too_large`) — jeweils mit
+      Koordinaten-Platzhalter; alte `akw.multiblock.error.*`-Keys entfernt.
+- [ ] GUI zeigt alle Fehler in der Diagnose-Liste — **bewusst nach Phase B verschoben**
+      (GUI öffnet nur bei `ASSEMBLED`; siehe B3 Diagnose-Tab).
 
 ---
 
@@ -234,3 +253,10 @@ rechteckige Hüllen von 3×3×3 bis 9×9×9.*
 - [x] **Konfigurierbare Komparator-Modi (4)** im Reaktor-GUI (v1.2.0): Energie /
       Temperatur / Brennstoff / Abfall.
 - [x] **Technische Referenz** `docs/REFERENCE.md` (klassengenau) erstellt (v1.2.0).
+- [x] **Multiblock-Phase A** (2026-07-02, kommende v1.3.0): rechteckige Hüllen 3–9 je Achse
+      per BFS (`ReactorValidator.find`/`validateBounds`), Controller an beliebiger
+      Hüllenposition; `reactor_energy_port` als einziger FE-Abgabepunkt (Controller ohne
+      Energie-Capability); `reactor_item_port` mit Modus-Property (Brennstoff-Eingang /
+      Abfall-Ausgang / Deaktiviert, Rechtsklick schaltet um); Fehlerliste `ValidationError`
+      (6 Typen, max. 8 Fehler, Koordinaten, Chat-Ausgabe beim Wrench-Klick); NBT-Migration
+      vom alten `ReactorSize`-Format.

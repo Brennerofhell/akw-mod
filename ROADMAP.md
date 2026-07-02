@@ -5,7 +5,7 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10 / NeoForge 21.10.
 > Die Migration von Fabric auf NeoForge ist abgeschlossen (v1.1.0) — siehe
 > [docs/NEOFORGE-MIGRATION.md](docs/NEOFORGE-MIGRATION.md). Die folgenden Phasen sind plattformneutral.
 
-## Status: v1.2.0 — Bauroboter + konfigurierbare Redstone-/Komparator-Modi
+## Status: v1.2.0 ausgeliefert · in Arbeit: v1.3.0 — Multiblock-Phase A abgeschlossen (Energie-/Item-Ports, rechteckige Hüllen 3–9, präzise Fehlerliste)
 
 ---
 
@@ -72,6 +72,10 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10 / NeoForge 21.10.
 
 ### Automation
 - [x] Hopper-Kompatibilität (v0.7.0): oben → Brennstoff, unten → Abfall
+      *(Einblockreaktoren; beim Multiblock seit Phase A nur noch über Item-Ports)*
+- [x] Energie-/Item-Ports für den Multiblock (Phase A, kommende v1.3.0):
+      FE-Abgabe nur noch über `reactor_energy_port` (Pflichtblock),
+      Brennstoff/Abfall über `reactor_item_port` (Modus per Rechtsklick)
 - [x] Redstone-Integration (v0.8.0): Komparator-Output + POWERED-Pause
 - [x] Konfigurierbare Redstone-Modi (4) + Komparator-Modi (4) im GUI (v1.2.0):
       Ignoriert / Signal aktiviert / Signal deaktiviert / Not-Aus (SCRAM) bzw.
@@ -106,7 +110,8 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10 / NeoForge 21.10.
 ## 🚀 Phase 6: Extensions (Post-Release)
 
 - [ ] Weitere Brennstoffe/Materialien
-- [x] Multiblock Strukturen (v0.6.0: 3×3×3, 5×5×5, 7×7×7)
+- [x] Multiblock Strukturen (v0.6.0: 3×3×3, 5×5×5, 7×7×7; seit Phase A rechteckig
+      3–9 Blöcke je Achse per BFS, Controller an beliebiger Hüllenposition)
 - [x] Bauroboter — automatischer 3×3×3-Multiblock-Aufbau aus Inventar + Energie (v1.2.0)
 - [ ] Netzwerk-System zwischen Reaktoren
 - [ ] Mod-Kompatibilität (andere Tech-Mods)
