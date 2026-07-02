@@ -7,53 +7,122 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-/** Prüft die bestehende zentrierte 3x3x3-, 5x5x5- oder 7x7x7-Hülle und ihren Innenraum. */
+/**
+ * Erkennt rechteckige Reaktorhüllen (3–9 Blöcke je Achse) per BFS über die
+ * Hüllenblöcke und prüft Hülle und Innenraum. Fehler werden als Liste von
+ * {@link ValidationError} mit Positionen gesammelt (max. {@link #MAX_ERRORS}).
+ */
 public final class ReactorValidator {
+
+    /** Maximale Kantenlänge der Hülle je Achse. */
+    public static final int MAX_EDGE = 9;
+    /** Obergrenze besuchter Hüllenblöcke während der BFS-Suche (9×9×9). */
+    public static final int MAX_VOLUME = MAX_EDGE * MAX_EDGE * MAX_EDGE;
+    /** Maximal gesammelte Fehler pro Validierung. */
+    public static final int MAX_ERRORS = 8;
+
     private ReactorValidator() {
     }
 
-    public static Result find(Level level, BlockPos controllerPos, Direction facing) {
-        Result mostUsefulError = Result.error(Error.MISSING_CASING);
-        for (int size : new int[]{7, 5, 3}) {
-            Result result = validate(level, controllerPos, facing, size);
-            if (result.valid()) {
-                return result;
-            }
-            if (result.error() != Error.MISSING_CASING) {
-                mostUsefulError = result;
+    /**
+     * Ermittelt die Hüllengrenzen per BFS ab der Controller-Position und validiert
+     * die gefundene Box vollständig. Der Controller darf an beliebiger Stelle der
+     * Hülle sitzen (Wand, Kante oder Ecke).
+     */
+    public static Result find(Level level, BlockPos controllerPos) {
+        if (!level.getBlockState(controllerPos).is(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER.get())) {
+            return Result.failure(List.of(
+                    new ValidationError(ValidationError.Type.GAP, controllerPos)));
+        }
+
+        Set<BlockPos> visited = new HashSet<>();
+        ArrayDeque<BlockPos> queue = new ArrayDeque<>();
+        visited.add(controllerPos.immutable());
+        queue.add(controllerPos.immutable());
+        int minX = controllerPos.getX(), maxX = controllerPos.getX();
+        int minY = controllerPos.getY(), maxY = controllerPos.getY();
+        int minZ = controllerPos.getZ(), maxZ = controllerPos.getZ();
+
+        while (!queue.isEmpty()) {
+            BlockPos current = queue.removeFirst();
+            for (Direction direction : Direction.values()) {
+                BlockPos neighbor = current.relative(direction);
+                if (visited.contains(neighbor) || !isShellBlock(level.getBlockState(neighbor))) {
+                    continue;
+                }
+                visited.add(neighbor.immutable());
+                minX = Math.min(minX, neighbor.getX());
+                maxX = Math.max(maxX, neighbor.getX());
+                minY = Math.min(minY, neighbor.getY());
+                maxY = Math.max(maxY, neighbor.getY());
+                minZ = Math.min(minZ, neighbor.getZ());
+                maxZ = Math.max(maxZ, neighbor.getZ());
+                if (maxX - minX + 1 > MAX_EDGE || maxY - minY + 1 > MAX_EDGE
+                        || maxZ - minZ + 1 > MAX_EDGE || visited.size() > MAX_VOLUME) {
+                    return Result.failure(List.of(
+                            new ValidationError(ValidationError.Type.TOO_LARGE, controllerPos)));
+                }
+                queue.addLast(neighbor.immutable());
             }
         }
-        return mostUsefulError;
+
+        return validateBounds(level, controllerPos,
+                new BlockPos(minX, minY, minZ), new BlockPos(maxX, maxY, maxZ));
     }
 
-    public static Result validate(Level level, BlockPos controllerPos, Direction facing, int outerSize) {
-        Direction forward = facing.getOpposite();
-        Direction right = facing.getClockWise();
-        int half = outerSize / 2;
+    /**
+     * Validiert eine bekannte Hüllen-Box vollständig (Oberfläche + Innenraum).
+     * Wird von {@link #find} und von der Tick-Revalidierung mit gespeicherten
+     * Grenzen genutzt.
+     */
+    public static Result validateBounds(Level level, BlockPos controllerPos,
+                                        BlockPos min, BlockPos max) {
+        List<ValidationError> errors = new ArrayList<>();
+        int sizeX = max.getX() - min.getX() + 1;
+        int sizeY = max.getY() - min.getY() + 1;
+        int sizeZ = max.getZ() - min.getZ() + 1;
+        if (sizeX < 3 || sizeY < 3 || sizeZ < 3) {
+            return Result.failure(List.of(
+                    new ValidationError(ValidationError.Type.GAP, controllerPos)));
+        }
+        if (sizeX > MAX_EDGE || sizeY > MAX_EDGE || sizeZ > MAX_EDGE) {
+            return Result.failure(List.of(
+                    new ValidationError(ValidationError.Type.TOO_LARGE, controllerPos)));
+        }
+
         Set<BlockPos> pipes = new HashSet<>();
         Set<BlockPos> cores = new HashSet<>();
         int rods = 0;
+        int controllers = 0;
+        int energyPorts = 0;
+        int itemPorts = 0;
 
-        for (int dx = -half; dx <= half; dx++) {
-            for (int dy = -half; dy <= half; dy++) {
-                for (int dz = 0; dz < outerSize; dz++) {
-                    BlockPos current = controllerPos.relative(right, dx)
-                            .relative(Direction.UP, dy).relative(forward, dz);
-                    boolean controller = dx == 0 && dy == 0 && dz == 0;
-                    boolean shell = Math.abs(dx) == half || Math.abs(dy) == half
-                            || dz == 0 || dz == outerSize - 1;
+        for (int x = min.getX(); x <= max.getX(); x++) {
+            for (int y = min.getY(); y <= max.getY(); y++) {
+                for (int z = min.getZ(); z <= max.getZ(); z++) {
+                    BlockPos current = new BlockPos(x, y, z);
                     BlockState state = level.getBlockState(current);
+                    boolean surface = x == min.getX() || x == max.getX()
+                            || y == min.getY() || y == max.getY()
+                            || z == min.getZ() || z == max.getZ();
 
-                    if (shell) {
-                        if (controller) {
-                            if (!state.is(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER.get())) {
-                                return Result.error(Error.MISSING_CASING);
+                    if (surface) {
+                        if (state.is(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER.get())) {
+                            controllers++;
+                            if (!current.equals(controllerPos)) {
+                                addError(errors, ValidationError.Type.FOREIGN_BLOCK, current);
                             }
-                        } else if (!state.is(ModBlocks.REACTOR_CASING.get())) {
-                            return Result.error(Error.MISSING_CASING);
+                        } else if (state.is(ModBlocks.REACTOR_CASING.get())) {
+                            // gültiger Hüllenblock
+                        } else if (state.isAir()) {
+                            addError(errors, ValidationError.Type.GAP, current);
+                        } else {
+                            addError(errors, ValidationError.Type.FOREIGN_BLOCK, current);
                         }
                         continue;
                     }
@@ -62,24 +131,37 @@ public final class ReactorValidator {
                         continue;
                     }
                     if (state.is(ModBlocks.REACTOR_CORE.get())) {
-                        cores.add(current.immutable());
+                        cores.add(current);
                     } else if (state.is(ModBlocks.CONTROL_ROD_BLOCK.get())) {
                         rods++;
                     } else if (state.is(ModBlocks.COOLING_PIPE.get())) {
-                        pipes.add(current.immutable());
+                        pipes.add(current);
                     } else {
-                        return Result.error(Error.INVALID_INTERIOR);
+                        addError(errors, ValidationError.Type.FOREIGN_BLOCK, current);
                     }
                 }
             }
         }
 
+        if (controllers == 0) {
+            // Gespeicherte Grenzen passen nicht mehr zur Controller-Position.
+            addError(errors, ValidationError.Type.GAP, controllerPos);
+        }
         if (cores.isEmpty()) {
-            return Result.error(Error.MISSING_CORE);
+            addError(errors, ValidationError.Type.NO_CORE, controllerPos);
         }
 
-        Set<BlockPos> connectedPipes = findPipesConnectedToShell(
-                level, pipes, controllerPos, facing, outerSize);
+        Set<BlockPos> connectedPipes = findPipesConnectedToShell(level, pipes, min, max);
+        for (BlockPos pipe : pipes) {
+            if (!connectedPipes.contains(pipe)) {
+                addError(errors, ValidationError.Type.DISCONNECTED_PIPE, pipe);
+            }
+        }
+
+        if (errors.stream().anyMatch(error -> error.type().blocksAssembly())) {
+            return Result.failure(errors);
+        }
+
         int coreNeighbors = 0;
         int coreRodContacts = 0;
         int coreCoolingContacts = 0;
@@ -96,22 +178,49 @@ public final class ReactorValidator {
             }
         }
 
-        ReactorLayout layout = new ReactorLayout(outerSize, cores.size(), rods, pipes.size(),
-                connectedPipes.size(), coreNeighbors, coreRodContacts, coreCoolingContacts);
-        return Result.success(layout);
+        ReactorLayout layout = new ReactorLayout(
+                min.getX() - controllerPos.getX(),
+                min.getY() - controllerPos.getY(),
+                min.getZ() - controllerPos.getZ(),
+                sizeX, sizeY, sizeZ,
+                cores.size(), rods, pipes.size(), connectedPipes.size(),
+                coreNeighbors, coreRodContacts, coreCoolingContacts,
+                energyPorts, itemPorts);
+        return new Result(layout, List.copyOf(errors));
+    }
+
+    /** Gültige Hüllenblöcke für BFS-Suche und Rohr-Anbindung. */
+    private static boolean isShellBlock(BlockState state) {
+        return state.is(ModBlocks.REACTOR_CASING.get())
+                || state.is(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER.get());
+    }
+
+    private static void addError(List<ValidationError> errors, ValidationError.Type type,
+                                 BlockPos pos) {
+        if (errors.size() < MAX_ERRORS) {
+            errors.add(new ValidationError(type, pos.immutable()));
+        }
+    }
+
+    private static boolean isOnSurface(BlockPos pos, BlockPos min, BlockPos max) {
+        if (pos.getX() < min.getX() || pos.getX() > max.getX()
+                || pos.getY() < min.getY() || pos.getY() > max.getY()
+                || pos.getZ() < min.getZ() || pos.getZ() > max.getZ()) {
+            return false;
+        }
+        return pos.getX() == min.getX() || pos.getX() == max.getX()
+                || pos.getY() == min.getY() || pos.getY() == max.getY()
+                || pos.getZ() == min.getZ() || pos.getZ() == max.getZ();
     }
 
     private static Set<BlockPos> findPipesConnectedToShell(Level level, Set<BlockPos> pipes,
-                                                            BlockPos controllerPos, Direction facing,
-                                                            int outerSize) {
+                                                           BlockPos min, BlockPos max) {
         Set<BlockPos> connected = new HashSet<>();
         ArrayDeque<BlockPos> queue = new ArrayDeque<>();
         for (BlockPos pipe : pipes) {
             for (Direction direction : Direction.values()) {
                 BlockPos neighbor = pipe.relative(direction);
-                if (isShellPosition(neighbor, controllerPos, facing, outerSize)
-                        && (level.getBlockState(neighbor).is(ModBlocks.REACTOR_CASING.get())
-                        || level.getBlockState(neighbor).is(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER.get()))) {
+                if (isOnSurface(neighbor, min, max) && isShellBlock(level.getBlockState(neighbor))) {
                     connected.add(pipe);
                     queue.add(pipe);
                     break;
@@ -131,49 +240,14 @@ public final class ReactorValidator {
         return connected;
     }
 
-    private static boolean isShellPosition(BlockPos pos, BlockPos controllerPos,
-                                           Direction facing, int outerSize) {
-        Direction forward = facing.getOpposite();
-        Direction right = facing.getClockWise();
-        BlockPos delta = pos.subtract(controllerPos);
-        int dx = delta.getX() * right.getStepX() + delta.getZ() * right.getStepZ();
-        int dy = delta.getY();
-        int dz = delta.getX() * forward.getStepX() + delta.getZ() * forward.getStepZ();
-        int half = outerSize / 2;
-        if (Math.abs(dx) > half || Math.abs(dy) > half || dz < 0 || dz >= outerSize) {
-            return false;
-        }
-        return Math.abs(dx) == half || Math.abs(dy) == half || dz == 0 || dz == outerSize - 1;
-    }
-
-    public enum Error {
-        NONE("akw.multiblock.assembled"),
-        MISSING_CASING("akw.multiblock.error.casing"),
-        MISSING_CORE("akw.multiblock.error.core"),
-        INVALID_INTERIOR("akw.multiblock.error.interior");
-
-        private final String translationKey;
-
-        Error(String translationKey) {
-            this.translationKey = translationKey;
+    public record Result(ReactorLayout layout, List<ValidationError> errors) {
+        public static Result failure(List<ValidationError> errors) {
+            return new Result(ReactorLayout.EMPTY, List.copyOf(errors));
         }
 
-        public String translationKey() {
-            return translationKey;
-        }
-    }
-
-    public record Result(ReactorLayout layout, Error error) {
-        public static Result success(ReactorLayout layout) {
-            return new Result(layout, Error.NONE);
-        }
-
-        public static Result error(Error error) {
-            return new Result(ReactorLayout.EMPTY, error);
-        }
-
+        /** Gültig, wenn kein blockierender Fehler vorliegt (Warnungen sind erlaubt). */
         public boolean valid() {
-            return error == Error.NONE;
+            return errors.stream().noneMatch(error -> error.type().blocksAssembly());
         }
     }
 }

@@ -119,7 +119,10 @@ public class MultiblockReactorControllerBlock extends Block implements EntityBlo
                             controller.getLayout().coreCount(),
                             controller.getLayout().connectedCoolingPipeCount()), true);
                 } else {
-                    player.displayClientMessage(controller.getLastAssemblyError(), true);
+                    player.displayClientMessage(Component.translatable("akw.multiblock.invalid"), true);
+                    for (Component line : controller.getLastErrorComponents()) {
+                        player.displayClientMessage(line, false);
+                    }
                 }
             }
             return InteractionResult.SUCCESS;

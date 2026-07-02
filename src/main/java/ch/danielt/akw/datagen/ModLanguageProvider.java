@@ -70,9 +70,12 @@ public class ModLanguageProvider {
             add("akw.multiblock.disassembled","Reaktor deaktiviert.");
             add("akw.multiblock.invalid",     "Ungültige Struktur — prüfe Gehäuse-Blöcke.");
             add("akw.multiblock.need_wrench", "Reaktor-Schraubenschlüssel benötigt.");
-            add("akw.multiblock.error.casing", "Ungültige oder unvollständige Reaktorhülle.");
-            add("akw.multiblock.error.core", "Kein Reaktorkern im Innenraum gefunden.");
-            add("akw.multiblock.error.interior", "Ungültiger Block im Reaktor-Innenraum.");
+            add("akw.reactor.error.gap", "Lücke in der Hülle bei %s, %s, %s.");
+            add("akw.reactor.error.foreign_block", "Ungültiger Block bei %s, %s, %s.");
+            add("akw.reactor.error.no_core", "Kein Reaktorkern im Innenraum gefunden.");
+            add("akw.reactor.error.no_energy_port", "Kein Energie-Port in der Hülle.");
+            add("akw.reactor.error.too_large", "Hülle größer als 9×9×9 oder nicht geschlossen.");
+            add("akw.reactor.error.disconnected_pipe", "Kühlrohr ohne Verbindung zur Hülle bei %s, %s, %s.");
 
             // Redstone-Modi
             add("akw.redstone_mode.ignored",       "Ignoriert");
@@ -175,9 +178,12 @@ public class ModLanguageProvider {
             add("akw.multiblock.disassembled","Reactor deactivated.");
             add("akw.multiblock.invalid",     "Invalid structure — check casing blocks.");
             add("akw.multiblock.need_wrench", "Reactor Wrench required.");
-            add("akw.multiblock.error.casing", "Invalid or incomplete reactor casing.");
-            add("akw.multiblock.error.core", "No reactor core found in the interior.");
-            add("akw.multiblock.error.interior", "Invalid block inside the reactor.");
+            add("akw.reactor.error.gap", "Gap in the casing at %s, %s, %s.");
+            add("akw.reactor.error.foreign_block", "Invalid block at %s, %s, %s.");
+            add("akw.reactor.error.no_core", "No reactor core found in the interior.");
+            add("akw.reactor.error.no_energy_port", "No energy port in the casing.");
+            add("akw.reactor.error.too_large", "Casing larger than 9×9×9 or not closed.");
+            add("akw.reactor.error.disconnected_pipe", "Cooling pipe not connected to the casing at %s, %s, %s.");
 
             // Redstone modes
             add("akw.redstone_mode.ignored",       "Ignored");

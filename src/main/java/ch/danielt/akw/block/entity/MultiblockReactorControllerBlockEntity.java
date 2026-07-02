@@ -7,6 +7,7 @@ import ch.danielt.akw.reactor.ReactorLayout;
 import ch.danielt.akw.reactor.ReactorSimulation;
 import ch.danielt.akw.reactor.ReactorValidator;
 import ch.danielt.akw.reactor.RedstoneMode;
+import ch.danielt.akw.reactor.ValidationError;
 import ch.danielt.akw.registry.ModBlockEntities;
 import ch.danielt.akw.registry.ModEffects;
 import ch.danielt.akw.registry.ModItems;
@@ -36,6 +37,8 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 /** Controller und Laufzeit-Zustand des modular aufgebauten Reaktors. */
 public class MultiblockReactorControllerBlockEntity extends BlockEntity
         implements ImplementedInventory, WorldlyContainer, MenuProvider {
@@ -64,7 +67,8 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
             new MutableEnergyStorage(20_000_000, 0, 32_768);
 
     private ReactorLayout layout = ReactorLayout.EMPTY;
-    private ReactorValidator.Error lastAssemblyError = ReactorValidator.Error.MISSING_CASING;
+    /** Letzte Validierungsfehler (transient, nur für Anzeige beim Wrench-Klick / GUI). */
+    private List<ValidationError> lastErrors = List.of();
     private int activeCores;
     private int burnTime;
     private int burnTimeTotal;
@@ -136,14 +140,19 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
         return layout;
     }
 
-    public Component getLastAssemblyError() {
-        return Component.translatable(lastAssemblyError.translationKey());
+    /** Letzte Validierungsfehler (leer, wenn noch nie validiert oder zuletzt gültig). */
+    public List<ValidationError> getLastErrors() {
+        return lastErrors;
+    }
+
+    /** Übersetzte Fehlermeldungen mit Koordinaten für Chat/GUI. */
+    public List<Component> getLastErrorComponents() {
+        return lastErrors.stream().map(ValidationError::toComponent).toList();
     }
 
     public boolean tryAssemble(Level level, BlockPos pos, BlockState state) {
-        Direction facing = state.getValue(MultiblockReactorControllerBlock.FACING);
-        ReactorValidator.Result result = ReactorValidator.find(level, pos, facing);
-        lastAssemblyError = result.error();
+        ReactorValidator.Result result = ReactorValidator.find(level, pos);
+        lastErrors = result.errors();
         if (!result.valid()) {
             return false;
         }
@@ -190,11 +199,10 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
 
         if (++be.revalidateTimer >= 100) {
             be.revalidateTimer = 0;
-            Direction facing = state.getValue(MultiblockReactorControllerBlock.FACING);
-            ReactorValidator.Result result = ReactorValidator.validate(
-                    level, pos, facing, be.layout.outerSize());
+            ReactorValidator.Result result = ReactorValidator.validateBounds(
+                    level, pos, be.layout.boundsMin(pos), be.layout.boundsMax(pos));
+            be.lastErrors = result.errors();
             if (!result.valid()) {
-                be.lastAssemblyError = result.error();
                 be.disassemble(level, pos, state);
                 return;
             }
@@ -365,7 +373,7 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
     }
 
     private void explode(Level level, BlockPos pos, BlockState state) {
-        int size = layout.outerSize();
+        int size = layout.maxDimension();
         disassemble(level, pos, state);
         level.explode(null, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
                 4f + size, true, Level.ExplosionInteraction.BLOCK);
@@ -405,7 +413,12 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
         output.putInt("BurnTimeTotal", burnTimeTotal);
         output.putInt("Heat", heat);
         output.putInt("ActiveCores", activeCores);
-        output.putInt("ReactorSize", layout.outerSize());
+        output.putInt("RelMinX", layout.relMinX());
+        output.putInt("RelMinY", layout.relMinY());
+        output.putInt("RelMinZ", layout.relMinZ());
+        output.putInt("SizeX", layout.sizeX());
+        output.putInt("SizeY", layout.sizeY());
+        output.putInt("SizeZ", layout.sizeZ());
         output.putInt("CoreCount", layout.coreCount());
         output.putInt("ControlRodCount", layout.controlRodCount());
         output.putInt("CoolingPipeCount", layout.coolingPipeCount());
@@ -413,6 +426,8 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
         output.putInt("CoreNeighborContacts", layout.coreNeighborContacts());
         output.putInt("CoreControlRodContacts", layout.coreControlRodContacts());
         output.putInt("CoreCoolingContacts", layout.coreCoolingContacts());
+        output.putInt("EnergyPortCount", layout.energyPortCount());
+        output.putInt("ItemPortCount", layout.itemPortCount());
         output.putInt("RedstoneMode", redstoneMode.ordinal());
         output.putInt("ComparatorMode", comparatorMode.ordinal());
     }
@@ -431,19 +446,61 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
         int cmpOrd = input.getIntOr("ComparatorMode", ComparatorMode.ENERGY.ordinal());
         comparatorMode = cmpOrd >= 0 && cmpOrd < ComparatorMode.values().length
                 ? ComparatorMode.values()[cmpOrd] : ComparatorMode.ENERGY;
-        layout = new ReactorLayout(
-                input.getIntOr("ReactorSize", 0),
-                input.getIntOr("CoreCount", 0),
-                input.getIntOr("ControlRodCount", 0),
-                input.getIntOr("CoolingPipeCount", 0),
-                input.getIntOr("ConnectedCoolingPipeCount", 0),
-                input.getIntOr("CoreNeighborContacts", 0),
-                input.getIntOr("CoreControlRodContacts", 0),
-                input.getIntOr("CoreCoolingContacts", 0));
+        layout = loadLayout(input);
         activeCores = Math.min(activeCores, layout.coreCount());
         energyStorage.setEnergy(Math.min(Math.max(0, input.getIntOr("Energy", 0)),
                 effectiveCapacity()));
         lastComparator = getComparatorLevel();
+    }
+
+    /**
+     * Liest das Layout aus NBT. Erkennt das alte Format (vor rechteckigen Hüllen)
+     * am fehlenden {@code SizeX} und rechnet dessen zentriertes {@code ReactorSize}
+     * mithilfe des Blockstate-{@code FACING} in die neuen Grenzfelder um.
+     */
+    private ReactorLayout loadLayout(ValueInput input) {
+        int coreCount = input.getIntOr("CoreCount", 0);
+        int rodCount = input.getIntOr("ControlRodCount", 0);
+        int pipeCount = input.getIntOr("CoolingPipeCount", 0);
+        int connectedPipes = input.getIntOr("ConnectedCoolingPipeCount", 0);
+        int neighborContacts = input.getIntOr("CoreNeighborContacts", 0);
+        int rodContacts = input.getIntOr("CoreControlRodContacts", 0);
+        int coolingContacts = input.getIntOr("CoreCoolingContacts", 0);
+
+        int sizeX = input.getIntOr("SizeX", -1);
+        if (sizeX >= 0) {
+            return new ReactorLayout(
+                    input.getIntOr("RelMinX", 0),
+                    input.getIntOr("RelMinY", 0),
+                    input.getIntOr("RelMinZ", 0),
+                    sizeX,
+                    input.getIntOr("SizeY", 0),
+                    input.getIntOr("SizeZ", 0),
+                    coreCount, rodCount, pipeCount, connectedPipes,
+                    neighborContacts, rodContacts, coolingContacts,
+                    input.getIntOr("EnergyPortCount", 0),
+                    input.getIntOr("ItemPortCount", 0));
+        }
+
+        // Migration: altes zentriertes Format (Controller mittig in einer Wand).
+        int legacySize = input.getIntOr("ReactorSize", 0);
+        if (legacySize < 3) {
+            return ReactorLayout.EMPTY;
+        }
+        Direction facing = getBlockState().getValue(MultiblockReactorControllerBlock.FACING);
+        Direction forward = facing.getOpposite();
+        Direction right = facing.getClockWise();
+        int half = legacySize / 2;
+        int relMinX = Math.min(right.getStepX() * -half, right.getStepX() * half)
+                + Math.min(0, forward.getStepX() * (legacySize - 1));
+        int relMinZ = Math.min(right.getStepZ() * -half, right.getStepZ() * half)
+                + Math.min(0, forward.getStepZ() * (legacySize - 1));
+        return new ReactorLayout(
+                relMinX, -half, relMinZ,
+                legacySize, legacySize, legacySize,
+                coreCount, rodCount, pipeCount, connectedPipes,
+                neighborContacts, rodContacts, coolingContacts,
+                0, 0);
     }
 
     // --- MenuProvider ---
