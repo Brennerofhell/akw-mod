@@ -41,9 +41,22 @@ neoForge {
             sourceSet(sourceSets.main)
         }
     }
+
+    // Unit-Tests für weltunabhängige Logik (reactor/*) bekommen dasselbe
+    // Minecraft-/NeoForge-Classpath wie der main-Sourceset, damit auch Klassen
+    // wie ValidationError (BlockPos/Component) oder ItemPortMode
+    // (StringRepresentable) im Test ladbar sind.
+    unitTest {
+        enable()
+        testedMod = mods.akw
+    }
 }
 
 sourceSets.main.resources.srcDir 'src/main/generated'
+
+repositories {
+    mavenCentral()
+}
 
 processResources {
     inputs.property 'version', project.version
