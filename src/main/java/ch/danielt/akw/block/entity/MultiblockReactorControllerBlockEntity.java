@@ -122,6 +122,9 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
 
     public MultiblockReactorControllerBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.MULTIBLOCK_REACTOR_CONTROLLER.get(), pos, state);
+        // FE-Entnahme läuft über die Port-Capability am Controller-Tick vorbei —
+        // ohne Dirty-Markierung droht beim Chunk-Entladen ein Energie-Rollback.
+        energyStorage.setOnChange(this::setChanged);
     }
 
     @Override
@@ -196,9 +199,10 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
             if (!surface) {
                 continue;
             }
-            if (level.getBlockEntity(pos) instanceof ReactorEnergyPortBlockEntity port) {
+            BlockEntity blockEntity = level.getBlockEntity(pos);
+            if (blockEntity instanceof ReactorEnergyPortBlockEntity port) {
                 port.setController(link ? worldPosition : null);
-            } else if (level.getBlockEntity(pos) instanceof ReactorItemPortBlockEntity itemPort) {
+            } else if (blockEntity instanceof ReactorItemPortBlockEntity itemPort) {
                 itemPort.setController(link ? worldPosition : null);
             }
         }

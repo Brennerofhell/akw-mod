@@ -39,6 +39,12 @@ public class ReactorItemPortBlockEntity extends BlockEntity implements WorldlyCo
         super(ModBlockEntities.REACTOR_ITEM_PORT.get(), pos, state);
     }
 
+    @Override
+    public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+        // Kein Inventar-Drop: die Stacks gehören dem Controller, nicht dem Port.
+        // (Das Default-Verhalten würde den delegierten Controller-Inhalt droppen.)
+    }
+
     /** Setzt oder löscht die Controller-Verlinkung (nur der Controller ruft das auf). */
     public void setController(@Nullable BlockPos pos) {
         BlockPos newPos = pos == null ? null : pos.immutable();

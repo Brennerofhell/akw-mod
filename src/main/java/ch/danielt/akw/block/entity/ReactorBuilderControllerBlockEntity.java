@@ -184,8 +184,8 @@ public class ReactorBuilderControllerBlockEntity extends BlockEntity
         Direction builderFacing = state.getValue(ReactorBuilderControllerBlock.FACING);
         BlockPos controllerPos = pos.relative(builderFacing, 2);
         ReactorValidator.Result result = ReactorValidator.find(level, controllerPos);
-        // Der Roboter baut nur die Casing-Hülle; ein fehlender Energie-Port
-        // gilt daher nicht als Baufehler (der Spieler rüstet ihn nach).
+        // Der Bauplan enthält keine Ports; ein fehlender Energie-Port gilt daher
+        // nicht als Baufehler (der Spieler rüstet ihn an der Hülle nach).
         boolean complete = result.errors().stream().noneMatch(error ->
                 error.type().blocksAssembly()
                         && error.type() != ValidationError.Type.NO_ENERGY_PORT);
