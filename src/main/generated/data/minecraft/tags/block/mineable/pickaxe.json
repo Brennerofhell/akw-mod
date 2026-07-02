@@ -19,6 +19,7 @@
     "akw:reactor_casing",
     "akw:multiblock_reactor_controller",
     "akw:reactor_builder_controller",
-    "akw:reactor_energy_port"
+    "akw:reactor_energy_port",
+    "akw:reactor_item_port"
   ]
 }

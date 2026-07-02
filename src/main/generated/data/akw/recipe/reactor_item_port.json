@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "C": "akw:reactor_casing",
+    "H": "minecraft:hopper"
+  },
+  "pattern": [
+    "H",
+    "C"
+  ],
+  "result": {
+    "count": 1,
+    "id": "akw:reactor_item_port"
+  }
+}

@@ -7,6 +7,7 @@ import ch.danielt.akw.block.entity.MultiblockReactorControllerBlockEntity;
 import ch.danielt.akw.block.entity.NuclearReactorBlockEntity;
 import ch.danielt.akw.block.entity.ReactorBuilderControllerBlockEntity;
 import ch.danielt.akw.block.entity.ReactorEnergyPortBlockEntity;
+import ch.danielt.akw.block.entity.ReactorItemPortBlockEntity;
 import ch.danielt.akw.block.entity.WasteContainerBlockEntity;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -39,6 +40,12 @@ public class ModBlockEntities {
             BLOCK_ENTITIES.register("reactor_energy_port", () -> new BlockEntityType<>(
                     ReactorEnergyPortBlockEntity::new,
                     ModBlocks.REACTOR_ENERGY_PORT.get()
+            ));
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ReactorItemPortBlockEntity>> REACTOR_ITEM_PORT =
+            BLOCK_ENTITIES.register("reactor_item_port", () -> new BlockEntityType<>(
+                    ReactorItemPortBlockEntity::new,
+                    ModBlocks.REACTOR_ITEM_PORT.get()
             ));
 
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<ReactorBuilderControllerBlockEntity>> REACTOR_BUILDER_CONTROLLER =

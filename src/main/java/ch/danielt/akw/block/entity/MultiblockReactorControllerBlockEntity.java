@@ -44,8 +44,6 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
 
     public static final int FUEL_SLOT = 0;
     public static final int WASTE_SLOT = 1;
-    private static final int[] FUEL_SLOTS = {FUEL_SLOT};
-    private static final int[] WASTE_SLOTS = {WASTE_SLOT};
     private static final int[] NO_SLOTS = {};
 
     private static final int IDX_ENERGY = NuclearReactorBlockEntity.IDX_ENERGY;
@@ -200,6 +198,8 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
             }
             if (level.getBlockEntity(pos) instanceof ReactorEnergyPortBlockEntity port) {
                 port.setController(link ? worldPosition : null);
+            } else if (level.getBlockEntity(pos) instanceof ReactorItemPortBlockEntity itemPort) {
+                itemPort.setController(link ? worldPosition : null);
             }
         }
     }
@@ -411,23 +411,21 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
                 4f + size, true, Level.ExplosionInteraction.BLOCK);
     }
 
-    // --- WorldlyContainer (Hopper-Kompatibilitaet) ---
+    // --- WorldlyContainer: Hopper laufen ausschließlich über Item-Ports ---
 
     @Override
     public int[] getSlotsForFace(Direction side) {
-        if (side == Direction.UP) return FUEL_SLOTS;
-        if (side == Direction.DOWN) return WASTE_SLOTS;
         return NO_SLOTS;
     }
 
     @Override
     public boolean canPlaceItemThroughFace(int slot, ItemStack stack, @Nullable Direction direction) {
-        return slot == FUEL_SLOT && stack.is(ModItems.FUEL_ROD);
+        return false;
     }
 
     @Override
     public boolean canTakeItemThroughFace(int slot, ItemStack stack, Direction direction) {
-        return slot == WASTE_SLOT;
+        return false;
     }
 
     @Override

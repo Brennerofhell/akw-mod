@@ -186,6 +186,14 @@ public class ModRecipeProvider extends RecipeProvider.Runner {
                         .unlockedBy(getHasName(ModBlocks.REACTOR_CASING), has(ModBlocks.REACTOR_CASING))
                         .save(output, key("reactor_energy_port"));
 
+                // Item-Port: Trichter auf Hüllenblock
+                shaped(RecipeCategory.REDSTONE, ModBlocks.REACTOR_ITEM_PORT)
+                        .pattern("H").pattern("C")
+                        .define('H', Items.HOPPER)
+                        .define('C', ModBlocks.REACTOR_CASING)
+                        .unlockedBy(getHasName(ModBlocks.REACTOR_CASING), has(ModBlocks.REACTOR_CASING))
+                        .save(output, key("reactor_item_port"));
+
                 shaped(RecipeCategory.REDSTONE, ModBlocks.REACTOR_BUILDER_CONTROLLER)
                         .pattern("CRC").pattern("EBE").pattern("CRC")
                         .define('C', ModBlocks.REACTOR_CASING)

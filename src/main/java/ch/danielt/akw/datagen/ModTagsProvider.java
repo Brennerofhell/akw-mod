@@ -39,7 +39,8 @@ public class ModTagsProvider extends BlockTagsProvider {
                 .add(ModBlocks.REACTOR_CASING.get())
                 .add(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER.get())
                 .add(ModBlocks.REACTOR_BUILDER_CONTROLLER.get())
-                .add(ModBlocks.REACTOR_ENERGY_PORT.get());
+                .add(ModBlocks.REACTOR_ENERGY_PORT.get())
+                .add(ModBlocks.REACTOR_ITEM_PORT.get());
 
         // Erze erfordern mindestens eine Eisen-Spitzhacke
         tag(BlockTags.NEEDS_IRON_TOOL)
