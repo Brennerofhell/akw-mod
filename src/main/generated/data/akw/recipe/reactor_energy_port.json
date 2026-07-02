@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "C": "akw:reactor_casing",
+    "E": "akw:energy_cable"
+  },
+  "pattern": [
+    "E",
+    "C"
+  ],
+  "result": {
+    "count": 1,
+    "id": "akw:reactor_energy_port"
+  }
+}

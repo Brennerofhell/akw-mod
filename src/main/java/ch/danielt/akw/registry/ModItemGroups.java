@@ -35,6 +35,7 @@ public class ModItemGroups {
                         output.accept(ModItems.REACTOR_WRENCH.get());
                         output.accept(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER.get());
                         output.accept(ModBlocks.REACTOR_BUILDER_CONTROLLER.get());
+                        output.accept(ModBlocks.REACTOR_ENERGY_PORT.get());
                         output.accept(ModBlocks.URANIUM_ORE.get());
                         output.accept(ModBlocks.DEEPSLATE_URANIUM_ORE.get());
                         ModBlocks.REACTORS.forEach(b -> output.accept(b.get()));
@@ -62,6 +63,7 @@ public class ModItemGroups {
             event.accept(ModBlocks.REACTOR_CASING);
             event.accept(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER);
             event.accept(ModBlocks.REACTOR_BUILDER_CONTROLLER);
+            event.accept(ModBlocks.REACTOR_ENERGY_PORT);
             ModBlocks.REACTORS.forEach(event::accept);
         } else if (event.getTabKey() == CreativeModeTabs.NATURAL_BLOCKS) {
             event.accept(ModBlocks.URANIUM_ORE);

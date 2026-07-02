@@ -65,6 +65,7 @@
   "block.akw.reactor_builder_controller": "Reactor Builder Controller",
   "block.akw.reactor_casing": "Reactor Casing",
   "block.akw.reactor_core": "Reactor Core",
+  "block.akw.reactor_energy_port": "Reactor Energy Port",
   "block.akw.thorium_reactor": "Thorium Reactor",
   "block.akw.uranium_ore": "Uranium Ore",
   "block.akw.waste_container": "Waste Container",

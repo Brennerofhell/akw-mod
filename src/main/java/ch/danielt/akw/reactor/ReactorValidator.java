@@ -119,6 +119,8 @@ public final class ReactorValidator {
                             }
                         } else if (state.is(ModBlocks.REACTOR_CASING.get())) {
                             // gültiger Hüllenblock
+                        } else if (state.is(ModBlocks.REACTOR_ENERGY_PORT.get())) {
+                            energyPorts++;
                         } else if (state.isAir()) {
                             addError(errors, ValidationError.Type.GAP, current);
                         } else {
@@ -149,6 +151,9 @@ public final class ReactorValidator {
         }
         if (cores.isEmpty()) {
             addError(errors, ValidationError.Type.NO_CORE, controllerPos);
+        }
+        if (energyPorts == 0) {
+            addError(errors, ValidationError.Type.NO_ENERGY_PORT, controllerPos);
         }
 
         Set<BlockPos> connectedPipes = findPipesConnectedToShell(level, pipes, min, max);
@@ -192,7 +197,8 @@ public final class ReactorValidator {
     /** Gültige Hüllenblöcke für BFS-Suche und Rohr-Anbindung. */
     private static boolean isShellBlock(BlockState state) {
         return state.is(ModBlocks.REACTOR_CASING.get())
-                || state.is(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER.get());
+                || state.is(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER.get())
+                || state.is(ModBlocks.REACTOR_ENERGY_PORT.get());
     }
 
     private static void addError(List<ValidationError> errors, ValidationError.Type type,

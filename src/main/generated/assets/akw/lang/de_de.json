@@ -65,6 +65,7 @@
   "block.akw.reactor_builder_controller": "Bauroboter-Kontrollblock",
   "block.akw.reactor_casing": "Reaktor-Gehäuse",
   "block.akw.reactor_core": "Reaktorkern",
+  "block.akw.reactor_energy_port": "Reaktor-Energie-Port",
   "block.akw.thorium_reactor": "Thorium-Reaktor",
   "block.akw.uranium_ore": "Uranerz",
   "block.akw.waste_container": "Abfallbehälter",

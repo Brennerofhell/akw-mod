@@ -1,7 +1,6 @@
 package ch.danielt.akw.block.entity;
 
 import ch.danielt.akw.block.MultiblockReactorControllerBlock;
-import ch.danielt.akw.energy.EnergyNet;
 import ch.danielt.akw.reactor.ComparatorMode;
 import ch.danielt.akw.reactor.ReactorLayout;
 import ch.danielt.akw.reactor.ReactorSimulation;
@@ -163,11 +162,13 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
         energyStorage.setEnergy(Math.min(energyStorage.getEnergyStored(), effectiveCapacity()));
         level.setBlock(pos, state.setValue(MultiblockReactorControllerBlock.ASSEMBLED, true),
                 Block.UPDATE_ALL);
+        updatePortLinks(level, true);
         setChanged();
         return true;
     }
 
     public void disassemble(Level level, BlockPos pos, BlockState state) {
+        updatePortLinks(level, false);
         layout = ReactorLayout.EMPTY;
         activeCores = 0;
         burnTime = 0;
@@ -177,6 +178,39 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
                         .setValue(MultiblockReactorControllerBlock.LIT, false),
                 Block.UPDATE_ALL);
         setChanged();
+    }
+
+    /**
+     * Verlinkt ({@code link=true}) oder entlinkt alle Port-BlockEntities auf der
+     * Hüllenoberfläche mit diesem Controller. Idempotent; wird bei Assemble,
+     * erfolgreicher Revalidierung und Disassemble aufgerufen.
+     */
+    private void updatePortLinks(Level level, boolean link) {
+        if (!layout.isAssembled()) {
+            return;
+        }
+        BlockPos min = layout.boundsMin(worldPosition);
+        BlockPos max = layout.boundsMax(worldPosition);
+        for (BlockPos pos : BlockPos.betweenClosed(min, max)) {
+            boolean surface = pos.getX() == min.getX() || pos.getX() == max.getX()
+                    || pos.getY() == min.getY() || pos.getY() == max.getY()
+                    || pos.getZ() == min.getZ() || pos.getZ() == max.getZ();
+            if (!surface) {
+                continue;
+            }
+            if (level.getBlockEntity(pos) instanceof ReactorEnergyPortBlockEntity port) {
+                port.setController(link ? worldPosition : null);
+            }
+        }
+    }
+
+    @Override
+    public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+        // Ports entlinken, bevor der Controller verschwindet; super droppt das Inventar.
+        if (this.level != null) {
+            updatePortLinks(this.level, false);
+        }
+        super.preRemoveSideEffects(pos, state);
     }
 
     private int effectiveCapacity() {
@@ -209,6 +243,7 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
             be.layout = result.layout();
             be.activeCores = Math.min(be.activeCores, be.layout.coreCount());
             be.energyStorage.setEnergy(Math.min(be.energyStorage.getEnergyStored(), be.effectiveCapacity()));
+            be.updatePortLinks(level, true);
         }
 
         boolean wasBurning = be.burnTime > 0;
@@ -270,10 +305,7 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
             dirty = true;
         }
 
-        if (be.energyStorage.getEnergyStored() > 0) {
-            EnergyNet.pushToNeighbors(be.energyStorage, level, pos,
-                    Math.max(160, stats.generationPerTick() * 2));
-        }
+        // FE-Abgabe läuft ausschließlich über die Energie-Ports der Hülle.
 
         if (be.burnTime > 0 && level instanceof ServerLevel serverLevel) {
             be.applyRadiation(serverLevel, pos);

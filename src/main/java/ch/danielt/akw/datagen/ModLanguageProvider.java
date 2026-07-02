@@ -70,6 +70,8 @@ public class ModLanguageProvider {
             add("akw.multiblock.disassembled","Reaktor deaktiviert.");
             add("akw.multiblock.invalid",     "Ungültige Struktur — prüfe Gehäuse-Blöcke.");
             add("akw.multiblock.need_wrench", "Reaktor-Schraubenschlüssel benötigt.");
+            addBlock(ModBlocks.REACTOR_ENERGY_PORT, "Reaktor-Energie-Port");
+
             add("akw.reactor.error.gap", "Lücke in der Hülle bei %s, %s, %s.");
             add("akw.reactor.error.foreign_block", "Ungültiger Block bei %s, %s, %s.");
             add("akw.reactor.error.no_core", "Kein Reaktorkern im Innenraum gefunden.");
@@ -178,6 +180,8 @@ public class ModLanguageProvider {
             add("akw.multiblock.disassembled","Reactor deactivated.");
             add("akw.multiblock.invalid",     "Invalid structure — check casing blocks.");
             add("akw.multiblock.need_wrench", "Reactor Wrench required.");
+            addBlock(ModBlocks.REACTOR_ENERGY_PORT, "Reactor Energy Port");
+
             add("akw.reactor.error.gap", "Gap in the casing at %s, %s, %s.");
             add("akw.reactor.error.foreign_block", "Invalid block at %s, %s, %s.");
             add("akw.reactor.error.no_core", "No reactor core found in the interior.");

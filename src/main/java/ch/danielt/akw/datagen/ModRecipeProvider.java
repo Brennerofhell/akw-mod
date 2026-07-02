@@ -178,6 +178,14 @@ public class ModRecipeProvider extends RecipeProvider.Runner {
                         .unlockedBy(getHasName(ModBlocks.REACTOR_CASING), has(ModBlocks.REACTOR_CASING))
                         .save(output, key("multiblock_reactor_controller"));
 
+                // Energie-Port: Kabel auf Hüllenblock
+                shaped(RecipeCategory.REDSTONE, ModBlocks.REACTOR_ENERGY_PORT)
+                        .pattern("E").pattern("C")
+                        .define('E', ModBlocks.ENERGY_CABLE)
+                        .define('C', ModBlocks.REACTOR_CASING)
+                        .unlockedBy(getHasName(ModBlocks.REACTOR_CASING), has(ModBlocks.REACTOR_CASING))
+                        .save(output, key("reactor_energy_port"));
+
                 shaped(RecipeCategory.REDSTONE, ModBlocks.REACTOR_BUILDER_CONTROLLER)
                         .pattern("CRC").pattern("EBE").pattern("CRC")
                         .define('C', ModBlocks.REACTOR_CASING)

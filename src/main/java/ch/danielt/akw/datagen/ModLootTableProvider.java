@@ -35,6 +35,7 @@ public class ModLootTableProvider extends BlockLootSubProvider {
             ModBlocks.REACTOR_CASING.get(),
             ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER.get(),
             ModBlocks.REACTOR_BUILDER_CONTROLLER.get(),
+            ModBlocks.REACTOR_ENERGY_PORT.get(),
             ModBlocks.ENERGY_CABLE.get(),
             ModBlocks.ENERGY_BATTERY.get());
 
@@ -64,6 +65,7 @@ public class ModLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.REACTOR_CASING.get());
         dropSelf(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER.get());
         dropSelf(ModBlocks.REACTOR_BUILDER_CONTROLLER.get());
+        dropSelf(ModBlocks.REACTOR_ENERGY_PORT.get());
 
         // Energie-Infrastruktur
         dropSelf(ModBlocks.ENERGY_CABLE.get());

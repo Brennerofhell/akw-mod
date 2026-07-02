@@ -7,6 +7,7 @@ import ch.danielt.akw.block.MultiblockReactorControllerBlock;
 import ch.danielt.akw.block.NuclearReactorBlock;
 import ch.danielt.akw.block.ReactorBuilderControllerBlock;
 import ch.danielt.akw.block.ReactorCasingBlock;
+import ch.danielt.akw.block.ReactorEnergyPortBlock;
 import ch.danielt.akw.block.WasteContainerBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -74,6 +75,9 @@ public class ModBlocks {
     public static final DeferredBlock<ReactorBuilderControllerBlock> REACTOR_BUILDER_CONTROLLER =
             registerWithItem("reactor_builder_controller", ReactorBuilderControllerBlock::new,
                     metal().lightLevel(s -> s.getValue(ReactorBuilderControllerBlock.ACTIVE) ? 7 : 0));
+    public static final DeferredBlock<ReactorEnergyPortBlock> REACTOR_ENERGY_PORT =
+            registerWithItem("reactor_energy_port", ReactorEnergyPortBlock::new,
+                    BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5f, 1200f));
 
     // --- Energie-Infrastruktur ---
     public static final DeferredBlock<EnergyCableBlock> ENERGY_CABLE =

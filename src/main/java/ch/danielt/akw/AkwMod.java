@@ -36,8 +36,9 @@ public class AkwMod {
     private void registerCapabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(Capabilities.Energy.BLOCK,
                 ModBlockEntities.NUCLEAR_REACTOR.get(), (be, side) -> be.energyStorage);
+        // Multiblock-Controller bewusst NICHT registriert: FE fliesst nur über Energie-Ports.
         event.registerBlockEntity(Capabilities.Energy.BLOCK,
-                ModBlockEntities.MULTIBLOCK_REACTOR_CONTROLLER.get(), (be, side) -> be.energyStorage);
+                ModBlockEntities.REACTOR_ENERGY_PORT.get(), (be, side) -> be.resolveControllerEnergy());
         event.registerBlockEntity(Capabilities.Energy.BLOCK,
                 ModBlockEntities.REACTOR_BUILDER_CONTROLLER.get(), (be, side) -> be.energyStorage);
         event.registerBlockEntity(Capabilities.Energy.BLOCK,
