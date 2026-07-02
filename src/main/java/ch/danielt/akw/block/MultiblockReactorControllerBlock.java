@@ -128,13 +128,9 @@ public class MultiblockReactorControllerBlock extends Block implements EntityBlo
             return InteractionResult.SUCCESS;
         }
 
-        // Kein Wrench: GUI öffnen (nur wenn assembliert)
-        if (state.getValue(ASSEMBLED)) {
-            if (player instanceof ServerPlayer serverPlayer) {
-                serverPlayer.openMenu(controller, buf -> buf.writeBlockPos(pos));
-            }
-        } else {
-            player.displayClientMessage(Component.translatable("akw.multiblock.need_wrench"), true);
+        // Kein Wrench: GUI öffnen — auch unassembliert (Diagnose-Tab zeigt die Fehlerliste)
+        if (player instanceof ServerPlayer serverPlayer) {
+            serverPlayer.openMenu(controller, buf -> buf.writeBlockPos(pos));
         }
         return InteractionResult.SUCCESS;
     }

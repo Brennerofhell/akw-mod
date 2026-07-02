@@ -83,6 +83,28 @@ public class ModLanguageProvider {
             add("akw.reactor.error.too_large", "Hülle größer als 9×9×9 oder nicht geschlossen.");
             add("akw.reactor.error.disconnected_pipe", "Kühlrohr ohne Verbindung zur Hülle bei %s, %s, %s.");
 
+            // Multiblock-GUI (Tabs + Kennzahlen)
+            add("akw.gui.tab.overview",    "Übersicht");
+            add("akw.gui.tab.control",     "Steuerung");
+            add("akw.gui.tab.diagnostics", "Diagnose");
+            add("akw.gui.size",            "Größe: %s×%s×%s");
+            add("akw.gui.cores",           "Kerne: %s");
+            add("akw.gui.energy",          "FE: %s / %s");
+            add("akw.gui.production",      "Erzeugung: %s FE/t");
+            add("akw.gui.cooling",         "Kühlung: %s HU/t");
+            add("akw.gui.heat",            "Hitze: %s / %s");
+            add("akw.gui.status.running",     "Status: In Betrieb");
+            add("akw.gui.status.idle",        "Status: Bereit");
+            add("akw.gui.status.off",         "Status: Ausgeschaltet");
+            add("akw.gui.status.unassembled", "Nicht assembliert — siehe Diagnose-Tab.");
+            add("akw.gui.control_rods",    "Steuerstäbe: %s%%");
+            add("akw.gui.enabled.on",      "Reaktor: AN");
+            add("akw.gui.enabled.off",     "Reaktor: AUS");
+            add("akw.gui.shutdown_temp",   "Abschaltung: %s%%");
+            add("akw.gui.no_errors",       "Keine Fehler.");
+            add("akw.gui.more_errors",     "… und %s weitere Fehler.");
+            add("akw.gui.layer",           "Schicht %s/%s");
+
             // Redstone-Modi
             add("akw.redstone_mode.ignored",       "Ignoriert");
             add("akw.redstone_mode.high_enables",  "Signal AN → aktiv");
@@ -196,6 +218,28 @@ public class ModLanguageProvider {
             add("akw.reactor.error.no_energy_port", "No energy port in the casing.");
             add("akw.reactor.error.too_large", "Casing larger than 9×9×9 or not closed.");
             add("akw.reactor.error.disconnected_pipe", "Cooling pipe not connected to the casing at %s, %s, %s.");
+
+            // Multiblock GUI (tabs + stats)
+            add("akw.gui.tab.overview",    "Overview");
+            add("akw.gui.tab.control",     "Control");
+            add("akw.gui.tab.diagnostics", "Diagnostics");
+            add("akw.gui.size",            "Size: %s×%s×%s");
+            add("akw.gui.cores",           "Cores: %s");
+            add("akw.gui.energy",          "FE: %s / %s");
+            add("akw.gui.production",      "Output: %s FE/t");
+            add("akw.gui.cooling",         "Cooling: %s HU/t");
+            add("akw.gui.heat",            "Heat: %s / %s");
+            add("akw.gui.status.running",     "Status: Running");
+            add("akw.gui.status.idle",        "Status: Ready");
+            add("akw.gui.status.off",         "Status: Off");
+            add("akw.gui.status.unassembled", "Not assembled — see Diagnostics tab.");
+            add("akw.gui.control_rods",    "Control rods: %s%%");
+            add("akw.gui.enabled.on",      "Reactor: ON");
+            add("akw.gui.enabled.off",     "Reactor: OFF");
+            add("akw.gui.shutdown_temp",   "Shutdown: %s%%");
+            add("akw.gui.no_errors",       "No errors.");
+            add("akw.gui.more_errors",     "… and %s more errors.");
+            add("akw.gui.layer",           "Layer %s/%s");
 
             // Redstone modes
             add("akw.redstone_mode.ignored",       "Ignored");

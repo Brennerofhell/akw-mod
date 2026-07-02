@@ -1,7 +1,7 @@
 package ch.danielt.akw.registry;
 
 import ch.danielt.akw.AkwMod;
-import ch.danielt.akw.screen.MultiblockReactorScreenHandler;
+import ch.danielt.akw.screen.ModularReactorScreenHandler;
 import ch.danielt.akw.screen.NuclearReactorScreenHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -20,10 +20,10 @@ public class ModScreenHandlers {
                     IMenuTypeExtension.create((syncId, inv, buf) ->
                             new NuclearReactorScreenHandler(syncId, inv, buf.readBlockPos())));
 
-    public static final DeferredHolder<MenuType<?>, MenuType<NuclearReactorScreenHandler>> MULTIBLOCK_REACTOR =
+    public static final DeferredHolder<MenuType<?>, MenuType<ModularReactorScreenHandler>> MULTIBLOCK_REACTOR =
             MENU_TYPES.register("multiblock_reactor", () ->
                     IMenuTypeExtension.create((syncId, inv, buf) ->
-                            new MultiblockReactorScreenHandler(syncId, inv, buf.readBlockPos())));
+                            new ModularReactorScreenHandler(syncId, inv, buf.readBlockPos())));
 
     public static void register(IEventBus bus) {
         MENU_TYPES.register(bus);

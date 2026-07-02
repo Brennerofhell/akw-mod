@@ -8,14 +8,20 @@ import ch.danielt.akw.reactor.ReactorValidator;
 import ch.danielt.akw.reactor.RedstoneMode;
 import ch.danielt.akw.reactor.ValidationError;
 import ch.danielt.akw.registry.ModBlockEntities;
+import ch.danielt.akw.registry.ModBlocks;
 import ch.danielt.akw.registry.ModEffects;
 import ch.danielt.akw.registry.ModItems;
-import ch.danielt.akw.screen.MultiblockReactorScreenHandler;
+import ch.danielt.akw.screen.ModularReactorScreenHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.MenuProvider;
@@ -36,6 +42,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /** Controller und Laufzeit-Zustand des modular aufgebauten Reaktors. */
@@ -54,7 +61,24 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
     private static final int IDX_MAX_HEAT = NuclearReactorBlockEntity.IDX_MAX_HEAT;
     private static final int IDX_REDSTONE_MODE = NuclearReactorBlockEntity.IDX_REDSTONE_MODE;
     private static final int IDX_COMPARATOR_MODE = NuclearReactorBlockEntity.IDX_COMPARATOR_MODE;
-    private static final int PROPERTY_COUNT = NuclearReactorBlockEntity.PROPERTY_COUNT;
+
+    // Multiblock-spezifische Zusatz-Properties (schließen an die geerbten 0–7 an).
+    public static final int IDX_CORE_COUNT = 8;
+    public static final int IDX_PRODUCTION = 9;
+    public static final int IDX_COOLING = 10;
+    public static final int IDX_CONTROL_ROD = 11;
+    public static final int IDX_ENABLED = 12;
+    public static final int IDX_SHUTDOWN_TEMP = 13;
+    public static final int IDX_ERROR_COUNT = 14;
+    public static final int IDX_SIZE_X = 15;
+    public static final int IDX_SIZE_Y = 16;
+    public static final int IDX_SIZE_Z = 17;
+    public static final int MB_PROPERTY_COUNT = 18;
+
+    /** Untere/obere Grenze der einstellbaren Abschalttemperatur (Prozent der Maximalhitze). */
+    public static final int MIN_SHUTDOWN_TEMP = 50;
+    public static final int MAX_SHUTDOWN_TEMP = 95;
+
     private static final int RADIATION_RADIUS = 8;
 
     private final NonNullList<ItemStack> inventory = NonNullList.withSize(2, ItemStack.EMPTY);
@@ -74,6 +98,14 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
     private int lastComparator = -1;
     private RedstoneMode redstoneMode = RedstoneMode.HIGH_DISABLES;
     private ComparatorMode comparatorMode = ComparatorMode.ENERGY;
+    /** Stufenloser Steuerstab-Einschub 0–100 % (senkt die Endreaktivität linear). */
+    private int controlRodInsertion;
+    /** Manueller Ein-/Aus-Schalter im GUI (aus = laufender Zyklus stoppt). */
+    private boolean enabled = true;
+    /** Auto-Drosselschwelle in Prozent der Maximalhitze. */
+    private int shutdownTempPercent = 90;
+    /** Innenraum-Schnitt für die Schichtansicht (nur Client, per Update-Tag befüllt). */
+    private int @Nullable [] clientInteriorGrid;
 
     private final ContainerData propertyDelegate = new ContainerData() {
         @Override
@@ -87,6 +119,16 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
                 case IDX_MAX_HEAT -> effectiveMaxHeat();
                 case IDX_REDSTONE_MODE -> redstoneMode.ordinal();
                 case IDX_COMPARATOR_MODE -> comparatorMode.ordinal();
+                case IDX_CORE_COUNT -> layout.coreCount();
+                case IDX_PRODUCTION -> currentStats().generationPerTick();
+                case IDX_COOLING -> currentStats().coolingPerTick();
+                case IDX_CONTROL_ROD -> controlRodInsertion;
+                case IDX_ENABLED -> enabled ? 1 : 0;
+                case IDX_SHUTDOWN_TEMP -> shutdownTempPercent;
+                case IDX_ERROR_COUNT -> lastErrors.size();
+                case IDX_SIZE_X -> layout.sizeX();
+                case IDX_SIZE_Y -> layout.sizeY();
+                case IDX_SIZE_Z -> layout.sizeZ();
                 default -> 0;
             };
         }
@@ -110,13 +152,25 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
                         setChanged();
                     }
                 }
+                case IDX_CONTROL_ROD -> {
+                    controlRodInsertion = Math.clamp(value, 0, 100);
+                    setChanged();
+                }
+                case IDX_ENABLED -> {
+                    enabled = value != 0;
+                    setChanged();
+                }
+                case IDX_SHUTDOWN_TEMP -> {
+                    shutdownTempPercent = Math.clamp(value, MIN_SHUTDOWN_TEMP, MAX_SHUTDOWN_TEMP);
+                    setChanged();
+                }
                 default -> { }
             }
         }
 
         @Override
         public int getCount() {
-            return PROPERTY_COUNT;
+            return MB_PROPERTY_COUNT;
         }
     };
 
@@ -154,6 +208,7 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
         ReactorValidator.Result result = ReactorValidator.find(level, pos);
         lastErrors = result.errors();
         if (!result.valid()) {
+            syncToClient(level);
             return false;
         }
 
@@ -165,6 +220,7 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
                 Block.UPDATE_ALL);
         updatePortLinks(level, true);
         setChanged();
+        syncToClient(level);
         return true;
     }
 
@@ -179,6 +235,7 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
                         .setValue(MultiblockReactorControllerBlock.LIT, false),
                 Block.UPDATE_ALL);
         setChanged();
+        syncToClient(level);
     }
 
     /**
@@ -226,7 +283,7 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
     }
 
     private ReactorSimulation.ReactorStats currentStats() {
-        return ReactorSimulation.calculate(layout, activeCores);
+        return ReactorSimulation.calculate(layout, activeCores, controlRodInsertion);
     }
 
     public static void tick(Level level, BlockPos pos, BlockState state,
@@ -239,10 +296,14 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
             be.revalidateTimer = 0;
             ReactorValidator.Result result = ReactorValidator.validateBounds(
                     level, pos, be.layout.boundsMin(pos), be.layout.boundsMax(pos));
+            boolean errorsChanged = !result.errors().equals(be.lastErrors);
             be.lastErrors = result.errors();
             if (!result.valid()) {
                 be.disassemble(level, pos, state);
                 return;
+            }
+            if (errorsChanged) {
+                be.syncToClient(level);
             }
             be.layout = result.layout();
             be.activeCores = Math.min(be.activeCores, be.layout.coreCount());
@@ -254,8 +315,10 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
         boolean dirty = false;
         boolean powered = state.getValue(MultiblockReactorControllerBlock.POWERED);
 
-        // EMERGENCY_STOP: laufenden Brennzyklus sofort beenden
-        if (powered && be.redstoneMode == RedstoneMode.EMERGENCY_STOP && be.burnTime > 0) {
+        // EMERGENCY_STOP oder manuell ausgeschaltet: laufenden Brennzyklus sofort beenden
+        boolean forceStop = !be.enabled
+                || (powered && be.redstoneMode == RedstoneMode.EMERGENCY_STOP);
+        if (forceStop && be.burnTime > 0) {
             be.burnTime = 0;
             be.activeCores = 0;
             dirty = true;
@@ -272,7 +335,7 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
             dirty = true;
         }
 
-        boolean canIgnite = switch (be.redstoneMode) {
+        boolean canIgnite = be.enabled && switch (be.redstoneMode) {
             case IGNORED -> true;
             case HIGH_ENABLES -> powered;
             case HIGH_DISABLES, EMERGENCY_STOP -> !powered;
@@ -303,7 +366,7 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
             be.explode(level, pos, state);
             return;
         }
-        if (be.heat >= be.effectiveMaxHeat() * 9 / 10 && be.burnTime > 0) {
+        if (be.heat >= (long) be.effectiveMaxHeat() * be.shutdownTempPercent / 100 && be.burnTime > 0) {
             be.burnTime = 0;
             be.activeCores = 0;
             dirty = true;
@@ -464,6 +527,9 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
         output.putInt("ItemPortCount", layout.itemPortCount());
         output.putInt("RedstoneMode", redstoneMode.ordinal());
         output.putInt("ComparatorMode", comparatorMode.ordinal());
+        output.putInt("ControlRodInsertion", controlRodInsertion);
+        output.putBoolean("Enabled", enabled);
+        output.putInt("ShutdownTemp", shutdownTempPercent);
     }
 
     @Override
@@ -480,11 +546,29 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
         int cmpOrd = input.getIntOr("ComparatorMode", ComparatorMode.ENERGY.ordinal());
         comparatorMode = cmpOrd >= 0 && cmpOrd < ComparatorMode.values().length
                 ? ComparatorMode.values()[cmpOrd] : ComparatorMode.ENERGY;
+        controlRodInsertion = Math.clamp(input.getIntOr("ControlRodInsertion", 0), 0, 100);
+        enabled = input.getBooleanOr("Enabled", true);
+        shutdownTempPercent = Math.clamp(input.getIntOr("ShutdownTemp", 90),
+                MIN_SHUTDOWN_TEMP, MAX_SHUTDOWN_TEMP);
         layout = loadLayout(input);
         activeCores = Math.min(activeCores, layout.coreCount());
         energyStorage.setEnergy(Math.min(Math.max(0, input.getIntOr("Energy", 0)),
                 effectiveCapacity()));
         lastComparator = getComparatorLevel();
+
+        // Nur im Update-Tag enthalten (Client-Anzeige): Fehlerliste + Innenraum-Schnitt.
+        input.getIntArray("ClientErrors").ifPresent(packed -> {
+            List<ValidationError> errors = new ArrayList<>(packed.length / 4);
+            for (int i = 0; i + 3 < packed.length; i += 4) {
+                int ordinal = packed[i];
+                if (ordinal >= 0 && ordinal < ValidationError.Type.values().length) {
+                    errors.add(new ValidationError(ValidationError.Type.values()[ordinal],
+                            new BlockPos(packed[i + 1], packed[i + 2], packed[i + 3])));
+                }
+            }
+            lastErrors = List.copyOf(errors);
+        });
+        clientInteriorGrid = input.getIntArray("InteriorGrid").orElse(null);
     }
 
     /**
@@ -537,6 +621,78 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
                 0, 0);
     }
 
+    // --- Client-Sync (Update-Tag: Fehlerliste + Innenraum für die Schichtansicht) ---
+
+    /** Zellcodes des Innenraum-Schnitts für die Schichtansicht. */
+    public static final int CELL_AIR = 0;
+    public static final int CELL_LEAD = 1;
+    public static final int CELL_CORE = 2;
+    public static final int CELL_ROD = 3;
+    public static final int CELL_PIPE = 4;
+    public static final int CELL_OTHER = 5;
+
+    @Override
+    public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+        CompoundTag tag = saveCustomOnly(registries);
+        int[] packed = new int[lastErrors.size() * 4];
+        for (int i = 0; i < lastErrors.size(); i++) {
+            ValidationError error = lastErrors.get(i);
+            packed[i * 4] = error.type().ordinal();
+            packed[i * 4 + 1] = error.pos().getX();
+            packed[i * 4 + 2] = error.pos().getY();
+            packed[i * 4 + 3] = error.pos().getZ();
+        }
+        tag.putIntArray("ClientErrors", packed);
+        if (layout.isAssembled() && level != null) {
+            tag.putIntArray("InteriorGrid", captureInterior());
+        }
+        return tag;
+    }
+
+    @Override
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    /**
+     * Serialisiert den Innenraum (ohne Hülle) als flaches Raster;
+     * Index = ((y · innerZ) + z) · innerX + x mit Innenmaßen size−2.
+     */
+    private int[] captureInterior() {
+        int innerX = layout.sizeX() - 2;
+        int innerY = layout.sizeY() - 2;
+        int innerZ = layout.sizeZ() - 2;
+        BlockPos origin = layout.boundsMin(worldPosition).offset(1, 1, 1);
+        int[] grid = new int[innerX * innerY * innerZ];
+        int i = 0;
+        for (int y = 0; y < innerY; y++) {
+            for (int z = 0; z < innerZ; z++) {
+                for (int x = 0; x < innerX; x++) {
+                    BlockState state = level.getBlockState(origin.offset(x, y, z));
+                    grid[i++] = state.isAir() ? CELL_AIR
+                            : state.is(ModBlocks.LEAD_BLOCK.get()) ? CELL_LEAD
+                            : state.is(ModBlocks.REACTOR_CORE.get()) ? CELL_CORE
+                            : state.is(ModBlocks.CONTROL_ROD_BLOCK.get()) ? CELL_ROD
+                            : state.is(ModBlocks.COOLING_PIPE.get()) ? CELL_PIPE
+                            : CELL_OTHER;
+                }
+            }
+        }
+        return grid;
+    }
+
+    /** Innenraum-Schnitt (nur auf dem Client befüllt), Reihenfolge siehe {@link #captureInterior}. */
+    public int @Nullable [] getClientInteriorGrid() {
+        return clientInteriorGrid;
+    }
+
+    /** Schickt Fehlerliste + Innenraum-Schnitt an die Clients (Update-Tag). */
+    private void syncToClient(Level level) {
+        if (!level.isClientSide()) {
+            level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_ALL);
+        }
+    }
+
     // --- MenuProvider ---
 
     @Override
@@ -546,6 +702,10 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
 
     @Override
     public AbstractContainerMenu createMenu(int syncId, Inventory playerInventory, Player player) {
-        return new MultiblockReactorScreenHandler(syncId, playerInventory, this, propertyDelegate);
+        if (this.level != null) {
+            // Frische Fehlerliste + Innenraum-Schnitt für die Diagnose-Tabs mitsenden.
+            syncToClient(this.level);
+        }
+        return new ModularReactorScreenHandler(syncId, playerInventory, this, propertyDelegate, worldPosition);
     }
 }
