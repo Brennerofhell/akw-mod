@@ -126,28 +126,39 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
     /** Innenraum-Schnitt für die Schichtansicht (nur Client, per Update-Tag befüllt). */
     private int @Nullable [] clientInteriorGrid;
 
+    // Client-Spiegelwerte für rein abgeleitete ContainerData-Properties. Der vom Server
+    // gesendete DataSlot-Sync ruft auf dem Client propertyDelegate.set(index, value) auf
+    // (DataSlot.forContainer delegiert set() 1:1 an ContainerData#set) — für Werte, die aus
+    // layout/activeCores/lastErrors abgeleitet sind, gibt es aber kein einzelnes Feld zum
+    // Zurückschreiben. Diese Felder dienen als Ablage für genau diesen Sync-Pfad; get()
+    // liefert sie auf dem Client statt neu zu berechnen (der Client hat ohnehin kein
+    // aktuelles layout, solange kein Update-Tag eintrifft).
+    private int clientCapacity, clientMaxHeat, clientCoreCount, clientProduction,
+            clientCooling, clientErrorCount, clientSizeX, clientSizeY, clientSizeZ;
+
     private final ContainerData propertyDelegate = new ContainerData() {
         @Override
         public int get(int index) {
+            boolean client = level != null && level.isClientSide();
             return switch (index) {
                 case IDX_ENERGY -> energyStorage.getEnergyStored();
-                case IDX_CAPACITY -> effectiveCapacity();
+                case IDX_CAPACITY -> client ? clientCapacity : effectiveCapacity();
                 case IDX_BURN_TIME -> burnTime;
                 case IDX_BURN_TOTAL -> burnTimeTotal;
                 case IDX_HEAT -> heat;
-                case IDX_MAX_HEAT -> effectiveMaxHeat();
+                case IDX_MAX_HEAT -> client ? clientMaxHeat : effectiveMaxHeat();
                 case IDX_REDSTONE_MODE -> redstoneMode.ordinal();
                 case IDX_COMPARATOR_MODE -> comparatorMode.ordinal();
-                case IDX_CORE_COUNT -> layout.coreCount();
-                case IDX_PRODUCTION -> currentStats().generationPerTick();
-                case IDX_COOLING -> currentStats().coolingPerTick();
+                case IDX_CORE_COUNT -> client ? clientCoreCount : layout.coreCount();
+                case IDX_PRODUCTION -> client ? clientProduction : currentStats().generationPerTick();
+                case IDX_COOLING -> client ? clientCooling : currentStats().coolingPerTick();
                 case IDX_CONTROL_ROD -> controlRodInsertion;
                 case IDX_ENABLED -> enabled ? 1 : 0;
                 case IDX_SHUTDOWN_TEMP -> shutdownTempPercent;
-                case IDX_ERROR_COUNT -> lastErrors.size();
-                case IDX_SIZE_X -> layout.sizeX();
-                case IDX_SIZE_Y -> layout.sizeY();
-                case IDX_SIZE_Z -> layout.sizeZ();
+                case IDX_ERROR_COUNT -> client ? clientErrorCount : lastErrors.size();
+                case IDX_SIZE_X -> client ? clientSizeX : layout.sizeX();
+                case IDX_SIZE_Y -> client ? clientSizeY : layout.sizeY();
+                case IDX_SIZE_Z -> client ? clientSizeZ : layout.sizeZ();
                 case IDX_STATUS -> status.ordinal();
                 case IDX_SAFETY -> safetyOverride ? 1 : 0;
                 default -> 0;
@@ -189,6 +200,19 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
                     safetyOverride = value != 0;
                     setChanged();
                 }
+                // Rein abgeleitete Anzeigewerte: nur über den Client-DataSlot-Sync gesetzt
+                // (siehe die Client-Spiegelfelder oben) — nie per Button-Klick, daher kein
+                // setChanged() nötig.
+                case IDX_CAPACITY -> clientCapacity = value;
+                case IDX_MAX_HEAT -> clientMaxHeat = value;
+                case IDX_CORE_COUNT -> clientCoreCount = value;
+                case IDX_PRODUCTION -> clientProduction = value;
+                case IDX_COOLING -> clientCooling = value;
+                case IDX_ERROR_COUNT -> clientErrorCount = value;
+                case IDX_SIZE_X -> clientSizeX = value;
+                case IDX_SIZE_Y -> clientSizeY = value;
+                case IDX_SIZE_Z -> clientSizeZ = value;
+                case IDX_STATUS -> status = ReactorStatus.byOrdinal(value, status);
                 default -> { }
             }
         }
