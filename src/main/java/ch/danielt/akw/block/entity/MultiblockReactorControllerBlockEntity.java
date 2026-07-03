@@ -45,6 +45,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /** Controller und Laufzeit-Zustand des modular aufgebauten Reaktors. */
 public class MultiblockReactorControllerBlockEntity extends BlockEntity
@@ -337,7 +338,15 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
                     level, pos, be.layout.boundsMin(pos), be.layout.boundsMax(pos));
             boolean errorsChanged = !result.errors().equals(be.lastErrors);
             be.lastErrors = result.errors();
-            if (!result.valid()) {
+            // Sind ALLE Kerne beschädigt (kleiner Reaktor, z. B. 3×3×3 mit nur einem
+            // Kern), meldet der Validator NO_CORE, obwohl die Hülle intakt ist. In
+            // diesem Sonderfall nicht disassemblieren/explodieren, sondern das
+            // Reparatur-Fenster (DAMAGED) offen halten, bis mindestens ein Kern
+            // wieder ein echter Reaktorkern ist.
+            boolean onlyMissingCoreWhileDamaged = be.status == ReactorStatus.DAMAGED
+                    && !result.errors().isEmpty()
+                    && result.errors().stream().allMatch(e -> e.type() == ValidationError.Type.NO_CORE);
+            if (!result.valid() && !onlyMissingCoreWhileDamaged) {
                 // Zerstörte Hülle an einem heißen Kern → Explosion
                 if (be.heat >= be.effectiveMaxHeat() * 3 / 4) {
                     be.explode(level, pos, state);
@@ -349,15 +358,18 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
             if (errorsChanged) {
                 be.syncToClient(level);
             }
-            be.layout = result.layout();
-            be.activeCores = Math.min(be.activeCores, be.layout.coreCount());
-            be.energyStorage.setEnergy(Math.min(be.energyStorage.getEnergyStored(), be.effectiveCapacity()));
-            be.updatePortLinks(level, true);
+            if (result.valid()) {
+                be.layout = result.layout();
+                be.activeCores = Math.min(be.activeCores, be.layout.coreCount());
+                be.energyStorage.setEnergy(
+                        Math.min(be.energyStorage.getEnergyStored(), be.effectiveCapacity()));
+                be.updatePortLinks(level, true);
 
-            // Ausgang aus DAMAGED: erst wenn alle Kerne repariert und abgekühlt sind.
-            if (be.status == ReactorStatus.DAMAGED && !be.isTooHotForRepair()
-                    && !be.hasDamagedCores(level, pos)) {
-                be.status = ReactorStatus.OFFLINE;
+                // Ausgang aus DAMAGED: erst wenn alle Kerne repariert und abgekühlt sind.
+                if (be.status == ReactorStatus.DAMAGED && !be.isTooHotForRepair()
+                        && !be.hasDamagedCores(level, pos)) {
+                    be.status = ReactorStatus.OFFLINE;
+                }
             }
         }
 
@@ -717,9 +729,15 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
         enabled = input.getBooleanOr("Enabled", true);
         shutdownTempPercent = Math.clamp(input.getIntOr("ShutdownTemp", 90),
                 MIN_SHUTDOWN_TEMP, MAX_SHUTDOWN_TEMP);
-        status = ReactorStatus.byOrdinal(
-                input.getIntOr("Status", ReactorStatus.UNASSEMBLED.ordinal()),
-                ReactorStatus.UNASSEMBLED);
+        Optional<Integer> savedStatus = input.getInt("Status");
+        if (savedStatus.isPresent()) {
+            status = ReactorStatus.byOrdinal(savedStatus.get(), ReactorStatus.UNASSEMBLED);
+        } else {
+            // Migration von Ständen ohne Status-Key (v1.2.0/Phase A/B): einen bereits
+            // geladenen Brennzyklus nahtlos als RUNNING fortsetzen statt burnTime>0 mit
+            // dem Status "Bereit" inkonsistent stehen zu lassen.
+            status = burnTime > 0 ? ReactorStatus.RUNNING : ReactorStatus.UNASSEMBLED;
+        }
         startupTimer = Math.max(0, input.getIntOr("StartupTimer", 0));
         decayHeatBase = Math.max(0, input.getIntOr("DecayHeatBase", 0));
         decayTicksLeft = Math.clamp(input.getIntOr("DecayTicksLeft", 0), 0, DECAY_TICKS);
