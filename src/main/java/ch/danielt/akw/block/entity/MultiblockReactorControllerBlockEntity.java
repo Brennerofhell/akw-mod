@@ -327,7 +327,11 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
     }
 
     private int effectiveCapacity() {
-        return ReactorSimulation.capacity(layout);
+        // Für sehr große Hüllen (bis 9×9×9) kann die reine Formel die reale
+        // Speichergrenze von energyStorage übersteigen — sonst würde der Energiebalken
+        // nie voll und der Reaktor verbrennt weiter Brennstoff, obwohl der Speicher
+        // längst gesättigt ist.
+        return Math.min(ReactorSimulation.capacity(layout), energyStorage.getMaxEnergyStored());
     }
 
     private int effectiveMaxHeat() {

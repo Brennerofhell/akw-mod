@@ -341,9 +341,13 @@ public class ModularReactorScreen extends AbstractContainerScreen<ModularReactor
             }
         }
 
-        /** Übernimmt den Serverwert, solange nicht gerade gezogen wird. */
+        /**
+         * Übernimmt den Serverwert, solange nicht gerade gezogen wird. Blockiert
+         * NICHT auf isFocused() — Tastaturfokus bleibt oft auch nach dem Loslassen
+         * bestehen und würde den Regler sonst dauerhaft vom Server-Sync abkoppeln.
+         */
         void syncFromServer() {
-            if (!dragging && !isFocused()) {
+            if (!dragging) {
                 double serverValue = menu.getControlRodInsertion() / 100.0;
                 if (Math.abs(serverValue - value) > 0.004) {
                     value = serverValue;
