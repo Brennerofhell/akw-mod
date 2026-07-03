@@ -63,7 +63,6 @@
   "akw.multiblock.assembled": "Reaktor assembliert: %s Kerne, %s verbundene Kühlrohre.",
   "akw.multiblock.disassembled": "Reaktor deaktiviert.",
   "akw.multiblock.invalid": "Ungültige Struktur — prüfe Gehäuse-Blöcke.",
-  "akw.multiblock.need_wrench": "Reaktor-Schraubenschlüssel benötigt.",
   "akw.reactor.error.disconnected_pipe": "Kühlrohr ohne Verbindung zur Hülle bei %s, %s, %s.",
   "akw.reactor.error.foreign_block": "Ungültiger Block bei %s, %s, %s.",
   "akw.reactor.error.gap": "Lücke in der Hülle bei %s, %s, %s.",

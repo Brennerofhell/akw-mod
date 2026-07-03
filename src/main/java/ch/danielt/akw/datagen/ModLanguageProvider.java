@@ -69,7 +69,6 @@ public class ModLanguageProvider {
             add("akw.multiblock.assembled",   "Reaktor assembliert: %s Kerne, %s verbundene Kühlrohre.");
             add("akw.multiblock.disassembled","Reaktor deaktiviert.");
             add("akw.multiblock.invalid",     "Ungültige Struktur — prüfe Gehäuse-Blöcke.");
-            add("akw.multiblock.need_wrench", "Reaktor-Schraubenschlüssel benötigt.");
             addBlock(ModBlocks.REACTOR_ENERGY_PORT, "Reaktor-Energie-Port");
             addBlock(ModBlocks.REACTOR_ITEM_PORT, "Reaktor-Item-Port");
             addBlock(ModBlocks.DAMAGED_REACTOR_CORE, "Beschädigter Reaktorkern");
@@ -215,7 +214,6 @@ public class ModLanguageProvider {
             add("akw.multiblock.assembled",   "Reactor assembled: %s cores, %s connected cooling pipes.");
             add("akw.multiblock.disassembled","Reactor deactivated.");
             add("akw.multiblock.invalid",     "Invalid structure — check casing blocks.");
-            add("akw.multiblock.need_wrench", "Reactor Wrench required.");
             addBlock(ModBlocks.REACTOR_ENERGY_PORT, "Reactor Energy Port");
             addBlock(ModBlocks.REACTOR_ITEM_PORT, "Reactor Item Port");
             addBlock(ModBlocks.DAMAGED_REACTOR_CORE, "Damaged Reactor Core");

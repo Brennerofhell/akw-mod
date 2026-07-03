@@ -63,7 +63,6 @@
   "akw.multiblock.assembled": "Reactor assembled: %s cores, %s connected cooling pipes.",
   "akw.multiblock.disassembled": "Reactor deactivated.",
   "akw.multiblock.invalid": "Invalid structure — check casing blocks.",
-  "akw.multiblock.need_wrench": "Reactor Wrench required.",
   "akw.reactor.error.disconnected_pipe": "Cooling pipe not connected to the casing at %s, %s, %s.",
   "akw.reactor.error.foreign_block": "Invalid block at %s, %s, %s.",
   "akw.reactor.error.gap": "Gap in the casing at %s, %s, %s.",

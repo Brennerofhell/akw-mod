@@ -759,8 +759,10 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
         } else {
             // Migration von Ständen ohne Status-Key (v1.2.0/Phase A/B): einen bereits
             // geladenen Brennzyklus nahtlos als RUNNING fortsetzen statt burnTime>0 mit
-            // dem Status "Bereit" inkonsistent stehen zu lassen.
-            status = burnTime > 0 ? ReactorStatus.RUNNING : ReactorStatus.UNASSEMBLED;
+            // dem Status "Bereit" inkonsistent stehen zu lassen. activeCores>0 zusätzlich
+            // geprüft, damit ein (eigentlich unmöglicher) burnTime>0/activeCores==0-Stand
+            // nicht als Phantom-RUNNING ohne Produktion hängen bleibt.
+            status = burnTime > 0 && activeCores > 0 ? ReactorStatus.RUNNING : ReactorStatus.UNASSEMBLED;
         }
         startupTimer = Math.max(0, input.getIntOr("StartupTimer", 0));
         decayHeatBase = Math.max(0, input.getIntOr("DecayHeatBase", 0));
@@ -768,6 +770,10 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
         safetyOverride = input.getBooleanOr("SafetyOverride", false);
         layout = loadLayout(input);
         activeCores = Math.min(activeCores, layout.coreCount());
+        // Verteidigt gegen manuell editierte/beschädigte NBT (oder eine sehr knapp vor dem
+        // Speichern erreichte Überhitzung): heat darf nie auf/über der Schadensschwelle
+        // geladen werden, sonst würde der allererste Tick sofort damageCores()/explode() auslösen.
+        heat = Math.min(heat, effectiveMaxHeat() - 1);
         energyStorage.setEnergy(Math.min(Math.max(0, input.getIntOr("Energy", 0)),
                 effectiveCapacity()));
         lastComparator = getComparatorLevel();
