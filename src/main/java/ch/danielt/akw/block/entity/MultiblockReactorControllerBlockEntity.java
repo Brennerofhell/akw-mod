@@ -353,6 +353,12 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
             be.activeCores = Math.min(be.activeCores, be.layout.coreCount());
             be.energyStorage.setEnergy(Math.min(be.energyStorage.getEnergyStored(), be.effectiveCapacity()));
             be.updatePortLinks(level, true);
+
+            // Ausgang aus DAMAGED: erst wenn alle Kerne repariert und abgekühlt sind.
+            if (be.status == ReactorStatus.DAMAGED && !be.isTooHotForRepair()
+                    && !be.hasDamagedCores(level, pos)) {
+                be.status = ReactorStatus.OFFLINE;
+            }
         }
 
         ReactorStatus oldStatus = be.status;
@@ -459,8 +465,9 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
             dirty = true;
         }
 
-        if ((be.status == ReactorStatus.RUNNING || be.status == ReactorStatus.DAMAGED)
-                && level instanceof ServerLevel serverLevel) {
+        boolean irradiates = be.status == ReactorStatus.RUNNING
+                || (be.status == ReactorStatus.DAMAGED && be.isTooHotForRepair());
+        if (irradiates && level instanceof ServerLevel serverLevel) {
             be.applyRadiation(serverLevel, pos);
         }
         if (be.status == ReactorStatus.RUNNING && level instanceof ServerLevel serverLevel
@@ -541,6 +548,21 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
     /** Für die Reparatur beschädigter Kerne: Reaktor muss erst abkühlen. */
     public boolean isTooHotForRepair() {
         return layout.isAssembled() && heat >= effectiveMaxHeat() * 5 / 100;
+    }
+
+    /** Scannt den Innenraum auf verbliebene beschädigte Kerne (nur bei periodischer Revalidierung). */
+    private boolean hasDamagedCores(Level level, BlockPos pos) {
+        if (!layout.isAssembled()) {
+            return false;
+        }
+        BlockPos min = layout.boundsMin(pos).offset(1, 1, 1);
+        BlockPos max = layout.boundsMax(pos).offset(-1, -1, -1);
+        for (BlockPos current : BlockPos.betweenClosed(min, max)) {
+            if (level.getBlockState(current).is(ModBlocks.DAMAGED_REACTOR_CORE.get())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private int consumeFuelBatch() {

@@ -17,11 +17,22 @@ public final class ReactorSimulation {
      *                            Endreaktivität = Grundreaktivität × (1 − Einschub/100).
      */
     public static ReactorStats calculate(ReactorLayout layout, int activeCores, int controlRodInsertion) {
-        if (!layout.isAssembled() || activeCores <= 0) {
+        if (!layout.isAssembled()) {
             return new ReactorStats(0, 0, PASSIVE_COOLING, capacity(layout), maxHeat(layout));
         }
 
         int cores = layout.coreCount();
+        // Kühlrohre kühlen die Struktur unabhängig vom Brennzustand — sonst würde
+        // SCRAM/COOLDOWN (activeCores=0) die installierte Kühlung wirkungslos machen
+        // und die Nachzerfallswärme könnte trotz Kühlrohren nicht abgeführt werden.
+        double coolingContactsPerCore = (double) layout.coreCoolingContacts() / cores;
+        int cooling = PASSIVE_COOLING + (int) Math.round(
+                cores * coolingContactsPerCore * COOLING_PER_CONTACT);
+
+        if (activeCores <= 0) {
+            return new ReactorStats(0, 0, cooling, capacity(layout), maxHeat(layout));
+        }
+
         int boundedActiveCores = Math.min(activeCores, cores);
         double neighborsPerCore = (double) layout.coreNeighborContacts() / cores;
         double baseReactivity = Math.min(1.0, 0.60 + 0.10 * neighborsPerCore);
@@ -29,15 +40,12 @@ public final class ReactorSimulation {
         double reactivity = baseReactivity * (1.0 - insertion);
         double controlRodsPerCore = Math.min(2.0, (double) layout.coreControlRodContacts() / cores);
         double heatFactor = Math.max(0.50, 1.0 - 0.25 * controlRodsPerCore);
-        double coolingContactsPerCore = (double) layout.coreCoolingContacts() / cores;
 
         int generation = Math.max(0,
                 (int) Math.round(boundedActiveCores * FE_PER_CORE * reactivity));
         int generatedHeat = Math.max(0,
                 (int) Math.round(boundedActiveCores * HEAT_PER_CORE
                         * reactivity * reactivity * heatFactor));
-        int cooling = PASSIVE_COOLING + (int) Math.round(
-                boundedActiveCores * coolingContactsPerCore * COOLING_PER_CONTACT);
 
         return new ReactorStats(generation, generatedHeat, cooling, capacity(layout), maxHeat(layout));
     }
