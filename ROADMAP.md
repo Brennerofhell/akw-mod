@@ -5,7 +5,7 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10 / NeoForge 21.10.
 > Die Migration von Fabric auf NeoForge ist abgeschlossen (v1.1.0) — siehe
 > [docs/NEOFORGE-MIGRATION.md](docs/NEOFORGE-MIGRATION.md). Die folgenden Phasen sind plattformneutral.
 
-## Status: v1.2.0 ausgeliefert · in Arbeit: v1.3.0 — Multiblock-Phase A abgeschlossen (Energie-/Item-Ports, rechteckige Hüllen 3–9, präzise Fehlerliste)
+## Status: v1.2.0 ausgeliefert · in Arbeit: v1.3.0 — Multiblock-Phasen A–C abgeschlossen (Energie-/Item-Ports, rechteckige Hüllen 3–9, präzise Fehlerliste; Tab-GUI mit Steuerstab-Regler und Schichtansicht; Zustandsautomat mit Nachzerfallswärme und reparierbaren beschädigten Kernen). Offen bis zum Release: 16-Bit-ContainerData-Sync-Fix, GameTests, `.ogg`-Sounds.
 
 ---
 
@@ -80,6 +80,8 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10 / NeoForge 21.10.
 - [x] Konfigurierbare Redstone-Modi (4) + Komparator-Modi (4) im GUI (v1.2.0):
       Ignoriert / Signal aktiviert / Signal deaktiviert / Not-Aus (SCRAM) bzw.
       Energie / Temperatur / Brennstoff / Abfall
+- [x] Stufenloser Steuerstab-Regler (0–100 %) im Multiblock-GUI (Multiblock-Phase B, v1.3.0):
+      `Endreaktivität = Grundreaktivität × (1 − Einschub/100)`
 - [ ] Pipe-Netzwerk für Ressourcentransport
 
 ### Zielversion: v0.4.0
@@ -113,6 +115,9 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10 / NeoForge 21.10.
 - [x] Multiblock Strukturen (v0.6.0: 3×3×3, 5×5×5, 7×7×7; seit Phase A rechteckig
       3–9 Blöcke je Achse per BFS, Controller an beliebiger Hüllenposition)
 - [x] Bauroboter — automatischer 3×3×3-Multiblock-Aufbau aus Inventar + Energie (v1.2.0)
+- [x] Eigenständiges Tab-GUI für den Multiblock-Controller (Übersicht/Steuerung/Diagnose,
+      Schichtansicht) sowie Zustandsautomat mit Nachzerfallswärme und reparierbaren
+      beschädigten Kernen statt sofortiger Explosion (Multiblock-Phasen B–C, v1.3.0)
 - [ ] Netzwerk-System zwischen Reaktoren
 - [ ] Mod-Kompatibilität (andere Tech-Mods)
 - [ ] Mehrsprachige Erweiterung
@@ -122,7 +127,7 @@ Entwicklungsplan für das Atomkraftwerk-Mod (Minecraft 1.21.10 / NeoForge 21.10.
 ## 📋 Technisches Backlog
 
 ### Code Quality
-- [ ] Unit Tests für Energy-Berechnung
+- [x] Unit Tests für Energy-Berechnung (52 JUnit-5-Tests für `reactor/*`, v1.3.0)
 - [ ] Block-Interaktions-Tests
 - [ ] Kompatibilität-Tests mit anderen Mods
 - [ ] Performance-Optimierung

@@ -1,6 +1,6 @@
 # TODO
 
-Aktualisiert: 2026-07-02
+Aktualisiert: 2026-07-05
 
 ## Aktueller Stand (Kurzfassung)
 
@@ -8,27 +8,34 @@ Aktualisiert: 2026-07-02
   (FE-Kabel, Akku); Strahlung; Multiblock-Reaktor mit **rechteckigen Hüllen 3–9 je Achse**
   (BFS-Erkennung, Controller an beliebiger Hüllenposition), **Energie-Ports** (einziger
   FE-Abgabepunkt) und **Item-Ports** (Brennstoff/Abfall, Modus per Rechtsklick) sowie
-  **präziser Fehlerliste mit Koordinaten** (Multiblock-Phase A, 2026-07-02); **Bauroboter**
-  (automatischer 3×3×3-Aufbau aus Inventar + Energie); **konfigurierbare Redstone-Modi (4)
-  und Komparator-Modi (4)** im Reaktor-GUI (v1.2.0).
+  **präziser Fehlerliste mit Koordinaten** (Multiblock-Phase A, 2026-07-02); eigenständiges
+  **Tab-GUI** (Übersicht/Steuerung/Diagnose) mit stufenlosem **Steuerstab-Regler**,
+  einstellbarer **Abschalttemperatur (50–95 %)** und Schichtansicht des Innenraums
+  (Multiblock-Phase B, 2026-07-02); **Zustandsautomat** (`ReactorStatus`) mit
+  **Nachzerfallswärme** nach Abschaltung und **beschädigten Kernen statt sofortiger
+  Explosion** bei 100 % Hitze, reparierbar per Schraubenschlüssel (Multiblock-Phase C,
+  2026-07-02, Review-Fixes bis 2026-07-03); **Bauroboter** (automatischer 3×3×3-Aufbau aus
+  Inventar + Energie); **konfigurierbare Redstone-Modi (4) und Komparator-Modi (4)** im
+  Reaktor-GUI (v1.2.0); **52 JUnit-5-Unit-Tests** für die Reaktorlogik.
 - **Fertig (Doku war veraltet):** alle Item- und Block-Texturen sowie das Mod-Icon vorhanden;
   klassengenaue technische Referenz `docs/REFERENCE.md`.
-- **Offen:** `.ogg`-Sounddateien; Multiblock-Phasen B–C (Steuerstab-Regler, eigenständiges
-  Controller-GUI inkl. Fehlerliste, Zustandsautomat); Unit-/GameTests; Balance.
-- **Bekannte Einschränkungen (nach Phase A):**
+- **Offen:** `.ogg`-Sounddateien; GameTests für `ReactorValidator`; Balance; **16-Bit-Limit
+  im ContainerData-Sync** (siehe „Tests und Stabilität", hohe Priorität).
+- **Bekannte Einschränkungen:**
   - Der **Bauroboter** baut weiterhin nur die reine 3×3×3-Casing-Hülle **ohne Ports**;
     sein „fertig"-Status toleriert den fehlenden Energie-Port bewusst — der Spieler rüstet
     Ports nach und assembliert mit dem Schraubenschlüssel.
-  - **GUI-Fehlerliste** bewusst nach **Phase B** verschoben (GUI öffnet nur bei `ASSEMBLED`);
-    bis dahin zeigt der Wrench-Klick die Fehler als Chat-Zeilen.
 
 ## Empfohlene Reihenfolge
 
 1. **Smoke-Tests** des bestehenden Stands (Abschnitt „Sofort") — Basis verifizieren.
 2. ✅ **Phase A** — erledigt (2026-07-02): Ports, rechteckige Hülle 3–9, präzise Fehler.
-3. **Phase B** — Steuerstab-Regler, Controller-GUI, Redstone-Port.
-4. **Phase C** — Zustandsautomat, Nachzerfallswärme, beschädigte Kerne.
-5. **Polish/Release** — `.ogg`-Sounds, Unit-/GameTests, Guide/ROADMAP nachziehen → v1.0.0.
+3. ✅ **Phase B** — erledigt (2026-07-02): Steuerstab-Regler, eigenständiges Tab-GUI,
+   Schichtansicht. (Der separate Redstone-Port-Block aus B2 bleibt weiterhin optional.)
+4. ✅ **Phase C** — erledigt (2026-07-02, Review-Fixes bis 2026-07-03): Zustandsautomat,
+   Nachzerfallswärme, beschädigte Kerne.
+5. **Polish/Release** — `.ogg`-Sounds, GameTests, 16-Bit-ContainerData-Fix, weiterer
+   Unit-Test-Ausbau, Balance → v1.3.0 veröffentlichen.
 
 ## Sofort (Smoke-Tests des aktuellen Stands)
 
@@ -42,6 +49,14 @@ Aktualisiert: 2026-07-02
       Verbraucher testen (Controller selbst darf kein FE mehr abgeben).
 - [ ] Migration testen: alte Welt ohne Energie-Port → Reaktor disassembliert binnen ~5 s
       mit Meldung „Kein Energie-Port in der Hülle."
+- [ ] Tab-GUI im Spiel prüfen: Übersicht/Steuerung/Diagnose-Tab, Steuerstab-Regler
+      (0–100 %), Abschalttemperatur-Regler (50–95 %), Sicherung-überbrücken-Schalter.
+- [ ] Überhitzung auf 100 % erzwingen (Sicherung AUS/AN) → beschädigte Kerne statt
+      Explosion prüfen; danach abkühlen lassen und mit dem Schraubenschlüssel reparieren.
+- [ ] SCRAM auslösen (Redstone-Not-Aus oder GUI-Schalter AUS) während des Betriebs und die
+      Nachzerfallswärme-/Abkühlungsphase im Status-Feld beobachten.
+- [ ] `./gradlew test` ausführen (52 JUnit-5-Tests) und GameTests für `ReactorValidator`
+      ergänzen (siehe „Tests und Stabilität").
 
 ---
 
@@ -95,77 +110,107 @@ rechteckige Hüllen von 3×3×3 bis 9×9×9.*
 
 ---
 
-## Phase B — Automation & Darstellung
+## Phase B — Automation & Darstellung ✅ (erledigt 2026-07-02)
 
 *Ziel: eigener Redstone-Port, vollständiges Controller-GUI, einstellbarer Steuerstab.*
 
+> **Abgeschlossen** (Commit `d742818`, kommende v1.3.0). B1, B3 und B4 sind vollständig
+> umgesetzt; B2 (separater Redstone-Port-Block) bleibt wie unten erläutert bewusst optional.
+
 ### B1 — Einstellbarer Steuerstabwert (0–100 %)
-> **Teils erledigt:** Die Konzept-Formel ist in `reactor/ReactorSimulation.java` bereits live
-> (`reactivity = min(1.0, 0.60 + 0.10·Nachbarkerne)`, `Wärme = 12·reactivity²·heatFactor`,
-> `heatFactor` aus angrenzenden Steuerstäben). Offen ist nur der **stufenlose Regler 0–100 %**
-> (aktuell wirken Steuerstäbe nur diskret über Nachbarschaft).
-- [ ] `controlRodInsertion` (int 0–100) in Controller-BE persistieren.
-- [ ] `ReactorSimulation` um den stufenlosen Steuerwert ergänzen
-  (`Endreaktivität = Grundreaktivität × (1 − Steuerwirkung)`).
-- [ ] GUI-Schieberegler im Screen-Handler + Screen.
+- [x] `controlRodInsertion` (int 0–100) in Controller-BE persistiert (NBT-Key
+      `ControlRodInsertion`).
+- [x] `ReactorSimulation.calculate(layout, activeCores, controlRodInsertion)`: stufenloser
+      Steuerwert (`Endreaktivität = Grundreaktivität × (1 − Einschub/100)`); bei 100 %
+      Einschub sinken Erzeugung und Wärme auf exakt 0 (vorher lag der Bodenwert bei `max(1, …)`).
+- [x] GUI-Schieberegler (`RodSlider extends AbstractSliderButton`) im Steuerungs-Tab.
 
 ### B3 — Controller-GUI-Überarbeitung
-- [ ] Eigene `ModularReactorScreen`-Klasse (statt `NuclearReactorScreen`).
-- [ ] Übersichts-Tab: Strukturgröße, Kernanzahl, FE, FE/t, Temperatur, HU/t,
-      Kühlleistung, Brennstoff-/Abfallfüllstand, Status-Label.
-- [ ] Steuerungs-Tab: Ein/Aus, Steuerstab-Regler, Redstone-Modus,
-      Abschalttemperatur.
-- [ ] Diagnose-Tab: Fehlerliste mit Koordinaten (aus A4).
-- [ ] Screen-Handler-Properties um `coreCount`, `productionPerTick`,
-      `coolingCapacity`, `controlRodInsertion` erweitern.
+- [x] Eigene `ModularReactorScreen`-/`ModularReactorScreenHandler`-Klassen (176×222, eigene
+      Textur `modular_reactor.png`, kein Erbe von `NuclearReactorScreen` mehr).
+- [x] Übersichts-Tab: Strukturgröße, Kernanzahl, FE, Erzeugung, Kühlung, Hitze, Status-Label.
+- [x] Steuerungs-Tab: Ein/Aus, Steuerstab-Regler, Redstone-/Komparator-Modus,
+      Abschalttemperatur (50–95 %, einstellbar), „Sicherung überbrücken"-Schalter.
+- [x] Diagnose-Tab: Fehlerliste mit Koordinaten (aus A4), dauerhaft im GUI statt nur im Chat.
+- [x] ContainerData auf 20 Properties erweitert (`MB_PROPERTY_COUNT`, Indizes in
+      `MultiblockReactorControllerBlockEntity.IDX_*`).
+- [x] GUI öffnet jetzt auch unassembliert (Diagnose-Tab zeigt die Fehlerliste); der tote
+      Lang-Key `akw.multiblock.need_wrench` wurde entfernt.
 
 ### B4 — Schichtansicht Innenlayout
-- [ ] Einfaches Grid im Diagnose-Tab: aktuelle Y-Schicht, Pfeiltasten zum Wechsel.
-- [ ] Farbcodes: Kern = gelb, Steuerstab = blau, Kühlrohr = cyan, Blei = grau, Luft = leer.
-- [ ] Umsetzung mit `DrawContext.fill()`.
+- [x] Grid im Diagnose-Tab: aktuelle Y-Schicht, Pfeiltasten (▲/▼) zum Wechsel.
+- [x] Farbcodes: Kern = gelb, Steuerstab = blau, Kühlrohr = cyan, Blei = grau, Luft = dunkel,
+      Fremdblock = rot.
+- [x] Umsetzung mit `GuiGraphics.fill()`; Innenraum-Daten laufen über das
+      BlockEntity-Update-Tag (`InteriorGrid`-Int-Array), nicht über ContainerData.
 
 ### B2 — `reactor_redstone_port` (neuer Block)
-> **Funktional erledigt (anderer Weg):** Die 4 Redstone-Modi (`IGNORED`, `HIGH_ENABLES`,
-> `HIGH_DISABLES`, `EMERGENCY_STOP`) und die 4 Komparator-Modi (Energie / Temperatur /
-> Brennstoff / Abfall) sind seit v1.2.0 direkt im Controller-GUI umschaltbar
-> (`reactor/RedstoneMode`, `reactor/ComparatorMode`). Der **separate Port-Block** unten ist
-> daher nur noch optional (für portgebundene Multiblock-Steuerung).
+> **Funktional erledigt (anderer Weg), Block-Variante weiterhin nicht umgesetzt:** Die 4
+> Redstone-Modi (`IGNORED`, `HIGH_ENABLES`, `HIGH_DISABLES`, `EMERGENCY_STOP`) und die 4
+> Komparator-Modi (Energie / Temperatur / Brennstoff / Abfall) sind seit v1.2.0 direkt im
+> Controller-GUI umschaltbar (`reactor/RedstoneMode`, `reactor/ComparatorMode`). Der
+> **separate Port-Block** unten bleibt daher optional.
 - [ ] (optional) Port-Block mit eigenem Modus, der in den Controller geschrieben wird.
 
 ---
 
-## Phase C — Reaktorsicherheit & Zustandsautomat
+## Phase C — Reaktorsicherheit & Zustandsautomat ✅ (erledigt 2026-07-02, Review-Fixes bis 2026-07-03)
 
 *Ziel: State-Machine, Nachzerfallswärme, beschädigte Kerne, keine sofortige Explosion.*
 
+> **Abgeschlossen** (Commit `2026efb`, Review-Fixes `13dd533`/`8096d2f`/`58a3334`/`2fd543c`/
+> `ef72983`, kommende v1.3.0). Siehe CHANGELOG „Behoben" für alle nachträglich gefundenen
+> und behobenen Fehler.
+
 ### C1 — Zustandsautomat
-- [ ] Enum `ReactorStatus`: `UNASSEMBLED`, `OFFLINE`, `STARTING`, `RUNNING`,
+- [x] Enum `reactor/ReactorStatus`: `UNASSEMBLED`, `OFFLINE`, `STARTING`, `RUNNING`,
       `SCRAM`, `COOLDOWN`, `DAMAGED`.
-- [ ] Transitionen im Tick-Loop kodieren; Ad-hoc-Flags ersetzen.
+- [x] Transitionen im Tick-Loop kodiert; Ad-hoc-Flags ersetzt.
+- [x] NBT-Migration für Stände ohne `Status`-Key (vor Phase C): impliziter `RUNNING`-Status
+      bei `burnTime>0 && activeCores>0`, sonst `UNASSEMBLED`.
 
 ### C2 — Nachzerfallswärme
-- [ ] Nach SCRAM: `decayHeat` = 20 % der letzten Kernwärme, linear auf 0
-      über 200 Ticks fallend.
-- [ ] COOLDOWN → OFFLINE wenn `heat < 5 %`.
+- [x] Nach SCRAM: `decayHeatBase` = 20 % der letzten Kernwärme, linear auf 0
+      über `DECAY_TICKS=200` fallend.
+- [x] COOLDOWN → OFFLINE wenn `heat < effectiveMaxHeat()·5/100`.
+- [x] Kühlung wirkt während SCRAM/COOLDOWN/DAMAGED unverändert weiter (Bugfix: skaliert mit
+      der installierten Kernzahl statt mit `activeCores`, das in diesen Zuständen 0 ist).
 
 ### C3 — Beschädigte Kerne
-- [ ] Bei 100 % Hitze: 1–3 zufällige Kerne → `damaged_reactor_core`.
-- [ ] `DamagedReactorCoreBlock`: keine Produktion, kleine Strahlungsquelle.
-- [ ] Reparatur: Schraubenschlüssel-Rechtsklick nach Abkühlung → normaler Kern.
-- [ ] Explosion nur bei `safetyOverride = true` (GUI-Checkbox) oder zerstörter Hülle.
+- [x] Bei 100 % Hitze: 1–3 zufällige Kerne → `damaged_reactor_core` (`damageCores()`),
+      außer die Sicherung ist überbrückt (`safetyOverride`) → dann Explosion wie zuvor.
+- [x] `DamagedReactorCoreBlock`: keine Produktion, im Validator inert; Strahlung läuft über
+      den Controller-Status weiter, solange er `isTooHotForRepair()` ist.
+- [x] Reparatur: Schraubenschlüssel-Rechtsklick nach Abkühlung (`isTooHotForRepair()==false`)
+      → normaler Kern; Rückkehr von `DAMAGED` nach `OFFLINE`, sobald kein beschädigter Kern
+      mehr im Innenraum liegt.
+- [x] Explosion sonst nur noch bei zerstörter Hülle ab 75 % Maximalhitze (Revalidierung)
+      oder überbrückter Sicherung.
 
 ---
 
 ## Tests und Stabilität
 
-- [ ] Unit-Tests für `ReactorSimulation` ergänzen:
-  - einzelner Kern ohne Kühlung,
-  - gekühlter Vierkernreaktor,
-  - Steuerstab-Wärmereduktion,
-  - Teilbetrieb bei zu wenig Brennstäben,
-  - Kapazitäts- und Temperaturgrenzen.
+- [ ] **HOHE PRIORITÄT — ContainerData-Sync auf 16 Bit begrenzt:**
+      `ClientboundContainerSetDataPacket` überträgt jeden Property-Wert per
+      `FriendlyByteBuf.writeShort`/`readShort` (bytecode-verifiziert gegen die
+      1.21.10/NeoForge-21.10-Klasse) — Werte über 32 767 werden als vorzeichenbehafteter
+      16-Bit-Wert truncated (z. B. ergibt `100 000 mod 65536` als signed short einen
+      negativen Wert). Betrifft **alle** Reaktor-GUIs, nicht nur die Phase-B/C-Änderungen:
+      Energie (`IDX_ENERGY`, bis 20 Mio. FE), Kapazität (`IDX_CAPACITY`, oft weit über
+      32 767), bei großen Multiblocks auch Hitze/Maximalhitze — sowohl
+      `NuclearReactorScreenHandler`/`NuclearReactorScreen` (alle 6 Einblockreaktoren) als
+      auch `ModularReactorScreenHandler`/`ModularReactorScreen`. Korrekte Behebung:
+      Low/High-Word-Splitting über je zwei `ContainerData`-Slots (wie in Tech-Mods üblich) —
+      bewusst nicht im Rahmen von Phase B/C umgesetzt, da GUI-übergreifend und auch den
+      unveränderten Einblockreaktor-Code betrifft.
+- [x] Unit-Tests für die Reaktorlogik: **52 JUnit-5-Tests** unter
+      `src/test/java/ch/danielt/akw/reactor/` für `ReactorSimulation`, `ReactorLayout`,
+      `ValidationError`, `ItemPortMode`, `RedstoneMode`, `ComparatorMode`, `ReactorStatus`
+      (`build.gradle`: JUnit-5-BOM + `useJUnitPlatform()` + ModDevGradle-`unitTest{}`-Block,
+      Commits `112dea4`/`9590607`).
 - [ ] GameTests für `ReactorValidator` mit gültiger Hülle, Gehäuselücke, fehlendem
-      Kern, Fremdblock und unverbundenem Kühlrohr.
+      Kern, Fremdblock und unverbundenem Kühlrohr (weltabhängig, weiterhin offen).
 - [ ] NBT-Neuladen während eines laufenden Brennzyklus testen.
 - [ ] Verhalten bei vollem Abfallslot und vollem Energiespeicher testen.
 - [ ] Sicherstellen, dass Energie, Hitze und Inventar niemals ungültige oder negative
@@ -260,3 +305,21 @@ rechteckige Hüllen von 3×3×3 bis 9×9×9.*
       Abfall-Ausgang / Deaktiviert, Rechtsklick schaltet um); Fehlerliste `ValidationError`
       (6 Typen, max. 8 Fehler, Koordinaten, Chat-Ausgabe beim Wrench-Klick); NBT-Migration
       vom alten `ReactorSize`-Format.
+- [x] **Multiblock-Phase B** (2026-07-02, kommende v1.3.0): eigenständiges Tab-GUI
+      (`ModularReactorScreenHandler`/`ModularReactorScreen`, 176×222, drei Tabs), stufenloser
+      Steuerstab-Regler 0–100 % (`ReactorSimulation.calculate` um `controlRodInsertion`
+      erweitert), einstellbare Abschalttemperatur 50–95 %, Schichtansicht des Innenraums mit
+      Farbcodes; ContainerData auf 20 Properties erweitert; GUI öffnet jetzt auch
+      unassembliert (toter Lang-Key `akw.multiblock.need_wrench` entfernt).
+- [x] **Multiblock-Phase C** (2026-07-02, Review-Fixes bis 2026-07-03, kommende v1.3.0):
+      Zustandsautomat `ReactorStatus` (UNASSEMBLED/OFFLINE/STARTING/RUNNING/SCRAM/COOLDOWN/
+      DAMAGED), Nachzerfallswärme nach Abschaltung (20 % der letzten Kernwärme, 200 Ticks
+      linear abklingend), beschädigte Kerne (`damaged_reactor_core`) statt sofortiger
+      Explosion bei 100 % Hitze — Reparatur per Schraubenschlüssel nach Abkühlung; Explosion
+      nur noch bei überbrückter Sicherung oder bei ≥75 % Maximalhitze zerstörter Hülle.
+      Adversarialer Review fand und behob danach 9 weitere Fehler (DAMAGED-Sackgasse,
+      Kühlungsausfall bei SCRAM, Client-GUI-Desync u. a. — siehe CHANGELOG).
+- [x] **Unit-Tests für die Reaktorlogik** (2026-07-02, kommende v1.3.0): 52 JUnit-5-Tests
+      (`ReactorSimulation`, `ReactorLayout`, `ValidationError`, `ItemPortMode`,
+      `RedstoneMode`, `ComparatorMode`, `ReactorStatus`); `build.gradle` um JUnit-5-BOM und
+      ModDevGradle-`unitTest{}`-Block erweitert.

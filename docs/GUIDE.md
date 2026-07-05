@@ -125,7 +125,8 @@ Reaktor. Seine Leistung hängt von den wirklich eingebauten Modulen ab.
 4. Setze **mindestens einen Reaktor-Energie-Port** in die Hülle — ohne ihn lässt sich
    der Reaktor nicht assemblieren (Meldung „Kein Energie-Port in der Hülle.").
 5. Setze mindestens einen **Reaktorkern** in den Innenraum.
-6. Erlaubt sind innen Luft, Reaktorkerne, Steuerstäbe, Kühlrohre und Blei-Blöcke.
+6. Erlaubt sind innen Luft, Reaktorkerne, Steuerstäbe, Kühlrohre, Blei-Blöcke und
+   beschädigte Kerne (siehe „Reaktorsicherheit" weiter unten).
 7. Rechtsklicke den Controller mit dem **Reaktor-Schraubenschlüssel**.
 
 Schlägt die Assemblierung fehl, meldet der Controller „Ungültige Struktur" und listet
@@ -134,6 +135,37 @@ Block, fehlender Kern, fehlender Energie-Port oder zu große Hülle. Kühlrohre 
 Verbindung zur Hülle erscheinen nur als Warnung und verhindern die Assemblierung nicht.
 Der Controller prüft die Struktur während des Betriebs alle 100 Ticks (5 Sekunden)
 erneut und deaktiviert sich bei Beschädigung selbst.
+
+Rechtsklick auf den Controller **ohne** Schraubenschlüssel öffnet immer das Controller-GUI —
+auch wenn der Reaktor noch gar nicht assembliert ist; der Diagnose-Tab zeigt dann direkt die
+aktuelle Fehlerliste an.
+
+### Controller-GUI: Übersicht, Steuerung, Diagnose
+
+Das Controller-GUI hat drei Reiter oberhalb des Inventars:
+
+**Übersicht** — Hüllengröße, Kernzahl, FE-Füllstand, Erzeugung (FE/Tick), Kühlung
+(HU/Tick), Hitze und der aktuelle **Status**: `Nicht assembliert`, `Bereit`, `Anfahren…`,
+`In Betrieb`, `SCRAM — Nachzerfallswärme`, `Abkühlung` oder `BESCHÄDIGT — Kerne reparieren`.
+
+**Steuerung**
+- **Redstone-/Komparator-Modus** — wie beim Einblockreaktor (siehe Abschnitt 2).
+- **Reaktor: AN/AUS** — genereller Schalter, unabhängig vom Redstone-Modus. Schaltest du
+  während des Betriebs auf AUS, geht der Reaktor sofort in die SCRAM-Abschaltung über (siehe
+  „Reaktorsicherheit" unten); bei AUS zündet er danach auch keinen neuen Brennstab.
+- **Abschaltung** — die Auto-SCRAM-Schwelle ist jetzt **einstellbar (50–95 % der
+  Maximalhitze, Standard 90 %)**: Klick erhöht in 5-%-Schritten, danach zurück auf 50 %.
+- **Sicherung überbrücken** — normalerweise **AN** (keine Explosion): bei 100 % Hitze werden
+  stattdessen 1–3 zufällige Kerne beschädigt. Überbrückst du die Sicherung, riskierst du bei
+  100 % Hitze wieder eine **echte Explosion** wie beim Einblockreaktor.
+- **Steuerstab-Regler** — stufenloser Schieberegler **0–100 %**: senkt die Endreaktivität
+  linear (`Endreaktivität = Grundreaktivität × (1 − Einschub/100)`); bei 100 % Einschub
+  produziert der Reaktor keine Energie und keine Hitze mehr, läuft aber weiter. Ergänzt die
+  bauliche Steuerstab-Wirkung aus dem Abschnitt „Innenmodule" unten.
+
+**Diagnose** — die Fehlerliste (bisher nur im Chat) sowie eine **Schichtansicht** des
+Innenraums: farbcodiertes Raster (gelb = Kern, blau = Steuerstab, cyan = Kühlrohr, grau =
+Blei, dunkel = Luft, rot = Fremdblock), mit Pfeiltasten zwischen den Y-Schichten wechselbar.
 
 ### Innenmodule
 
@@ -149,9 +181,31 @@ erneut und deaktiviert sich bei Beschädigung selbst.
 
 Ein Brennzyklus aktiviert so viele Kerne, wie Brennstäbe und freie Plätze im
 Abfallslot vorhanden sind. Pro aktivem Kern werden ein Brennstab verbraucht und ein
-verbrauchter Brennstab erzeugt. Bei 90 Prozent Maximaltemperatur erfolgt eine
-automatische Abschaltung; bei weiterem Temperaturanstieg bleibt die Kernschmelze
-gefährlich.
+verbrauchter Brennstab erzeugt.
+
+### Reaktorsicherheit: Abschaltung, Nachzerfallswärme und beschädigte Kerne
+
+Schaltet der Reaktor ab — automatisch bei der eingestellten Abschalttemperatur, per
+GUI-Schalter „Reaktor: AUS" oder per Not-Aus-Redstone-Modus — beginnt eine kurze
+**SCRAM**-Phase: der Reaktor gibt noch etwa 20 % seiner letzten Wärmeleistung als
+**Nachzerfallswärme** ab, die über rund 200 Ticks (10 Sekunden) linear abklingt. Kühlrohre
+wirken währenddessen weiter uneingeschränkt — genug Kühlung vorausgesetzt, sinkt die Hitze
+auch ohne aktiven Brennzyklus. Danach kühlt der Reaktor im Zustand **Abkühlung** weiter ab,
+bis er unter 5 % der Maximalhitze fällt und wieder **Bereit** ist.
+
+Erreicht die Hitze **100 % der Maximalhitze**, werden **1–3 zufällige Reaktorkerne**
+beschädigt (`Beschädigter Reaktorkern`), statt dass der Reaktor sofort explodiert. Ein
+beschädigter Kern produziert nichts, zählt aber weiterhin als gültiger, inerter
+Hüllen-Innenblock. Der Reaktor bleibt im Status **BESCHÄDIGT**, solange noch beschädigte
+Kerne vorhanden sind oder die Hitze über 5 % der Maximalhitze liegt — solange strahlt er
+weiter. Sobald abgekühlt: **jeden beschädigten Kern per Rechtsklick mit dem
+Reaktor-Schraubenschlüssel reparieren** (Meldung „Reaktor noch zu heiß für die Reparatur.",
+solange nicht abgekühlt). Sind alle Kerne repariert und der Reaktor abgekühlt, geht er
+automatisch wieder auf **Bereit**.
+
+Eine **echte Explosion** passiert beim Multiblock nur noch in zwei Fällen:
+- die Hülle wird bei ≥ 75 % Maximalhitze zerstört (z. B. durch Beschuss), oder
+- die Sicherung wurde im Steuerungs-Tab bewusst **überbrückt**.
 
 ### Anschlüsse: Energie- und Item-Ports
 

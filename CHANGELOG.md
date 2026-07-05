@@ -7,7 +7,9 @@ Versionierung nach [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [1.3.0] — Unveröffentlicht
 
-Multiblock-Phase A: Energie- und Item-Ports, rechteckige Hüllen 3–9 je Achse, präzise Fehlerliste.
+Multiblock-Phasen A–C: Energie- und Item-Ports, rechteckige Hüllen 3–9 je Achse, präzise
+Fehlerliste, Tab-GUI mit Steuerstab-Regler und Schichtansicht, Zustandsautomat mit
+Nachzerfallswärme und reparierbaren beschädigten Kernen.
 
 ### ⚠️ Breaking Changes
 - **FE-Abgabe nur noch über Energie-Ports:** Der Multiblock-Controller besitzt **keine
@@ -18,9 +20,11 @@ Multiblock-Phase A: Energie- und Item-Ports, rechteckige Hüllen 3–9 je Achse,
   Hülle einsetzen und mit dem Schraubenschlüssel neu assemblieren.
 - **Hopper am Controller funktionieren nicht mehr:** Brennstoffzufuhr und Abfallentnahme
   laufen ausschließlich über den **Reaktor-Item-Port** (`akw:reactor_item_port`).
-- Sprach-Keys `akw.multiblock.error.*` entfernt (ersetzt durch `akw.reactor.error.*`).
+- Sprach-Keys `akw.multiblock.error.*` entfernt (ersetzt durch `akw.reactor.error.*`);
+  zusätzlich der tote Key `akw.multiblock.need_wrench` entfernt (das GUI öffnet seit
+  Phase B auch unassembliert, siehe unten).
 
-### Hinzugefügt
+### Hinzugefügt (Phase A — Ports & Hülle)
 - **Reaktor-Energie-Port** (`akw:reactor_energy_port`): einziger FE-Abgabepunkt der Hülle.
   Hält keinen eigenen Speicher, sondern delegiert an den Controller und schiebt pro Tick
   aktiv bis 32 768 FE je Seite an angrenzende Verbraucher. Rezept: **Energie-Kabel über
@@ -37,7 +41,7 @@ Multiblock-Phase A: Energie- und Item-Ports, rechteckige Hüllen 3–9 je Achse,
   max. 8 Fehler pro Validierung. Der Wrench-Klick zeigt `akw.multiblock.invalid` in der
   Actionbar und alle Fehler als **Chat-Zeilen mit Koordinaten** (`akw.reactor.error.*`).
 
-### Technisch
+### Technisch (Phase A — Ports & Hülle)
 - `ReactorValidator` neu: `find()` (BFS) + `validateBounds()` — die Tick-Revalidierung alle
   100 Ticks läuft über die **gespeicherten Grenzen** (kein `facing`-Parameter mehr).
   Konstanten `MAX_EDGE=9`, `MAX_VOLUME=729`, `MAX_ERRORS=8`.
@@ -54,9 +58,116 @@ Multiblock-Phase A: Energie- und Item-Ports, rechteckige Hüllen 3–9 je Achse,
 - Bauroboter: `finish()` validiert per `ReactorValidator.find()`; ein fehlender Energie-Port
   zählt **nicht** als Baufehler — der Roboter baut weiterhin nur die 3×3×3-Casing-Hülle,
   Ports rüstet der Spieler nach (bekannte Einschränkung).
-- GUI-Fehlerliste bewusst nach Phase B verschoben (GUI öffnet nur bei `ASSEMBLED`).
 - Datagen: Modelle, Blockstates, Loot-Tabellen, `mineable/pickaxe`-Tag, Rezepte und
   Sprache (de/en) für beide Ports; Ports im Creative-Tab und in `FUNCTIONAL_BLOCKS`.
+
+### Hinzugefügt (Phase B — Multiblock-GUI)
+- **Eigenständiges Tab-GUI** für den Multiblock-Controller (`ModularReactorScreenHandler` /
+  `ModularReactorScreen`, 176×222, eigene Textur `textures/gui/modular_reactor.png`) statt
+  des bisher geteilten `NuclearReactorScreen`; die MenuType-ID `multiblock_reactor` bleibt
+  unverändert. Drei Reiter:
+  - **Übersicht** — Hüllengröße, Kernzahl, FE-Füllstand, Erzeugung, Kühlung, Hitze, Status.
+  - **Steuerung** — Redstone-/Komparator-Modus, Ein/Aus-Schalter, einstellbare
+    **Abschalttemperatur (50–95 %)**, „Sicherung überbrücken"-Schalter und ein stufenloser
+    **Steuerstab-Regler (0–100 %)**.
+  - **Diagnose** — Fehlerliste (bisher nur im Chat) sowie eine **Schichtansicht** des
+    Innenraums mit Farbcodes (Kern/Steuerstab/Kühlrohr/Blei/Fremdblock) und
+    Y-Schicht-Pfeiltasten.
+- **GUI öffnet jetzt auch unassembliert** und zeigt dann direkt den Diagnose-Tab mit der
+  Fehlerliste, statt nur eine Chat-Meldung anzuzeigen.
+- **Stufenloser Steuerstab-Regler:** `ReactorSimulation.calculate()` um den Parameter
+  `controlRodInsertion` erweitert — `Endreaktivität = Grundreaktivität × (1 − Einschub/100)`.
+  Bei 100 % Einschub produziert der Reaktor keine Energie und keine Wärme mehr.
+
+### Hinzugefügt (Phase C — Zustandsautomat & Reaktorsicherheit)
+- **Zustandsautomat `reactor/ReactorStatus`:** `UNASSEMBLED`, `OFFLINE`, `STARTING`,
+  `RUNNING`, `SCRAM`, `COOLDOWN`, `DAMAGED` ersetzen die bisherigen Ad-hoc-Flags im
+  Controller-Tick.
+- **Nachzerfallswärme:** nach einer Abschaltung (Auto-SCRAM bei der einstellbaren
+  Abschalttemperatur, GUI-Ausschalter oder Not-Aus-Redstone-Modus) gibt der Reaktor über
+  `DECAY_TICKS=200` linear abklingend noch **20 % der letzten Kernwärme** ab, bevor er in
+  `COOLDOWN` und schließlich (`heat < 5 % Maximalhitze`) in `OFFLINE` übergeht.
+- **Beschädigte Kerne statt sofortiger Explosion:** bei 100 % Maximalhitze werden **1–3
+  zufällige Kerne** zu `akw:damaged_reactor_core` (neuer Block, produziert nichts, im
+  Validator ein gültiger, inerter Innenraumblock). Reparatur per
+  **Schraubenschlüssel-Rechtsklick**, sobald der Reaktor abgekühlt ist
+  (`isTooHotForRepair()`). Eine echte Explosion passiert nur noch, wenn im Steuerungs-Tab
+  die **Sicherung überbrückt** wurde, oder wenn die Hülle bei ≥75 % Maximalhitze zerstört
+  wird.
+
+### Technisch (Phase B/C)
+- `MultiblockReactorControllerBlockEntity`: `ContainerData` auf **20 Properties** erweitert
+  (`MB_PROPERTY_COUNT`); neue Indizes 8–19 für Kernzahl, Erzeugung, Kühlung, Steuerstab,
+  Ein/Aus, Abschalttemperatur, Fehlerzahl, Größe X/Y/Z, Status, Sicherung. Rein abgeleitete
+  Properties laufen über dedizierte Client-Spiegelfelder (siehe „Behoben").
+- Fehlerliste und Innenraum-Schnitt (Schichtansicht) laufen über das
+  **BlockEntity-Update-Tag** (`getUpdateTag`, Int-Arrays `ClientErrors` + `InteriorGrid`),
+  nicht über `ContainerData` — zu groß für einzelne Properties.
+- Neue NBT-Keys: `ControlRodInsertion`, `Enabled`, `ShutdownTemp`, `Status`, `StartupTimer`,
+  `DecayHeatBase`, `DecayTicksLeft`, `SafetyOverride`.
+- `ReactorValidator` behandelt `damaged_reactor_core` wie `LEAD_BLOCK` — gültiger, aber
+  inerter Innenraumblock (zählt nicht als Kern).
+- `ReactorSimulation.calculate()`: Kühlung wird jetzt **vor** der `activeCores`-Prüfung und
+  unabhängig von ihr berechnet (skaliert mit der installierten Kernzahl statt mit
+  `activeCores`) — sonst wäre die Kühlung während SCRAM/COOLDOWN/DAMAGED wirkungslos.
+  `effectiveCapacity()` deckelt zusätzlich gegen `energyStorage.getMaxEnergyStored()`
+  (20 Mio. FE), da die reine Formel bei sehr großen Hüllen (bis 9×9×9) bis 34,3 Mio. FE
+  ergeben kann.
+- Datagen: Blockstate, Modell, Loot-Tabelle, `mineable/pickaxe`-Tag und Sprache (de/en) für
+  `damaged_reactor_core`; kein Rezept (entsteht nur durch Überhitzung, nicht craftbar).
+- **Unit-Tests:** 52 JUnit-5-Tests unter `src/test/java/ch/danielt/akw/reactor/` für
+  `ReactorSimulation`, `ReactorLayout`, `ValidationError`, `ItemPortMode`, `RedstoneMode`,
+  `ComparatorMode`, `ReactorStatus`. `build.gradle`: JUnit-5-BOM, `useJUnitPlatform()`,
+  ModDevGradle-`unitTest { enable(); testedMod = mods.akw }`.
+
+### Behoben
+Adversarialer Review nach Phase B/C fand und behob folgende Fehler (alle noch vor
+Veröffentlichung von v1.3.0):
+
+1. **`DAMAGED` war ein Sackgassenzustand:** reparierte Kerne führten nie zurück zu
+   `OFFLINE`; Strahlung lief auch nach vollständiger Abkühlung/Reparatur unbegrenzt weiter.
+   Fix: Ausgangstransition bei der 100-Tick-Revalidierung (`hasDamagedCores()`-Scan),
+   Strahlung an `isTooHotForRepair()` gekoppelt.
+2. **Kühlung fiel während SCRAM/COOLDOWN/DAMAGED auf den Passivwert zurück**, weil
+   `ReactorSimulation.calculate()` die Kühlrohr-Kontakte an `activeCores` koppelte (bei
+   SCRAM = 0) — die Nachzerfallswärme konnte dadurch trotz vorhandener Kühlrohre
+   zuverlässig die Schadensschwelle überschreiten, und die Schutzabschaltung beschädigte
+   so die Kerne, die sie eigentlich schützen sollte. Fix: Kühlung skaliert jetzt mit der
+   vollen installierten Kernzahl, unabhängig vom Brennzustand.
+3. **Alle Kerne beschädigt (z. B. jeder 1-Kern-Minimalreaktor):** der Validator meldete
+   `NO_CORE` trotz intakter Hülle, wodurch der Controller still disassemblierte statt das
+   Reparatur-Fenster offen zu halten. Fix: Sonderfall in der Revalidierung, wenn
+   ausschließlich `NO_CORE` während `DAMAGED` gemeldet wird.
+4. **NBT-Migration:** alte Stände (v1.2.0/Phase A/B, kein `Status`-Key) mit laufendem
+   Brennzyklus wurden zu `OFFLINE` migriert, obwohl `burnTime`/`activeCores` noch liefen —
+   das GUI zeigte inkonsistente Werte. Fix: impliziter `RUNNING`-Status bei
+   `burnTime>0 && activeCores>0`.
+5. **Client-GUI zeigte veraltete Status-/Produktions-/Kühlungswerte:**
+   `DataSlot.forContainer(...)` leitet den Server→Client-Sync direkt an
+   `ContainerData.set(index, value)` auf dem Client weiter (bytecode-verifiziert); für rein
+   abgeleitete Properties (Status, Kernzahl, Erzeugung, Kühlung, Fehlerzahl, Größe X/Y/Z,
+   Kapazität, Maximalhitze) landete das im `default`-Zweig und wurde verworfen. Fix:
+   dedizierte Client-Spiegelfelder.
+6. **Hitze beim Laden unclamped:** konnte über der Schadensschwelle geladen werden und
+   sofort `damageCores()`/`explode()` im ersten Tick auslösen. Fix: Clamp auf
+   `effectiveMaxHeat()-1` nach dem Laden.
+7. **Steuerstab-Regler-Fokus-Desync:** der Regler übernahm Server-Werte nicht mehr, sobald
+   er (auch ohne Ziehen) Tastaturfokus hatte — im Mehrspieler-Betrieb potenziell eine
+   dauerhafte Anzeigeabweichung. Fix: nur noch an `dragging` gekoppelt.
+8. **Kapazität konnte die reale Speichergrenze übersteigen:** `ReactorSimulation.capacity()`
+   kann bei sehr großen Hüllen (bis 9×9×9) rechnerisch bis 34,3 Mio. FE ergeben, der reale
+   `energyStorage` ist aber hart auf 20 Mio. FE begrenzt — der Energiebalken wurde nie voll
+   und der Reaktor verbrannte unnötig weiter Brennstoff. Fix: `effectiveCapacity()` deckelt
+   jetzt gegen `energyStorage.getMaxEnergyStored()`.
+9. Toter Sprach-Key `akw.multiblock.need_wrench` entfernt (de + en).
+
+### Bekannte Probleme
+- **ContainerData-Sync auf 16 Bit begrenzt** (nicht in dieser Version behoben):
+  `ClientboundContainerSetDataPacket` überträgt jeden Wert per
+  `FriendlyByteBuf.writeShort`/`readShort` — Werte über 32 767 werden truncated bzw. als
+  negative Zahl angezeigt. Betrifft potenziell **alle** Reaktor-GUIs (Energie, Kapazität,
+  bei großen Multiblocks auch Hitze), nicht nur die Phase-B/C-Änderungen. Geplante
+  Behebung (Low/High-Word-Splitting) siehe TODO.md „Tests und Stabilität".
 
 ---
 

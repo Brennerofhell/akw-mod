@@ -15,7 +15,7 @@ Fabric→NeoForge-API-Tabellen [NEOFORGE-MIGRATION.md](NEOFORGE-MIGRATION.md).
 | **Minecraft** | 1.21.10 |
 | **NeoForge** | 21.10.64 (`loaderVersion = "[4,)"`, Dependency `neoforge [21.10,)`, `minecraft [1.21.10,1.22)`) |
 | **Java** | 21 (Mojang-Mappings) |
-| **Mod-Version** | 1.2.0 (`gradle.properties` → `mod_version`); Codestand enthält bereits die unveröffentlichten 1.3.0-Änderungen (Multiblock-Phase A) |
+| **Mod-Version** | 1.3.0 (`gradle.properties` → `mod_version`), noch **unveröffentlicht**; Codestand enthält die vollständigen Multiblock-Phasen A–C (Ports, Tab-GUI mit Steuerstab-Regler, Zustandsautomat mit Nachzerfallswärme und beschädigten Kernen) |
 | **Lizenz** | MIT |
 
 > **Wahrheitsquelle der Balance-Werte:** Reaktor-Tier-Werte stehen ausschließlich in
@@ -66,8 +66,9 @@ BE-Typen an: `NUCLEAR_REACTOR`, `REACTOR_BUILDER_CONTROLLER`, `ENERGY_CABLE`, `E
 ist **bewusst nicht** registriert — FE fließt beim Multiblock ausschließlich über Energie-Ports.
 
 ### `AkwClient` (`@EventBusSubscriber(value = Dist.CLIENT)`)
-`onRegisterScreens(RegisterMenuScreensEvent)` bindet beide MenuTypes an `NuclearReactorScreen`:
-`NUCLEAR_REACTOR` und `MULTIBLOCK_REACTOR` (der Multiblock nutzt denselben Screen).
+`onRegisterScreens(RegisterMenuScreensEvent)` bindet `NUCLEAR_REACTOR` an `NuclearReactorScreen`
+und `MULTIBLOCK_REACTOR` an das eigenständige `ModularReactorScreen` (Tab-GUI, seit Phase B;
+zuvor nutzte der Multiblock ebenfalls `NuclearReactorScreen`).
 
 ### Registrierungsmuster
 Jede `Mod*`-Klasse (`registry/`) hält einen `DeferredRegister` und exponiert `register(IEventBus)`.
@@ -112,6 +113,7 @@ BlockItems werden über `ITEMS.registerSimpleBlockItem(name, block)` erzeugt (so
 | `REACTOR_BUILDER_CONTROLLER` | `akw:reactor_builder_controller` | `ReactorBuilderControllerBlock` | `lightLevel 7` bei `ACTIVE` |
 | `REACTOR_ENERGY_PORT` | `akw:reactor_energy_port` | `ReactorEnergyPortBlock` | `strength(5, 1200)`; einziger FE-Abgabepunkt des Multiblocks |
 | `REACTOR_ITEM_PORT` | `akw:reactor_item_port` | `ReactorItemPortBlock` | `strength(5, 1200)`; Property `mode` (Hopper-Anschluss) |
+| `DAMAGED_REACTOR_CORE` | `akw:damaged_reactor_core` | `DamagedReactorCoreBlock` | `lightLevel 3`; entsteht bei 100 % Hitze statt Explosion, inert (kein Kern), reparierbar per Schraubenschlüssel |
 | `ENERGY_CABLE` | `akw:energy_cable` | `EnergyCableBlock` | FE-Transport |
 | `ENERGY_BATTERY` | `akw:energy_battery` | `EnergyBatteryBlock` | FE-Speicher |
 | 6× Reaktoren | siehe §4 | `NuclearReactorBlock` | `lightLevel 13` bei `LIT` |
@@ -223,7 +225,8 @@ BFS-Obergrenze besuchter Hüllenblöcke), `MAX_ERRORS = 8` (max. gesammelte Fehl
   - **Oberfläche:** erlaubt sind genau ein Controller (an `controllerPos`; jeder weitere →
     `FOREIGN_BLOCK`), `REACTOR_CASING`, `REACTOR_ENERGY_PORT`, `REACTOR_ITEM_PORT`
     (Ports werden gezählt); Luft → `GAP`, alles andere → `FOREIGN_BLOCK`.
-  - **Innenraum:** Luft/`LEAD_BLOCK` erlaubt (zählt nichts); `REACTOR_CORE`/
+  - **Innenraum:** Luft/`LEAD_BLOCK`/`DAMAGED_REACTOR_CORE` erlaubt (zählt nichts — ein
+    beschädigter Kern ist ein gültiger, aber inerter Innenraumblock, kein Kern); `REACTOR_CORE`/
     `CONTROL_ROD_BLOCK`/`COOLING_PIPE` werden gezählt; alles andere → `FOREIGN_BLOCK`.
   - Kein Kern → `NO_CORE`; kein Energie-Port → `NO_ENERGY_PORT`.
   - Nicht mit der Hülle verbundene Rohre → `DISCONNECTED_PIPE` je Rohrposition
@@ -258,23 +261,41 @@ Werte der BlockState-Property `mode` des Item-Ports: `FUEL_INPUT("fuel_input")`,
 **Konstanten:** `FE_PER_CORE=80`, `HEAT_PER_CORE=12`, `BURN_TICKS=2400`,
 `CAPACITY_PER_CORE=100 000`, `PASSIVE_COOLING=2`, `COOLING_PER_CONTACT=8`.
 
-**`calculate(layout, activeCores)` → `ReactorStats(generationPerTick, heatPerTick, coolingPerTick, capacity, maxHeat)`**
+**`calculate(layout, activeCores, controlRodInsertion)` → `ReactorStats(generationPerTick, heatPerTick, coolingPerTick, capacity, maxHeat)`**
 
-Zwischengrößen (`cores = layout.coreCount()`, `n = min(activeCores, cores)`):
+`controlRodInsertion` ist der stufenlose Steuerstab-Regler aus dem Steuerungs-Tab (0–100 %,
+seit Phase B). Nicht assembliert → `(0, 0, PASSIVE_COOLING, capacity, maxHeat)`.
+
+Kühlung wird **vor** der `activeCores`-Prüfung und **unabhängig davon** berechnet
+(`cores = layout.coreCount()`):
 ```
-neighborsPerCore       = coreNeighborContacts / cores
-reactivity             = min(1.0, 0.60 + 0.10 * neighborsPerCore)        // 0.60 … 1.00
-controlRodsPerCore     = min(2.0, coreControlRodContacts / cores)
-heatFactor             = max(0.50, 1.0 - 0.25 * controlRodsPerCore)      // 0.50 … 1.00
 coolingContactsPerCore = coreCoolingContacts / cores
+cooling                = PASSIVE_COOLING + round(cores * coolingContactsPerCore * 8)
+```
+> Bugfix (Phase C): vor diesem Fix skalierte die Kühlung mit `activeCores` statt mit der
+> installierten Kernzahl — SCRAM/COOLDOWN/DAMAGED (`activeCores=0`) machten dadurch jede
+> installierte Kühlung wirkungslos und die Nachzerfallswärme konnte trotz Kühlrohren nicht
+> abgeführt werden.
+
+Ist `activeCores ≤ 0`: `(0, 0, cooling, capacity, maxHeat)`.
+
+Sonst, Zwischengrößen (`n = min(activeCores, cores)`):
+```
+neighborsPerCore   = coreNeighborContacts / cores
+baseReactivity     = min(1.0, 0.60 + 0.10 * neighborsPerCore)          // 0.60 … 1.00
+insertion          = clamp(controlRodInsertion, 0, 100) / 100
+reactivity         = baseReactivity * (1 - insertion)                  // Steuerstab-Regler
+controlRodsPerCore = min(2.0, coreControlRodContacts / cores)
+heatFactor         = max(0.50, 1.0 - 0.25 * controlRodsPerCore)        // 0.50 … 1.00
 ```
 Output-Formeln:
 ```
-generation = max(1, round(n * 80 * reactivity))
-heat       = max(1, round(n * 12 * reactivity² * heatFactor))   // reactivity geht QUADRATISCH ein
-cooling    = 2 + round(n * coolingContactsPerCore * 8)
+generation = max(0, round(n * 80 * reactivity))
+heat       = max(0, round(n * 12 * reactivity² * heatFactor))   // reactivity geht QUADRATISCH ein
 ```
-Sonderfall (nicht assembliert oder `activeCores ≤ 0`): `(0, 0, 2, capacity, maxHeat)`.
+Bei **100 % Steuerstab-Einschub** ist `reactivity=0` → `generation=heat=0` (der Reaktor läuft
+weiter, produziert aber nichts). Vor Phase B lag der Bodenwert bei `max(1, …)` (kein Regler
+existierte); seither kann die Erzeugung/Wärme echt auf 0 fallen.
 
 **`capacity(layout)`** = `max(1, coreCount) · 100 000` (Overflow-sicher via `multiplyExact`).
 **`maxHeat(layout)`** = `1 600 + max(1, coreCount) · 200`.
@@ -287,52 +308,147 @@ Sonderfall (nicht assembliert oder `activeCores ≤ 0`): `(0, 0, 2, capacity, ma
     sonst `tryAssemble` (Erfolg: `akw.multiblock.assembled` mit coreCount + connectedCoolingPipeCount;
     Fehler: `akw.multiblock.invalid` in der Actionbar + alle Zeilen aus
     `getLastErrorComponents()` — max. 8, mit Koordinaten — als **Chat-Zeilen**).
-  - **ohne Wrench:** `ASSEMBLED` → GUI öffnen; sonst Meldung `akw.multiblock.need_wrench`.
+  - **ohne Wrench:** GUI öffnen — **auch unassembliert** (seit Phase B; der Diagnose-Tab
+    zeigt dann direkt die Fehlerliste statt einer Chat-Meldung). Der Lang-Key
+    `akw.multiblock.need_wrench` ist damit entfallen.
 
 ### `block/entity/MultiblockReactorControllerBlockEntity`
 `implements ImplementedInventory, WorldlyContainer, MenuProvider`. Inventar 2 Slots (Brennstoff/Abfall).
-Energiespeicher `MutableEnergyStorage(20 000 000, 0, 32 768)` — effektive Kapazität wird per Layout
-über `effectiveCapacity()` = `ReactorSimulation.capacity(layout)` begrenzt.
+Energiespeicher `MutableEnergyStorage(20 000 000, 0, 32 768)`.
 
-Zustand: `layout`, `lastErrors` (transient, `List<ValidationError>` — für Wrench-Klick/GUI;
-`getLastErrorComponents()` liefert die übersetzten Zeilen), `activeCores`, `burnTime`,
-`burnTimeTotal`, `heat`, `revalidateTimer`, `lastComparator`, `redstoneMode`, `comparatorMode`.
+`effectiveCapacity()` = `min(ReactorSimulation.capacity(layout), energyStorage.getMaxEnergyStored())`
+— die reine Formel kann bei sehr großen Hüllen (bis 9×9×9, bis zu 343 Kerne) rechnerisch bis
+34,3 Mio. FE ergeben, wird aber gegen die reale Speichergrenze (20 Mio.) gedeckelt (Bugfix,
+Phase C), sonst würde der Energiebalken nie voll und der Reaktor unnötig weiter Brennstoff
+verbrennen. `effectiveMaxHeat()` = `ReactorSimulation.maxHeat(layout)` (ungedeckelt).
 
-- `tryAssemble` → `ReactorValidator.find`; bei Erfolg `layout` setzen, `heat=0`, Energie auf
-  `effectiveCapacity()` gedeckelt, `ASSEMBLED=true`, `updatePortLinks(link=true)`.
-- `disassemble` → Ports entlinken, `layout=EMPTY`, alle Laufzeitwerte 0, `ASSEMBLED=LIT=false`.
+**Zustand (Felder):** `layout`, `lastErrors` (transient, `List<ValidationError>` — für
+Wrench-Klick/Diagnose-Tab; `getLastErrorComponents()` liefert übersetzte Zeilen), `activeCores`,
+`burnTime`, `burnTimeTotal`, `heat`, `revalidateTimer`, `lastComparator`, `redstoneMode`,
+`comparatorMode`, `controlRodInsertion` (0–100, stufenloser Regler), `enabled` (GUI-Schalter,
+Default `true`), `shutdownTempPercent` (`MIN_SHUTDOWN_TEMP=50`…`MAX_SHUTDOWN_TEMP=95`, Default
+90 — Auto-SCRAM-Schwelle), `status` (`ReactorStatus`, s. u.), `startupTimer`,
+`decayHeatBase`/`decayTicksLeft` (Nachzerfallswärme nach SCRAM), `safetyOverride`
+(GUI-Schalter „Sicherung überbrücken"), `clientInteriorGrid` (nur Client, Schichtansicht)
+sowie sechs `client*`-Spiegelfelder für rein abgeleitete ContainerData-Properties (s. u.).
+
+- `tryAssemble` → `ReactorValidator.find`; bei Erfolg `layout` setzen, `heat=activeCores=0`,
+  Energie auf `effectiveCapacity()` gedeckelt, `ASSEMBLED=true`, `updatePortLinks(link=true)`,
+  `status = OFFLINE`.
+- `disassemble` → Ports entlinken, `layout=EMPTY`, alle Laufzeitwerte inkl. `decayTicksLeft`
+  auf 0, `status = UNASSEMBLED`, `ASSEMBLED=LIT=false`.
 - `updatePortLinks(level, link)` — verlinkt/entlinkt alle Energie-/Item-Port-BEs auf der
   Hüllenoberfläche mit diesem Controller (idempotent; bei Assemble, erfolgreicher
   Revalidierung und Disassemble). `preRemoveSideEffects` entlinkt zusätzlich beim Abbau
   des Controllers (super droppt das Inventar).
-- **`tick`** (nur wenn `ASSEMBLED`):
-  - Alle **100 Ticks** Revalidierung: `ReactorValidator.validateBounds` mit den
-    **gespeicherten Grenzen** (`layout.boundsMin/boundsMax`); schlägt sie fehl →
-    `disassemble` (Selbstabschaltung — so disassemblieren z. B. Alt-Reaktoren ohne
-    Energie-Port nach dem Update binnen ~5 s mit `akw.reactor.error.no_energy_port`).
-    Bei Erfolg: Layout übernehmen, Energie deckeln, `updatePortLinks(true)`.
-  - `EMERGENCY_STOP` analog Einblock-Reaktor (`burnTime=0`, `activeCores=0`).
-  - **Brennen:** Energie += `stats.generationPerTick()` (gedeckelt auf `stats.capacity()`).
-  - **Zünden** (`canIgnite`): `consumeFuelBatch()` startet so viele Kerne, wie Brennstäbe **und**
-    freier Abfallplatz vorhanden sind (`min(coreCount, fuelCount, wasteRoom)`); verbraucht
-    so viele Brennstäbe und erzeugt so viele Spent-Rods. `burnTime = BURN_TICKS (2400)`.
-  - **Hitze:** `heat += stats.heatPerTick()` (wenn vorher aktiv); `heat -= stats.coolingPerTick()`.
-  - **Explosion:** bei `heat ≥ effectiveMaxHeat()` → `explode` (Stärke `4 + layout.maxDimension()`,
-    disassembliert).
-  - **Auto-Abschaltung** bei `heat ≥ effectiveMaxHeat·9/10` (90 %): `burnTime=0`, `activeCores=0`.
-  - **Keine direkte FE-Abgabe** — FE fließt ausschließlich über die Energie-Ports der Hülle
-    (der Controller hat auch keine Energie-Capability, siehe §1).
-  - **Strahlung:** Radius 8, `radLevel = heat ≥ maxHeat/2 ? 1 : 0`, Blei schützt (gemeinsame
-    `hasLeadShielding`). **Partikel:** `ELECTRIC_SPARK`, Anzahl `min(12, 2+activeCores)`.
+
+#### Zustandsautomat (`ReactorStatus`, Tick-Loop)
+
+`reactor/ReactorStatus` (Enum): `UNASSEMBLED, OFFLINE, STARTING, RUNNING, SCRAM, COOLDOWN,
+DAMAGED`. `translationKey()` = `akw.reactor.status.<name in Kleinbuchstaben>`;
+`byOrdinal(ordinal, fallback)` klemmt ungültige Werte auf den Fallback.
+
+**`tick(level, pos, state, be)`** (nur wenn `ASSEMBLED`, sonst `status=UNASSEMBLED`):
+
+1. **Revalidierung alle 100 Ticks** über die gespeicherten Grenzen (`validateBounds`):
+   - Sonderfall `onlyMissingCoreWhileDamaged`: meldet die Validierung **ausschließlich**
+     `NO_CORE`, während `status==DAMAGED` ist (z. B. ein 1-Kern-Minimalreaktor mit
+     beschädigtem Kern) → **nicht** disassemblieren/explodieren, das Reparatur-Fenster
+     bleibt offen.
+   - Sonst bei Fehlschlag: Hülle zerstört bei `heat ≥ effectiveMaxHeat()·3/4` (75 %) →
+     `explode`; sonst `disassemble` (Selbstabschaltung — so disassemblieren z. B.
+     Alt-Reaktoren ohne Energie-Port nach dem Update binnen ~5 s).
+   - Bei Erfolg: Layout übernehmen, `activeCores` deckeln, Energie deckeln, Ports neu
+     verlinken. **Ausgang aus `DAMAGED`:** wenn `!isTooHotForRepair()` **und** kein
+     `damaged_reactor_core` mehr im Innenraum (`hasDamagedCores`-Scan) → `status = OFFLINE`.
+2. **Zustandsübergänge** (`switch (status)`):
+   - `OFFLINE` → `STARTING` (`startupTimer = STARTUP_TICKS = 40`), wenn `canIgnite`
+     (Redstone-Modus **und** GUI-Schalter `enabled`), Energie nicht voll und
+     `hasIgnitableFuel()`.
+   - `STARTING` → zurück zu `OFFLINE`, falls `canIgnite` wegfällt; nach Ablauf von
+     `startupTimer` → `consumeFuelBatch()`; Erfolg → `RUNNING` (`burnTime=burnTimeTotal=
+     BURN_TICKS`), sonst zurück zu `OFFLINE`.
+   - `RUNNING` → bei `forceStop` (`!enabled` oder `EMERGENCY_STOP`+`POWERED`) → `scram()`;
+     sonst `burnTime--`, Energie += `generationPerTick` (gedeckelt), `heat += heatPerTick`;
+     bei `burnTime≤0` nahtlos neu zünden (`consumeFuelBatch`) oder → `COOLDOWN`.
+   - `SCRAM` → Nachzerfallswärme: `heat += round(decayHeatBase · decayTicksLeft / DECAY_TICKS)`,
+     `decayTicksLeft--`; bei `decayTicksLeft==0` → `COOLDOWN`.
+   - `COOLDOWN` → `OFFLINE`, sobald `heat < effectiveMaxHeat()·5/100` (5 %).
+   - `DAMAGED`, `UNASSEMBLED` → passiv (Ausgang nur über die Revalidierung oben).
+   - **Kühlung wirkt in jedem Zustand:** `heat = max(0, heat − coolingPerTick())` — siehe
+     `ReactorSimulation.calculate` (Bugfix: skaliert mit der vollen installierten
+     Kernzahl statt mit `activeCores`, sonst wäre die Kühlung während
+     SCRAM/COOLDOWN/DAMAGED wirkungslos).
+3. **Überhitzung** (`heat ≥ effectiveMaxHeat()`): `safetyOverride==true` → `explode()`;
+   sonst `damageCores()` (Kerne statt Explosion beschädigen).
+4. **Auto-SCRAM:** nur im Zustand `RUNNING`, bei
+   `heat ≥ effectiveMaxHeat()·shutdownTempPercent/100` (einstellbar 50–95 %,
+   GUI-Regler; vor Phase C fest bei 90 % und ohne Nachzerfallswärme) → `scram()`.
+5. **Strahlung:** `irradiates = status==RUNNING || (status==DAMAGED && isTooHotForRepair())`;
+   Radius 8, `radLevel = heat ≥ maxHeat/2 ? 1 : 0`, Blei schützt (`hasLeadShielding`).
+6. `LIT` = `status==RUNNING`. **Partikel:** `ELECTRIC_SPARK`, Anzahl `min(12, 2+activeCores)`,
+   nur im Zustand `RUNNING`. Komparator wie bisher.
+
+`scram()`: `decayHeatBase = max(1, round(heatPerTick·0.2))`, `decayTicksLeft =
+DECAY_TICKS (200)`, `burnTime=burnTimeTotal=activeCores=0`, `status=SCRAM`.
+
+`damageCores(level, pos)`: bei `heat ≥ effectiveMaxHeat()` werden **1–3 zufällige**
+`REACTOR_CORE`-Blöcke im Innenraum durch `DAMAGED_REACTOR_CORE` ersetzt; `burnTime=
+burnTimeTotal=activeCores=decayTicksLeft=0`, `heat = effectiveMaxHeat()·3/4`,
+`status=DAMAGED`, `revalidateTimer=90` (zeitnahe Revalidierung, da sich die Kernzahl ändert).
+
+`isTooHotForRepair()` (public) = `layout.isAssembled() && heat ≥ effectiveMaxHeat()·5/100`;
+wird von `DamagedReactorCoreBlock` für die Reparatursperre genutzt.
+
 - **WorldlyContainer:** vollständig **gesperrt** (`getSlotsForFace` → leer,
   `canPlace/canTakeItemThroughFace` → `false`) — Hopper laufen ausschließlich über
   Item-Ports. `stillValid` ≤ 64 Blöcke².
-- **Menü:** `MultiblockReactorScreenHandler(syncId, inv, this, propertyDelegate)`.
+- **Menü:** `ModularReactorScreenHandler(syncId, inv, this, propertyDelegate, worldPosition)`;
+  `createMenu` schickt vorher per `syncToClient` eine frische Fehlerliste + einen frischen
+  Innenraum-Schnitt.
 
-NBT speichert zusätzlich zum Laufzeitzustand das gesamte Layout (siehe §17), sodass nach Reload kein
-erneutes Assemblieren nötig ist. **Migration:** Fehlt `SizeX`, wird das alte zentrierte
-`ReactorSize`-Format erkannt und über das Blockstate-`FACING` in `relMin*/size*` umgerechnet
-(Port-Zähler = 0 → beim nächsten Revalidieren korrigiert bzw. ohne Energie-Port disassembliert).
+#### ContainerData (`MB_PROPERTY_COUNT = 20`)
+
+Siehe §12 für die vollständige Index-Tabelle (0–19). Rein abgeleitete Properties (Kapazität,
+maxHitze, Kernzahl, Erzeugung, Kühlung, Fehlerzahl, Größe X/Y/Z) werden auf dem **Client** aus
+dedizierten Spiegelfeldern gelesen statt live berechnet — der Server→Client-Sync eines
+`ContainerData`-Werts ruft über `DataSlot.forContainer` direkt `set(index, value)` auf; für
+Properties ohne eigenes Rückschreibfeld ginge der Wert sonst im `default`-Zweig von `set()`
+verloren (Bugfix, siehe CHANGELOG).
+
+#### Client-Sync für Fehlerliste & Innenraum-Schnitt (Update-Tag)
+
+`getUpdateTag`/`loadAdditional` transportieren zwei **nicht persistierte** Int-Arrays über den
+Block-Update-Tag (nicht über `ContainerData`, wegen der Größe):
+- `ClientErrors` — je Fehler 4 Ints (`ValidationError.Type`-Ordinal, x, y, z);
+  `getLastErrorComponents()` übersetzt sie clientseitig.
+- `InteriorGrid` — flaches Raster des Innenraums (ohne Hülle), Index
+  `((y·innerZ)+z)·innerX+x` bei Innenmaßen `size−2`; Zellcodes `CELL_AIR=0, CELL_LEAD=1,
+  CELL_CORE=2, CELL_ROD=3, CELL_PIPE=4, CELL_OTHER=5` (`captureInterior()`); nur befüllt,
+  wenn `layout.isAssembled()`.
+
+`syncToClient(level)` triggert `level.sendBlockUpdated(...)` und wird bei Assemble,
+Disassemble, geänderter Fehlerliste (Revalidierung), `damageCores()` und beim Öffnen des
+Menüs aufgerufen. `getClientInteriorGrid()` liefert das zuletzt empfangene Raster (nur Client).
+
+NBT speichert zusätzlich zum Laufzeitzustand das gesamte Layout (siehe §17), sodass nach Reload
+kein erneutes Assemblieren nötig ist. **Migration Ⅰ (Layout):** Fehlt `SizeX`, wird das alte
+zentrierte `ReactorSize`-Format erkannt und über das Blockstate-`FACING` in `relMin*/size*`
+umgerechnet (Port-Zähler = 0 → beim nächsten Revalidieren korrigiert bzw. ohne Energie-Port
+disassembliert). **Migration Ⅱ (Status):** Fehlt der `Status`-Key (Stände vor Phase C), wird bei
+`burnTime>0 && activeCores>0` `RUNNING` angenommen, sonst `UNASSEMBLED` (Bugfix — verhindert
+inkonsistente GUI-Anzeigen bei einem noch laufenden Brennzyklus). Nach dem Laden wird `heat`
+zusätzlich auf `effectiveMaxHeat()-1` geklammert (Bugfix), damit ein am/über dem Schadenswert
+gespeicherter Stand nicht sofort im ersten Tick `damageCores()`/`explode()` auslöst.
+
+### `block/DamagedReactorCoreBlock`
+Entsteht bei 100 % Hitze anstelle einer Explosion (siehe `damageCores()` oben); produziert
+nichts und zählt im Validator als inerter, gültiger Innenraumblock (kein Kern).
+`CONTROLLER_SEARCH_RADIUS = 8` (Hülle bis 9×9×9 → Controller höchstens 8 Blöcke entfernt).
+- `useWithoutItem` mit `REACTOR_WRENCH` in der Haupthand: sucht im Radius 8 nach einer
+  `MultiblockReactorControllerBlockEntity`; ist einer davon `isTooHotForRepair()` →
+  Meldung `akw.damaged_core.too_hot`; sonst → zurück zu `REACTOR_CORE`, Meldung
+  `akw.damaged_core.repaired`.
 
 ### `block/ReactorEnergyPortBlock` + `entity/ReactorEnergyPortBlockEntity`
 Einziger FE-Abgabepunkt der Hülle. Die BE hält **keinen eigenen Speicher**, nur die
@@ -540,9 +656,6 @@ NuclearReactorScreen (Client, liest Live-Werte über Handler-Getter)
 - `clickMenuButton`: **id 0** → Redstone-Modus +1; **id 1** → Komparator-Modus +1.
 - Client-Fallback: `SimpleContainer(2)` / `SimpleContainerData(8)`.
 
-`MultiblockReactorScreenHandler` erbt davon; Delegate via `be.getPropertyDelegate()`,
-Fallback auf `MultiblockReactorControllerBlockEntity`.
-
 ### `screen/NuclearReactorScreen`
 Textur `akw:textures/gui/nuclear_reactor.png` (Atlas 256×256), `blit` mit `RenderPipelines.GUI_TEXTURED`.
 Zwei Buttons (relativ zu `leftPos/topPos`): Redstone-Button `(7, 17, 71×20)` → Klick id 0;
@@ -559,6 +672,88 @@ Balken (relativ, von unten gefüllt):
 
 Tooltips: Energie-Hitbox `x∈[152,166), y∈[16,70)` → „<E> / <Cap> FE";
 Hitze-Hitbox `x∈[136,150)` → „<Heat> / <maxHeat> Hitze".
+
+### Multiblock-Reaktor-GUI (`ModularReactorScreenHandler` / `ModularReactorScreen`)
+
+Eigenständige Klassen seit Phase B (kein Erbe von `NuclearReactorScreenHandler`/-`Screen`
+mehr). Textur `akw:textures/gui/modular_reactor.png` (Atlas 256×256). GUI-Größe **176×222**
+(höher als der Einblock-Reaktor wegen der drei Tab-Buttons oberhalb des Fensters).
+
+**Slots:** Brennstoff `(80, 35)` (nur `FUEL_ROD`), Abfall `(116, 35)` (Output-only) — wie beim
+Einblock-Reaktor. Spieler-Inventar ab `y=140` (3×9), Hotbar `y=198`.
+
+#### ContainerData-Indizes (`MultiblockReactorControllerBlockEntity`, `MB_PROPERTY_COUNT = 20`)
+
+Indizes 0–7 sind ident mit `NuclearReactorBlockEntity` (per Referenz auf dessen `IDX_*`-Konstanten).
+
+| Index | Konstante | Bedeutung |
+|--:|---|---|
+| 0 | `IDX_ENERGY` | aktuelle Energie |
+| 1 | `IDX_CAPACITY` | `effectiveCapacity()` (Client: Spiegelfeld) |
+| 2 | `IDX_BURN_TIME` | verbleibende Brenndauer |
+| 3 | `IDX_BURN_TOTAL` | Brenndauer des aktuellen Zyklus |
+| 4 | `IDX_HEAT` | aktuelle Hitze |
+| 5 | `IDX_MAX_HEAT` | `effectiveMaxHeat()` (Client: Spiegelfeld) |
+| 6 | `IDX_REDSTONE_MODE` | Redstone-Modus (Ordinal) |
+| 7 | `IDX_COMPARATOR_MODE` | Komparator-Modus (Ordinal) |
+| 8 | `IDX_CORE_COUNT` | `layout.coreCount()` (Client: Spiegelfeld) |
+| 9 | `IDX_PRODUCTION` | `generationPerTick` (Client: Spiegelfeld) |
+| 10 | `IDX_COOLING` | `coolingPerTick` (Client: Spiegelfeld) |
+| 11 | `IDX_CONTROL_ROD` | Steuerstab-Einschub 0–100 % |
+| 12 | `IDX_ENABLED` | GUI-Ein/Aus-Schalter (0/1) |
+| 13 | `IDX_SHUTDOWN_TEMP` | Abschalttemperatur 50–95 % |
+| 14 | `IDX_ERROR_COUNT` | Fehleranzahl (Client: Spiegelfeld) |
+| 15 | `IDX_SIZE_X` | Hüllengröße X (Client: Spiegelfeld) |
+| 16 | `IDX_SIZE_Y` | Hüllengröße Y (Client: Spiegelfeld) |
+| 17 | `IDX_SIZE_Z` | Hüllengröße Z (Client: Spiegelfeld) |
+| 18 | `IDX_STATUS` | `ReactorStatus`-Ordinal |
+| 19 | `IDX_SAFETY` | `safetyOverride` (0/1) |
+
+> Als „Client: Spiegelfeld" markierte Indizes sind **rein abgeleitet** (aus `layout`,
+> `activeCores`, `lastErrors`); ihr `set()` schreibt auf dem Client in ein dediziertes
+> `client*`-Feld statt neu zu berechnen — Hintergrund: der DataSlot-Sync ruft `set(index,
+> value)` unabhängig davon auf, ob der Index eine echte oder eine abgeleitete Property ist
+> (Bugfix, siehe CHANGELOG).
+
+**Buttons (`clickMenuButton`, serverseitig):**
+
+| ID | Konstante | Wirkung |
+|--:|---|---|
+| 0 | `BUTTON_REDSTONE` | Redstone-Modus +1 (zyklisch) |
+| 1 | `BUTTON_COMPARATOR` | Komparator-Modus +1 (zyklisch) |
+| 2 | `BUTTON_ENABLED` | Ein/Aus umschalten |
+| 3 | `BUTTON_SHUTDOWN_TEMP` | Abschalttemperatur `+SHUTDOWN_TEMP_STEP(5)`, Wrap 95→50 |
+| 4 | `BUTTON_SAFETY` | „Sicherung überbrücken" umschalten |
+| 100–200 | `BUTTON_ROD_BASE + n` | Steuerstab-Einschub auf **n %** setzen (0–100) |
+
+**Tabs (`ModularReactorScreen`, Client-only):** `Tab`-Enum `OVERVIEW/CONTROL/DIAGNOSTICS`,
+drei Buttons oberhalb des Fensters (`topPos−22`, je 58×20 px), blenden die tab-spezifischen
+Widgets per `visible`-Flag ein/aus.
+
+- **Übersicht:** Größe (`akw.gui.size`), Kernzahl (`akw.gui.cores`), FE (`akw.gui.energy`,
+  kompakt formatiert — „1,2k"/„2,5M"), Erzeugung (`akw.gui.production`), Kühlung
+  (`akw.gui.cooling`), Hitze (`akw.gui.heat`), Status (`akw.gui.status` +
+  `ReactorStatus.translationKey()`). Unassembliert: nur `akw.gui.status.unassembled`
+  (Verweis auf den Diagnose-Tab).
+- **Steuerung:** Redstone-/Komparator-Button (je 76×16, `y=56`), Ein/Aus- und
+  Abschalttemperatur-Button (76×16, `y=74`), „Sicherung überbrücken"-Button (160×16,
+  `y=92`, Label `akw.gui.safety.on`/`.off`), darunter der stufenlose **`RodSlider`**
+  (`AbstractSliderButton`, 160×16, `y=110`) — sendet beim Loslassen
+  `BUTTON_ROD_BASE + Prozent`; `syncFromServer()` übernimmt den Serverwert nur, solange
+  **nicht gerade gezogen wird** (`dragging`, bewusst nicht an Tastaturfokus gekoppelt —
+  Bugfix: sonst bliebe der Regler nach einem Fokus ohne Ziehen dauerhaft vom
+  Server-Sync abgekoppelt).
+- **Diagnose:** Fehlerliste (max. 2 Zeilen + „… und n weitere Fehler.", grün „Keine
+  Fehler." sonst rot) sowie die **Schichtansicht**: Raster ab `(8, 86)`, Zellgröße 6 px,
+  Farbcodes `CELL_COLORS[0..5]` (Luft dunkelgrau, Blei grau, Kern gelb, Steuerstab blau,
+  Kühlrohr cyan, Fremdblock rot); Pfeil-Buttons „▲"/„▼" (`(62,86)`/`(62,102)`, 16×14)
+  wechseln die Y-Schicht (`layerIndex`, geklemmt auf `[0, innerY-1]`); Anzeige
+  „Schicht n/max" (`akw.gui.layer`).
+
+**Balken/Anzeigen (`renderBg`, auf allen Tabs sichtbar):** Energiebalken (grün, `x=153,
+y=17, 12×52`), Hitzebalken (`x=137`, orange, ab `heatFrac·100 ≥ shutdownTempPercent` rot
+statt fest bei 75 %), Brennfortschritt (`x=72, y=34, 4×18`, orange). Tooltips über den
+Balken zeigen „FE / Kapazität" bzw. „Hitze / maxHitze".
 
 ---
 
@@ -671,7 +866,7 @@ Sound-Untertitel und die 9 Advancement-Paare `advancements.akw.<id>.{title,desc}
 | BlockEntity | Keys |
 |---|---|
 | `NuclearReactorBlockEntity` | `Items` (Inventar), `Energy`, `BurnTime`, `BurnTimeTotal`, `Heat`, `RedstoneMode`, `ComparatorMode` |
-| `MultiblockReactorControllerBlockEntity` | wie oben + `ActiveCores`, `RelMinX`, `RelMinY`, `RelMinZ`, `SizeX`, `SizeY`, `SizeZ`, `CoreCount`, `ControlRodCount`, `CoolingPipeCount`, `ConnectedCoolingPipeCount`, `CoreNeighborContacts`, `CoreControlRodContacts`, `CoreCoolingContacts`, `EnergyPortCount`, `ItemPortCount` — Legacy-Key `ReactorSize` (altes zentriertes Format) wird beim Laden über das Blockstate-`FACING` migriert |
+| `MultiblockReactorControllerBlockEntity` | wie oben + `ActiveCores`, `RelMinX`, `RelMinY`, `RelMinZ`, `SizeX`, `SizeY`, `SizeZ`, `CoreCount`, `ControlRodCount`, `CoolingPipeCount`, `ConnectedCoolingPipeCount`, `CoreNeighborContacts`, `CoreControlRodContacts`, `CoreCoolingContacts`, `EnergyPortCount`, `ItemPortCount`, `ControlRodInsertion`, `Enabled`, `ShutdownTemp`, `Status`, `StartupTimer`, `DecayHeatBase`, `DecayTicksLeft`, `SafetyOverride` — Legacy-Key `ReactorSize` (altes zentriertes Format) wird beim Laden über das Blockstate-`FACING` migriert; fehlt `Status` (Stände vor Phase C), wird er aus `BurnTime`/`ActiveCores` abgeleitet. Zusätzlich nur im **Update-Tag** (nicht persistiert): `ClientErrors`, `InteriorGrid` (Fehlerliste + Schichtansicht für den Client) |
 | `ReactorEnergyPortBlockEntity` / `ReactorItemPortBlockEntity` | `Controller` (Long, `BlockPos.asLong()`; Sentinel `Long.MIN_VALUE` = unverlinkt) |
 | `ReactorBuilderControllerBlockEntity` | `Items`, `Energy`, `BuildIndex`, `BuildCooldown`, `Building`, `StatusKey`, `RobotUuidMost`, `RobotUuidLeast` |
 | `EnergyCableBlockEntity` / `EnergyBatteryBlockEntity` | `Energy` |
@@ -679,6 +874,7 @@ Sound-Untertitel und die 9 Advancement-Paare `advancements.akw.<id>.{title,desc}
 
 ---
 
-*Diese Referenz spiegelt den Codestand nach Multiblock-Phase A (kommende Version 1.3.0;
-`gradle.properties` steht noch auf 1.2.0). Bei Code-Änderungen die betroffenen Abschnitte
-mitführen — insbesondere Tier-Werte (§4), Simulationsformeln (§5) und NBT-Keys (§17).*
+*Diese Referenz spiegelt den Codestand nach Multiblock-Phasen A–C (kommende Version 1.3.0;
+`gradle.properties` steht bereits auf 1.3.0, die Version ist aber noch unveröffentlicht). Bei
+Code-Änderungen die betroffenen Abschnitte mitführen — insbesondere Tier-Werte (§4),
+Simulationsformeln (§5), ContainerData-Indizes (§12) und NBT-Keys (§17).*

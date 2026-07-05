@@ -23,7 +23,7 @@ Alle Java-Klassen liegen unter `src/main/java/ch/danielt/akw/`:
 | `block.entity` | BlockEntities; `MutableEnergyStorage` (Energie-Facade über `SimpleEnergyHandler`), `ImplementedInventory` |
 | `reactor` | `ReactorValidator`, `ReactorLayout`, `ReactorSimulation`, `RedstoneMode`, `ComparatorMode` (weltunabhängige Multiblock-Logik) |
 | `datagen` | `AkwDataGenerator` + 6 Provider (Modelle, Rezepte, Loot, Tags, Lang, Advancements) |
-| `screen` | `NuclearReactorScreenHandler`, `MultiblockReactorScreenHandler`, `NuclearReactorScreen` |
+| `screen` | `NuclearReactorScreenHandler`/`NuclearReactorScreen` (Einblock), `ModularReactorScreenHandler`/`ModularReactorScreen` (Multiblock, eigenständiges Tab-GUI seit Phase B) |
 | `registry` | `ModItems`, `ModBlocks`, `ModBlockEntities`, `ModScreenHandlers`, `ModItemGroups`, `ModEffects`, `ModSounds` |
 | `worldgen` | `ModWorldGen` — Uranerz-Weltgenerierung |
 
@@ -39,8 +39,11 @@ ModItems → ModBlocks → ModEffects → ModSounds → ModBlockEntities
 ```
 - `ModBlockEntities` braucht die fertige Liste `ModBlocks.REACTORS`.
 - `registerCapabilities(RegisterCapabilitiesEvent)` registriert `Capabilities.Energy.BLOCK` für
-  `NUCLEAR_REACTOR`, `MULTIBLOCK_REACTOR_CONTROLLER`, `REACTOR_BUILDER_CONTROLLER`, `ENERGY_CABLE`
-  und `ENERGY_BATTERY` (Provider: `(be, side) -> be.energyStorage`).
+  `NUCLEAR_REACTOR`, `REACTOR_BUILDER_CONTROLLER`, `ENERGY_CABLE` und `ENERGY_BATTERY`
+  (Provider: `(be, side) -> be.energyStorage`) sowie für `REACTOR_ENERGY_PORT`
+  (Provider: `(be, side) -> be.resolveControllerEnergy()`). Der
+  `MULTIBLOCK_REACTOR_CONTROLLER` ist **bewusst nicht** registriert — FE fließt beim
+  Multiblock ausschließlich über Energie-Ports (siehe REFERENCE.md §1).
 - BlockItems werden über `ITEMS.registerSimpleBlockItem(name, block)` angelegt (setzt die nötige Item-ID).
 
 ---
@@ -109,8 +112,11 @@ public static void pushToNeighbors(EnergyHandler source, Level level, BlockPos p
 ```
 
 `EnergyNet.pushToNeighbors()` wird von `NuclearReactorBlockEntity`, `EnergyCableBlockEntity`,
-`EnergyBatteryBlockEntity` und `MultiblockReactorControllerBlockEntity` genutzt. Der Speicher jedes
-BE ist eine `MutableEnergyStorage` (Subklasse von `SimpleEnergyHandler`, also selbst ein `EnergyHandler`).
+`EnergyBatteryBlockEntity` und `ReactorEnergyPortBlockEntity` genutzt. Der
+Multiblock-Controller selbst gibt **kein** FE mehr direkt ab — die Abgabe läuft ausschließlich
+über die `reactor_energy_port`-Blöcke der Hülle, die den Speicher des Controllers per
+`resolveControllerEnergy()` referenzieren. Der Speicher jedes BE ist eine
+`MutableEnergyStorage` (Subklasse von `SimpleEnergyHandler`, also selbst ein `EnergyHandler`).
 
 ### 3.2 Reaktor-Tick-Logik (`NuclearReactorBlockEntity`)
 
