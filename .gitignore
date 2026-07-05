@@ -17,6 +17,10 @@ tools/
 # Fabric Datagen-Cache (Inhalt von src/main/generated wird committed, der Cache nicht)
 src/main/generated/.cache/
 
+# Persistentes Agent-Gedächtnis (lokales Arbeitsgedächtnis der .claude/agents/*.md-Agents,
+# kein Projektinhalt)
+.claude/agent-memory/
+
 # Versehentlich kompilierte Klassen im Projekt-Root
 /net/
 
