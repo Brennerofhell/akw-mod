@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/orientable_with_bottom",
+  "textures": {
+    "bottom": "akw:block/nuclear_reactor_bottom",
+    "front": "akw:block/nuclear_reactor_front",
+    "side": "akw:block/nuclear_reactor_side",
+    "top": "akw:block/nuclear_reactor_top"
+  }
+}

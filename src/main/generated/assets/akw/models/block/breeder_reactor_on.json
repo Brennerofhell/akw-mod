@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/orientable_with_bottom",
+  "textures": {
+    "bottom": "akw:block/breeder_reactor_bottom",
+    "front": "akw:block/breeder_reactor_front_on",
+    "side": "akw:block/breeder_reactor_side",
+    "top": "akw:block/breeder_reactor_top"
+  }
+}
