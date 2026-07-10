@@ -407,9 +407,9 @@ wird von `DamagedReactorCoreBlock` für die Reparatursperre genutzt.
   `createMenu` schickt vorher per `syncToClient` eine frische Fehlerliste + einen frischen
   Innenraum-Schnitt.
 
-#### ContainerData (`MB_PROPERTY_COUNT = 20`)
+#### ContainerData (`MB_PROPERTY_COUNT = 26`)
 
-Siehe §12 für die vollständige Index-Tabelle (0–19). Rein abgeleitete Properties (Kapazität,
+Siehe §12 für die vollständige Index-Tabelle (0–25). Rein abgeleitete Properties (Kapazität,
 maxHitze, Kernzahl, Erzeugung, Kühlung, Fehlerzahl, Größe X/Y/Z) werden auf dem **Client** aus
 dedizierten Spiegelfeldern gelesen statt live berechnet — der Server→Client-Sync eines
 `ContainerData`-Werts ruft über `DataSlot.forContainer` direkt `set(index, value)` auf; für
@@ -658,7 +658,7 @@ NuclearReactorScreen (Client, liest Live-Werte über Handler-Getter)
 - Abfall-Slot 1 bei **(116, 35)**, Output-only (`mayPlace=false`).
 - Spieler-Inventar `x=8+col·18, y=84+row·18`; Hotbar `y=142`.
 - `clickMenuButton`: **id 0** → Redstone-Modus +1; **id 1** → Komparator-Modus +1.
-- Client-Fallback: `SimpleContainer(2)` / `SimpleContainerData(8)`.
+- Client-Fallback: `SimpleContainer(2)` / `SimpleContainerData(12)`.
 
 ### `screen/NuclearReactorScreen`
 Textur `akw:textures/gui/nuclear_reactor.png` (Atlas 256×256), `blit` mit `RenderPipelines.GUI_TEXTURED`.
