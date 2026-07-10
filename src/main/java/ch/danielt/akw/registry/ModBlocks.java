@@ -10,6 +10,7 @@ import ch.danielt.akw.block.ReactorBuilderControllerBlock;
 import ch.danielt.akw.block.ReactorCasingBlock;
 import ch.danielt.akw.block.ReactorEnergyPortBlock;
 import ch.danielt.akw.block.ReactorItemPortBlock;
+import ch.danielt.akw.block.ReactorRedstonePortBlock;
 import ch.danielt.akw.block.WasteContainerBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -87,6 +88,9 @@ public class ModBlocks {
                     BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5f, 1200f));
     public static final DeferredBlock<ReactorItemPortBlock> REACTOR_ITEM_PORT =
             registerWithItem("reactor_item_port", ReactorItemPortBlock::new,
+                    BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5f, 1200f));
+    public static final DeferredBlock<ReactorRedstonePortBlock> REACTOR_REDSTONE_PORT =
+            registerWithItem("reactor_redstone_port", ReactorRedstonePortBlock::new,
                     BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5f, 1200f));
     public static final DeferredBlock<DamagedReactorCoreBlock> DAMAGED_REACTOR_CORE =
             registerWithItem("damaged_reactor_core", DamagedReactorCoreBlock::new,

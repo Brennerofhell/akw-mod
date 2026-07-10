@@ -71,12 +71,15 @@ public class ModLanguageProvider {
             add("akw.multiblock.invalid",     "Ungültige Struktur — prüfe Gehäuse-Blöcke.");
             addBlock(ModBlocks.REACTOR_ENERGY_PORT, "Reaktor-Energie-Port");
             addBlock(ModBlocks.REACTOR_ITEM_PORT, "Reaktor-Item-Port");
+            addBlock(ModBlocks.REACTOR_REDSTONE_PORT, "Reaktor-Redstone-Port");
             addBlock(ModBlocks.DAMAGED_REACTOR_CORE, "Beschädigter Reaktorkern");
             addBlock(ModBlocks.REACTOR_GLASS, "Reaktorglas");
             addBlock(ModBlocks.GRAPHITE_MODERATOR, "Graphitmoderator");
             add("akw.item_port.mode.fuel_input", "Modus: Brennstoff-Eingang");
             add("akw.item_port.mode.waste_output", "Modus: Abfall-Ausgang");
             add("akw.item_port.mode.disabled", "Modus: Deaktiviert");
+            add("akw.redstone_port_mode.input", "Modus: Redstone-Eingang");
+            add("akw.redstone_port_mode.output", "Modus: Redstone-Ausgang");
 
             add("akw.reactor.error.gap", "Lücke in der Hülle bei %s, %s, %s.");
             add("akw.reactor.error.foreign_block", "Ungültiger Block bei %s, %s, %s.");
@@ -218,12 +221,15 @@ public class ModLanguageProvider {
             add("akw.multiblock.invalid",     "Invalid structure — check casing blocks.");
             addBlock(ModBlocks.REACTOR_ENERGY_PORT, "Reactor Energy Port");
             addBlock(ModBlocks.REACTOR_ITEM_PORT, "Reactor Item Port");
+            addBlock(ModBlocks.REACTOR_REDSTONE_PORT, "Reactor Redstone Port");
             addBlock(ModBlocks.DAMAGED_REACTOR_CORE, "Damaged Reactor Core");
             addBlock(ModBlocks.REACTOR_GLASS, "Reactor Glass");
             addBlock(ModBlocks.GRAPHITE_MODERATOR, "Graphite Moderator");
             add("akw.item_port.mode.fuel_input", "Mode: Fuel input");
             add("akw.item_port.mode.waste_output", "Mode: Waste output");
             add("akw.item_port.mode.disabled", "Mode: Disabled");
+            add("akw.redstone_port_mode.input", "Mode: Redstone input");
+            add("akw.redstone_port_mode.output", "Mode: Redstone output");
 
             add("akw.reactor.error.gap", "Gap in the casing at %s, %s, %s.");
             add("akw.reactor.error.foreign_block", "Invalid block at %s, %s, %s.");

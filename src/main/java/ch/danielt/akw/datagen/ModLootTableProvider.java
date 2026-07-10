@@ -37,6 +37,7 @@ public class ModLootTableProvider extends BlockLootSubProvider {
             ModBlocks.REACTOR_BUILDER_CONTROLLER.get(),
             ModBlocks.REACTOR_ENERGY_PORT.get(),
             ModBlocks.REACTOR_ITEM_PORT.get(),
+            ModBlocks.REACTOR_REDSTONE_PORT.get(),
             ModBlocks.DAMAGED_REACTOR_CORE.get(),
             ModBlocks.REACTOR_GLASS.get(),
             ModBlocks.GRAPHITE_MODERATOR.get(),
@@ -71,6 +72,7 @@ public class ModLootTableProvider extends BlockLootSubProvider {
         dropSelf(ModBlocks.REACTOR_BUILDER_CONTROLLER.get());
         dropSelf(ModBlocks.REACTOR_ENERGY_PORT.get());
         dropSelf(ModBlocks.REACTOR_ITEM_PORT.get());
+        dropSelf(ModBlocks.REACTOR_REDSTONE_PORT.get());
         dropSelf(ModBlocks.DAMAGED_REACTOR_CORE.get());
         dropSelf(ModBlocks.REACTOR_GLASS.get());
         dropSelf(ModBlocks.GRAPHITE_MODERATOR.get());

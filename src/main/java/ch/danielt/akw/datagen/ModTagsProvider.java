@@ -5,6 +5,7 @@ import ch.danielt.akw.registry.ModBlocks;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.common.data.BlockTagsProvider;
 
 import java.util.concurrent.CompletableFuture;
@@ -41,6 +42,7 @@ public class ModTagsProvider extends BlockTagsProvider {
                 .add(ModBlocks.REACTOR_BUILDER_CONTROLLER.get())
                 .add(ModBlocks.REACTOR_ENERGY_PORT.get())
                 .add(ModBlocks.REACTOR_ITEM_PORT.get())
+                .add(ModBlocks.REACTOR_REDSTONE_PORT.get())
                 .add(ModBlocks.DAMAGED_REACTOR_CORE.get())
                 .add(ModBlocks.REACTOR_GLASS.get())
                 .add(ModBlocks.GRAPHITE_MODERATOR.get());
@@ -49,5 +51,21 @@ public class ModTagsProvider extends BlockTagsProvider {
         tag(BlockTags.NEEDS_IRON_TOOL)
                 .add(ModBlocks.URANIUM_ORE.get())
                 .add(ModBlocks.DEEPSLATE_URANIUM_ORE.get());
+
+        // Create Mod Kompatibilität: Keine Bewegung von Reaktor-Blöcken durch Contraptions
+        tag(BlockTags.create(ResourceLocation.fromNamespaceAndPath("create", "non_movable")))
+                .add(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER.get())
+                .add(ModBlocks.REACTOR_CASING.get())
+                .add(ModBlocks.REACTOR_GLASS.get())
+                .add(ModBlocks.REACTOR_CORE.get())
+                .add(ModBlocks.CONTROL_ROD_BLOCK.get())
+                .add(ModBlocks.COOLING_PIPE.get())
+                .add(ModBlocks.GRAPHITE_MODERATOR.get())
+                .add(ModBlocks.LEAD_BLOCK.get())
+                .add(ModBlocks.REACTOR_ENERGY_PORT.get())
+                .add(ModBlocks.REACTOR_ITEM_PORT.get())
+                .add(ModBlocks.REACTOR_REDSTONE_PORT.get())
+                .add(ModBlocks.DAMAGED_REACTOR_CORE.get())
+                .add(ModBlocks.REACTOR_BUILDER_CONTROLLER.get());
     }
 }

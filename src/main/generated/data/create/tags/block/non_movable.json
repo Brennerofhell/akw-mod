@@ -1,0 +1,17 @@
+{
+  "values": [
+    "akw:multiblock_reactor_controller",
+    "akw:reactor_casing",
+    "akw:reactor_glass",
+    "akw:reactor_core",
+    "akw:control_rod_block",
+    "akw:cooling_pipe",
+    "akw:graphite_moderator",
+    "akw:lead_block",
+    "akw:reactor_energy_port",
+    "akw:reactor_item_port",
+    "akw:reactor_redstone_port",
+    "akw:damaged_reactor_core",
+    "akw:reactor_builder_controller"
+  ]
+}

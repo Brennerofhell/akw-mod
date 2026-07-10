@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "C": "akw:reactor_casing",
+    "R": "minecraft:repeater"
+  },
+  "pattern": [
+    "R",
+    "C"
+  ],
+  "result": {
+    "count": 1,
+    "id": "akw:reactor_redstone_port"
+  }
+}

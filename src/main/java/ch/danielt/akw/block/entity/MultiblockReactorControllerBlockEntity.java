@@ -1,6 +1,7 @@
 package ch.danielt.akw.block.entity;
 
 import ch.danielt.akw.block.MultiblockReactorControllerBlock;
+import ch.danielt.akw.block.ReactorRedstonePortBlock;
 import ch.danielt.akw.reactor.ComparatorMode;
 import ch.danielt.akw.reactor.ReactorLayout;
 import ch.danielt.akw.reactor.ReactorSimulation;
@@ -348,6 +349,8 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
                 port.setController(link ? worldPosition : null);
             } else if (blockEntity instanceof ReactorItemPortBlockEntity itemPort) {
                 itemPort.setController(link ? worldPosition : null);
+            } else if (blockEntity instanceof ReactorRedstonePortBlockEntity redstonePort) {
+                redstonePort.setController(link ? worldPosition : null);
             }
         }
     }
@@ -437,7 +440,7 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
         }
 
         ReactorStatus oldStatus = be.status;
-        boolean powered = state.getValue(MultiblockReactorControllerBlock.POWERED);
+        boolean powered = be.isReactorPowered(level, state);
         boolean canIgnite = be.enabled && switch (be.redstoneMode) {
             case IGNORED -> true;
             case HIGH_ENABLES -> powered;
@@ -572,6 +575,7 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
         if (comparatorLevel != be.lastComparator) {
             be.lastComparator = comparatorLevel;
             level.updateNeighbourForOutputSignal(pos, state.getBlock());
+            be.updateRedstonePortsOutput(level, comparatorLevel);
         }
 
         if (be.status != oldStatus || dirty) {
@@ -981,5 +985,51 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
             syncToClient(this.level);
         }
         return new ModularReactorScreenHandler(syncId, playerInventory, this, propertyDelegate, worldPosition);
+    }
+
+    public boolean isReactorPowered(Level level, BlockState state) {
+        if (state.getValue(MultiblockReactorControllerBlock.POWERED)) {
+            return true;
+        }
+        if (layout != null) {
+            BlockPos min = layout.boundsMin(worldPosition);
+            BlockPos max = layout.boundsMax(worldPosition);
+            for (BlockPos pos : BlockPos.betweenClosed(min, max)) {
+                boolean surface = pos.getX() == min.getX() || pos.getX() == max.getX()
+                        || pos.getY() == min.getY() || pos.getY() == max.getY()
+                        || pos.getZ() == min.getZ() || pos.getZ() == max.getZ();
+                if (surface) {
+                    BlockEntity be = level.getBlockEntity(pos);
+                    if (be instanceof ReactorRedstonePortBlockEntity) {
+                        BlockState portState = level.getBlockState(pos);
+                        if (portState.hasProperty(ReactorRedstonePortBlock.MODE)
+                                && portState.getValue(ReactorRedstonePortBlock.MODE) == ch.danielt.akw.reactor.RedstonePortMode.INPUT) {
+                            if (level.hasNeighborSignal(pos)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    public void updateRedstonePortsOutput(Level level, int signal) {
+        if (layout != null) {
+            BlockPos min = layout.boundsMin(worldPosition);
+            BlockPos max = layout.boundsMax(worldPosition);
+            for (BlockPos pos : BlockPos.betweenClosed(min, max)) {
+                boolean surface = pos.getX() == min.getX() || pos.getX() == max.getX()
+                        || pos.getY() == min.getY() || pos.getY() == max.getY()
+                        || pos.getZ() == min.getZ() || pos.getZ() == max.getZ();
+                if (surface) {
+                    BlockEntity be = level.getBlockEntity(pos);
+                    if (be instanceof ReactorRedstonePortBlockEntity redstonePort) {
+                        redstonePort.updateOutputState(signal);
+                    }
+                }
+            }
+        }
     }
 }

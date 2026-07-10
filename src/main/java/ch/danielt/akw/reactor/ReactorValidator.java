@@ -124,6 +124,8 @@ public final class ReactorValidator {
                             energyPorts++;
                         } else if (state.is(ModBlocks.REACTOR_ITEM_PORT.get())) {
                             itemPorts++;
+                        } else if (state.is(ModBlocks.REACTOR_REDSTONE_PORT.get())) {
+                            // gültiger Hüllenblock (Redstone-Port)
                         } else if (state.isAir()) {
                             addError(errors, ValidationError.Type.GAP, current);
                         } else {
@@ -210,7 +212,8 @@ public final class ReactorValidator {
                 || state.is(ModBlocks.REACTOR_GLASS.get())
                 || state.is(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER.get())
                 || state.is(ModBlocks.REACTOR_ENERGY_PORT.get())
-                || state.is(ModBlocks.REACTOR_ITEM_PORT.get());
+                || state.is(ModBlocks.REACTOR_ITEM_PORT.get())
+                || state.is(ModBlocks.REACTOR_REDSTONE_PORT.get());
     }
 
     private static void addError(List<ValidationError> errors, ValidationError.Type type,

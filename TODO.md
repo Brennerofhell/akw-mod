@@ -148,7 +148,7 @@ rechteckige Hüllen von 3×3×3 bis 9×9×9.*
 > Komparator-Modi (Energie / Temperatur / Brennstoff / Abfall) sind seit v1.2.0 direkt im
 > Controller-GUI umschaltbar (`reactor/RedstoneMode`, `reactor/ComparatorMode`). Der
 > **separate Port-Block** unten bleibt daher optional.
-- [ ] (optional) Port-Block mit eigenem Modus, der in den Controller geschrieben wird.
+- [x] (optional) Port-Block mit eigenem Modus, der in den Controller geschrieben wird.
 
 ---
 

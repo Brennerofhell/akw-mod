@@ -208,6 +208,14 @@ public class ModRecipeProvider extends RecipeProvider.Runner {
                         .unlockedBy(getHasName(ModBlocks.REACTOR_CASING), has(ModBlocks.REACTOR_CASING))
                         .save(output, key("reactor_item_port"));
 
+                // Redstone-Port: Repeater auf Hüllenblock
+                shaped(RecipeCategory.REDSTONE, ModBlocks.REACTOR_REDSTONE_PORT)
+                        .pattern("R").pattern("C")
+                        .define('R', Items.REPEATER)
+                        .define('C', ModBlocks.REACTOR_CASING)
+                        .unlockedBy(getHasName(ModBlocks.REACTOR_CASING), has(ModBlocks.REACTOR_CASING))
+                        .save(output, key("reactor_redstone_port"));
+
                 shaped(RecipeCategory.REDSTONE, ModBlocks.REACTOR_BUILDER_CONTROLLER)
                         .pattern("CRC").pattern("EBE").pattern("CRC")
                         .define('C', ModBlocks.REACTOR_CASING)

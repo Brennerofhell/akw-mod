@@ -28,6 +28,18 @@ public class ModModelProvider extends ModelProvider {
         blockModels.createTrivialCube(ModBlocks.REACTOR_BUILDER_CONTROLLER.get());
         blockModels.createTrivialCube(ModBlocks.REACTOR_ENERGY_PORT.get());
         blockModels.createTrivialCube(ModBlocks.REACTOR_ITEM_PORT.get());
+        Block redstonePort = ModBlocks.REACTOR_REDSTONE_PORT.get();
+        net.minecraft.resources.ResourceLocation redstonePortModelId = ModelTemplates.CUBE_ALL.create(
+                redstonePort,
+                TexturedModel.CUBE.get(redstonePort).getMapping(),
+                blockModels.modelOutput
+        );
+        blockModels.blockStateOutput.accept(
+                BlockModelGenerators.createSimpleBlock(
+                        redstonePort,
+                        BlockModelGenerators.plainVariant(redstonePortModelId)
+                )
+        );
         blockModels.createTrivialCube(ModBlocks.DAMAGED_REACTOR_CORE.get());
 
         // Einfache Würfel-Blöcke
