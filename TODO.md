@@ -16,11 +16,10 @@ Aktualisiert: 2026-07-05
   Explosion** bei 100 % Hitze, reparierbar per Schraubenschlüssel (Multiblock-Phase C,
   2026-07-02, Review-Fixes bis 2026-07-03); **Bauroboter** (automatischer 3×3×3-Aufbau aus
   Inventar + Energie); **konfigurierbare Redstone-Modi (4) und Komparator-Modi (4)** im
-  Reaktor-GUI (v1.2.0); **52 JUnit-5-Unit-Tests** für die Reaktorlogik.
+  Reaktor-GUI (v1.2.0); **53 JUnit-5-Unit-Tests** für die Reaktorlogik.
 - **Fertig (Doku war veraltet):** alle Item- und Block-Texturen sowie das Mod-Icon vorhanden;
   klassengenaue technische Referenz `docs/REFERENCE.md`.
-- **Offen:** `.ogg`-Sounddateien; GameTests für `ReactorValidator`; Balance; **16-Bit-Limit
-  im ContainerData-Sync** (siehe „Tests und Stabilität", hohe Priorität).
+- **Offen:** `.ogg`-Sounddateien; GameTests für `ReactorValidator`; Balance.
 - **Bekannte Einschränkungen:**
   - Der **Bauroboter** baut weiterhin nur die reine 3×3×3-Casing-Hülle **ohne Ports**;
     sein „fertig"-Status toleriert den fehlenden Energie-Port bewusst — der Spieler rüstet
@@ -34,8 +33,7 @@ Aktualisiert: 2026-07-05
    Schichtansicht. (Der separate Redstone-Port-Block aus B2 bleibt weiterhin optional.)
 4. ✅ **Phase C** — erledigt (2026-07-02, Review-Fixes bis 2026-07-03): Zustandsautomat,
    Nachzerfallswärme, beschädigte Kerne.
-5. **Polish/Release** — `.ogg`-Sounds, GameTests, 16-Bit-ContainerData-Fix, weiterer
-   Unit-Test-Ausbau, Balance → v1.3.0 veröffentlichen.
+5. **Polish/Release** — `.ogg`-Sounds, GameTests, weiterer Unit-Test-Ausbau, Balance → v1.3.0 veröffentlichen.
 
 ## Sofort (Smoke-Tests des aktuellen Stands)
 
@@ -191,20 +189,18 @@ rechteckige Hüllen von 3×3×3 bis 9×9×9.*
 
 ## Tests und Stabilität
 
-- [ ] **HOHE PRIORITÄT — ContainerData-Sync auf 16 Bit begrenzt:**
+- [x] **ContainerData-Sync auf 16 Bit begrenzt (Behoben 2026-07-10):**
       `ClientboundContainerSetDataPacket` überträgt jeden Property-Wert per
       `FriendlyByteBuf.writeShort`/`readShort` (bytecode-verifiziert gegen die
-      1.21.10/NeoForge-21.10-Klasse) — Werte über 32 767 werden als vorzeichenbehafteter
+      1.21.10/NeoForge-21.10-Klasse) — Werte über 32 767 wurden als vorzeichenbehafteter
       16-Bit-Wert truncated (z. B. ergibt `100 000 mod 65536` als signed short einen
       negativen Wert). Betrifft **alle** Reaktor-GUIs, nicht nur die Phase-B/C-Änderungen:
       Energie (`IDX_ENERGY`, bis 20 Mio. FE), Kapazität (`IDX_CAPACITY`, oft weit über
       32 767), bei großen Multiblocks auch Hitze/Maximalhitze — sowohl
       `NuclearReactorScreenHandler`/`NuclearReactorScreen` (alle 6 Einblockreaktoren) als
-      auch `ModularReactorScreenHandler`/`ModularReactorScreen`. Korrekte Behebung:
-      Low/High-Word-Splitting über je zwei `ContainerData`-Slots (wie in Tech-Mods üblich) —
-      bewusst nicht im Rahmen von Phase B/C umgesetzt, da GUI-übergreifend und auch den
-      unveränderten Einblockreaktor-Code betrifft.
-- [x] Unit-Tests für die Reaktorlogik: **52 JUnit-5-Tests** unter
+      auch `ModularReactorScreenHandler`/`ModularReactorScreen`. Behebung durch:
+      Low/High-Word-Splitting über je zwei `ContainerData`-Slots.
+- [x] Unit-Tests für die Reaktorlogik: **53 JUnit-5-Tests** unter
       `src/test/java/ch/danielt/akw/reactor/` für `ReactorSimulation`, `ReactorLayout`,
       `ValidationError`, `ItemPortMode`, `RedstoneMode`, `ComparatorMode`, `ReactorStatus`
       (`build.gradle`: JUnit-5-BOM + `useJUnitPlatform()` + ModDevGradle-`unitTest{}`-Block,

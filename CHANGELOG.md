@@ -95,9 +95,10 @@ Nachzerfallswärme und reparierbaren beschädigten Kernen.
   die **Sicherung überbrückt** wurde, oder wenn die Hülle bei ≥75 % Maximalhitze zerstört
   wird.
 
-### Technisch (Phase B/C)
-- `MultiblockReactorControllerBlockEntity`: `ContainerData` auf **20 Properties** erweitert
-  (`MB_PROPERTY_COUNT`); neue Indizes 8–19 für Kernzahl, Erzeugung, Kühlung, Steuerstab,
+### Technisch (Phase B/C & Sync-Fix)
+- **Behebung des 16-Bit-ContainerData-Sync-Limits:** Große Properties wie Energie, Kapazität, Hitze, Maximalhitze sowie Multiblock-Erzeugung und -Kühlung wurden über Low/High-Word-Splitting in jeweils zwei 16-Bit-ContainerData-Slots aufgeteilt. Dies behebt Darstellungsfehler (negative Werte) im GUI bei Werten über 32.767.
+- `MultiblockReactorControllerBlockEntity`: `ContainerData` auf **26 Properties** erweitert (`MB_PROPERTY_COUNT`).
+- `NuclearReactorBlockEntity`: `ContainerData` auf **12 Properties** erweitert (`PROPERTY_COUNT`).
   Ein/Aus, Abschalttemperatur, Fehlerzahl, Größe X/Y/Z, Status, Sicherung. Rein abgeleitete
   Properties laufen über dedizierte Client-Spiegelfelder (siehe „Behoben").
 - Fehlerliste und Innenraum-Schnitt (Schichtansicht) laufen über das
