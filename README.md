@@ -4,12 +4,14 @@ Baue dein eigenes Atomkraftwerk: Uran abbauen, anreichern, Brennstäbe herstelle
 Reaktor betreiben und FE-kompatiblen Strom erzeugen. Mit Radioaktivitätsmechanik,
 Automation über Hopper und Redstone sowie einem Multiblock-Reaktorsystem.
 
+[![Download Mod JAR](https://img.shields.io/badge/Download-Mod--JAR-brightgreen?style=for-the-badge&logo=minecraft)](https://github.com/Brennerofhell/akw-mod/raw/neoforge_main/build/libs/neoforge/akw-1.3.0.jar)
+
 | | |
 |---|---|
 | **Minecraft** | 1.21.10 |
 | **NeoForge** | 21.10.64 |
 | **Java** | 21 |
-| **Version** | 1.2.0 |
+| **Version** | 1.3.0 |
 | **Lizenz** | MIT |
 
 > Energie nutzt das **NeoForge-eigene Energiesystem** (`Capabilities.Energy` / FE) — kein externer
@@ -118,7 +120,7 @@ Uranabbau beginnt → Erstes Metall → Anreicherung → Brennstab bereit
 ## Installation
 
 1. Minecraft 1.21.10 + [NeoForge 21.10.64](https://neoforged.net) installieren
-2. `akw-1.2.0.jar` in den `mods`-Ordner legen (kein weiterer Dependency nötig)
+2. Die Mod-JAR-Datei [herunterladen (akw-1.3.0.jar)](https://github.com/Brennerofhell/akw-mod/raw/neoforge_main/build/libs/neoforge/akw-1.3.0.jar) und in den `mods`-Ordner legen (kein weiterer Dependency nötig)
 3. Minecraft mit dem NeoForge-Profil starten
 
 ---
