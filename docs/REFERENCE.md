@@ -635,18 +635,22 @@ ScreenHandler  (Server: Container+ContainerData direkt von der BE;
 NuclearReactorScreen (Client, liest Live-Werte über Handler-Getter)
 ```
 
-### ContainerData-Indizes (`NuclearReactorBlockEntity`, `PROPERTY_COUNT = 8`)
+### ContainerData-Indizes (`NuclearReactorBlockEntity`, `PROPERTY_COUNT = 12`)
 
 | Index | Konstante | Bedeutung |
 |--:|---|---|
-| 0 | `IDX_ENERGY` | aktuelle Energie (auf `Integer.MAX_VALUE` geklammert) |
-| 1 | `IDX_CAPACITY` | Kapazität |
-| 2 | `IDX_BURN_TIME` | verbleibende Brenndauer |
-| 3 | `IDX_BURN_TOTAL` | Brenndauer des aktuellen Stabs |
-| 4 | `IDX_HEAT` | aktuelle Hitze |
-| 5 | `IDX_MAX_HEAT` | maximale Hitze |
-| 6 | `IDX_REDSTONE_MODE` | Redstone-Modus (Ordinal) |
-| 7 | `IDX_COMPARATOR_MODE` | Komparator-Modus (Ordinal) |
+| 0 | `IDX_ENERGY_LOW` | Aktuelle Energie (Low 16-Bit Word) |
+| 1 | `IDX_ENERGY_HIGH` | Aktuelle Energie (High 16-Bit Word) |
+| 2 | `IDX_CAPACITY_LOW` | Kapazität (Low 16-Bit Word) |
+| 3 | `IDX_CAPACITY_HIGH` | Kapazität (High 16-Bit Word) |
+| 4 | `IDX_BURN_TIME` | verbleibende Brenndauer |
+| 5 | `IDX_BURN_TOTAL` | Brenndauer des aktuellen Stabs |
+| 6 | `IDX_HEAT_LOW` | Aktuelle Hitze (Low 16-Bit Word) |
+| 7 | `IDX_HEAT_HIGH` | Aktuelle Hitze (High 16-Bit Word) |
+| 8 | `IDX_MAX_HEAT_LOW` | Maximale Hitze (Low 16-Bit Word) |
+| 9 | `IDX_MAX_HEAT_HIGH` | Maximale Hitze (High 16-Bit Word) |
+| 10 | `IDX_REDSTONE_MODE` | Redstone-Modus (Ordinal) |
+| 11 | `IDX_COMPARATOR_MODE` | Komparator-Modus (Ordinal) |
 
 ### `screen/NuclearReactorScreenHandler`
 2-Slot-Block-Inventar (`checkContainerSize(inv, 2)`).
@@ -682,32 +686,38 @@ mehr). Textur `akw:textures/gui/modular_reactor.png` (Atlas 256×256). GUI-Grö�
 **Slots:** Brennstoff `(80, 35)` (nur `FUEL_ROD`), Abfall `(116, 35)` (Output-only) — wie beim
 Einblock-Reaktor. Spieler-Inventar ab `y=140` (3×9), Hotbar `y=198`.
 
-#### ContainerData-Indizes (`MultiblockReactorControllerBlockEntity`, `MB_PROPERTY_COUNT = 20`)
+#### ContainerData-Indizes (`MultiblockReactorControllerBlockEntity`, `MB_PROPERTY_COUNT = 26`)
 
-Indizes 0–7 sind ident mit `NuclearReactorBlockEntity` (per Referenz auf dessen `IDX_*`-Konstanten).
+Indizes 0–11 sind identisch mit `NuclearReactorBlockEntity` (per Referenz auf dessen `IDX_*`-Konstanten).
 
 | Index | Konstante | Bedeutung |
 |--:|---|---|
-| 0 | `IDX_ENERGY` | aktuelle Energie |
-| 1 | `IDX_CAPACITY` | `effectiveCapacity()` (Client: Spiegelfeld) |
-| 2 | `IDX_BURN_TIME` | verbleibende Brenndauer |
-| 3 | `IDX_BURN_TOTAL` | Brenndauer des aktuellen Zyklus |
-| 4 | `IDX_HEAT` | aktuelle Hitze |
-| 5 | `IDX_MAX_HEAT` | `effectiveMaxHeat()` (Client: Spiegelfeld) |
-| 6 | `IDX_REDSTONE_MODE` | Redstone-Modus (Ordinal) |
-| 7 | `IDX_COMPARATOR_MODE` | Komparator-Modus (Ordinal) |
-| 8 | `IDX_CORE_COUNT` | `layout.coreCount()` (Client: Spiegelfeld) |
-| 9 | `IDX_PRODUCTION` | `generationPerTick` (Client: Spiegelfeld) |
-| 10 | `IDX_COOLING` | `coolingPerTick` (Client: Spiegelfeld) |
-| 11 | `IDX_CONTROL_ROD` | Steuerstab-Einschub 0–100 % |
-| 12 | `IDX_ENABLED` | GUI-Ein/Aus-Schalter (0/1) |
-| 13 | `IDX_SHUTDOWN_TEMP` | Abschalttemperatur 50–95 % |
-| 14 | `IDX_ERROR_COUNT` | Fehleranzahl (Client: Spiegelfeld) |
-| 15 | `IDX_SIZE_X` | Hüllengröße X (Client: Spiegelfeld) |
-| 16 | `IDX_SIZE_Y` | Hüllengröße Y (Client: Spiegelfeld) |
-| 17 | `IDX_SIZE_Z` | Hüllengröße Z (Client: Spiegelfeld) |
-| 18 | `IDX_STATUS` | `ReactorStatus`-Ordinal |
-| 19 | `IDX_SAFETY` | `safetyOverride` (0/1) |
+| 0 | `IDX_ENERGY_LOW` | Aktuelle Energie (Low 16-Bit Word) |
+| 1 | `IDX_ENERGY_HIGH` | Aktuelle Energie (High 16-Bit Word) |
+| 2 | `IDX_CAPACITY_LOW` | Kapazität (Low 16-Bit Word, Client: Spiegelfeld) |
+| 3 | `IDX_CAPACITY_HIGH` | Kapazität (High 16-Bit Word, Client: Spiegelfeld) |
+| 4 | `IDX_BURN_TIME` | verbleibende Brenndauer |
+| 5 | `IDX_BURN_TOTAL` | Brenndauer des aktuellen Zyklus |
+| 6 | `IDX_HEAT_LOW` | Aktuelle Hitze (Low 16-Bit Word) |
+| 7 | `IDX_HEAT_HIGH` | Aktuelle Hitze (High 16-Bit Word) |
+| 8 | `IDX_MAX_HEAT_LOW` | Maximale Hitze (Low 16-Bit Word, Client: Spiegelfeld) |
+| 9 | `IDX_MAX_HEAT_HIGH` | Maximale Hitze (High 16-Bit Word, Client: Spiegelfeld) |
+| 10 | `IDX_REDSTONE_MODE` | Redstone-Modus (Ordinal) |
+| 11 | `IDX_COMPARATOR_MODE` | Komparator-Modus (Ordinal) |
+| 12 | `IDX_CORE_COUNT` | `layout.coreCount()` (Client: Spiegelfeld) |
+| 13 | `IDX_PRODUCTION_LOW` | `generationPerTick` (Low Word, Client: Spiegelfeld) |
+| 14 | `IDX_PRODUCTION_HIGH` | `generationPerTick` (High Word, Client: Spiegelfeld) |
+| 15 | `IDX_COOLING_LOW` | `coolingPerTick` (Low Word, Client: Spiegelfeld) |
+| 16 | `IDX_COOLING_HIGH` | `coolingPerTick` (High Word, Client: Spiegelfeld) |
+| 17 | `IDX_CONTROL_ROD` | Steuerstab-Einschub 0–100 % |
+| 18 | `IDX_ENABLED` | GUI-Ein/Aus-Schalter (0/1) |
+| 19 | `IDX_SHUTDOWN_TEMP` | Abschalttemperatur 50–95 % |
+| 20 | `IDX_ERROR_COUNT` | Fehleranzahl (Client: Spiegelfeld) |
+| 21 | `IDX_SIZE_X` | Hüllengröße X (Client: Spiegelfeld) |
+| 22 | `IDX_SIZE_Y` | Hüllengröße Y (Client: Spiegelfeld) |
+| 23 | `IDX_SIZE_Z` | Hüllengröße Z (Client: Spiegelfeld) |
+| 24 | `IDX_STATUS` | `ReactorStatus`-Ordinal |
+| 25 | `IDX_SAFETY` | `safetyOverride` (0/1) |
 
 > Als „Client: Spiegelfeld" markierte Indizes sind **rein abgeleitet** (aus `layout`,
 > `activeCores`, `lastErrors`); ihr `set()` schreibt auf dem Client in ein dediziertes
