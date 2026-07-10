@@ -57,15 +57,19 @@ public class NuclearReactorBlockEntity extends BlockEntity
     private static final int[] NO_SLOTS    = {};
 
     /** ContainerData-Indizes (gemeinsam von BlockEntity, ScreenHandler, Screen genutzt). */
-    public static final int IDX_ENERGY = 0;
-    public static final int IDX_CAPACITY = 1;
-    public static final int IDX_BURN_TIME = 2;
-    public static final int IDX_BURN_TOTAL = 3;
-    public static final int IDX_HEAT = 4;
-    public static final int IDX_MAX_HEAT = 5;
-    public static final int IDX_REDSTONE_MODE = 6;
-    public static final int IDX_COMPARATOR_MODE = 7;
-    public static final int PROPERTY_COUNT = 8;
+    public static final int IDX_ENERGY_LOW = 0;
+    public static final int IDX_ENERGY_HIGH = 1;
+    public static final int IDX_CAPACITY_LOW = 2;
+    public static final int IDX_CAPACITY_HIGH = 3;
+    public static final int IDX_BURN_TIME = 4;
+    public static final int IDX_BURN_TOTAL = 5;
+    public static final int IDX_HEAT_LOW = 6;
+    public static final int IDX_HEAT_HIGH = 7;
+    public static final int IDX_MAX_HEAT_LOW = 8;
+    public static final int IDX_MAX_HEAT_HIGH = 9;
+    public static final int IDX_REDSTONE_MODE = 10;
+    public static final int IDX_COMPARATOR_MODE = 11;
+    public static final int PROPERTY_COUNT = 12;
 
     /** Kuehlung pro Tick je angrenzendem Kuehlrohr. */
     public static final int COOL_PER_PIPE = 8;
@@ -96,16 +100,24 @@ public class NuclearReactorBlockEntity extends BlockEntity
     private ComparatorMode comparatorMode = ComparatorMode.ENERGY;
 
     private final ContainerData containerData = new ContainerData() {
+        private int energyLow, energyHigh;
+        private int capacityLow, capacityHigh;
+        private int heatLow, heatHigh;
+        private int maxHeatLow, maxHeatHigh;
+
         @Override
         public int get(int index) {
-            // energy/capacity sind int; auf Integer.MAX_VALUE begrenzen
             return switch (index) {
-                case IDX_ENERGY -> Math.min(energyStorage.getEnergyStored(), Integer.MAX_VALUE);
-                case IDX_CAPACITY -> Math.min(energyStorage.getMaxEnergyStored(), Integer.MAX_VALUE);
+                case IDX_ENERGY_LOW -> getLowWord(Math.min(energyStorage.getEnergyStored(), Integer.MAX_VALUE));
+                case IDX_ENERGY_HIGH -> getHighWord(Math.min(energyStorage.getEnergyStored(), Integer.MAX_VALUE));
+                case IDX_CAPACITY_LOW -> getLowWord(Math.min(energyStorage.getMaxEnergyStored(), Integer.MAX_VALUE));
+                case IDX_CAPACITY_HIGH -> getHighWord(Math.min(energyStorage.getMaxEnergyStored(), Integer.MAX_VALUE));
                 case IDX_BURN_TIME -> burnTime;
                 case IDX_BURN_TOTAL -> burnTimeTotal;
-                case IDX_HEAT -> heat;
-                case IDX_MAX_HEAT -> maxHeat;
+                case IDX_HEAT_LOW -> getLowWord(heat);
+                case IDX_HEAT_HIGH -> getHighWord(heat);
+                case IDX_MAX_HEAT_LOW -> getLowWord(maxHeat);
+                case IDX_MAX_HEAT_HIGH -> getHighWord(maxHeat);
                 case IDX_REDSTONE_MODE -> redstoneMode.ordinal();
                 case IDX_COMPARATOR_MODE -> comparatorMode.ordinal();
                 default -> 0;
@@ -115,10 +127,28 @@ public class NuclearReactorBlockEntity extends BlockEntity
         @Override
         public void set(int index, int value) {
             switch (index) {
-                case IDX_ENERGY -> energyStorage.setEnergy(value);
+                case IDX_ENERGY_LOW -> {
+                    energyLow = value;
+                    energyStorage.setEnergy(combineWords(energyLow, energyHigh));
+                }
+                case IDX_ENERGY_HIGH -> {
+                    energyHigh = value;
+                    energyStorage.setEnergy(combineWords(energyLow, energyHigh));
+                }
+                case IDX_CAPACITY_LOW -> capacityLow = value;
+                case IDX_CAPACITY_HIGH -> capacityHigh = value;
                 case IDX_BURN_TIME -> burnTime = value;
                 case IDX_BURN_TOTAL -> burnTimeTotal = value;
-                case IDX_HEAT -> heat = value;
+                case IDX_HEAT_LOW -> {
+                    heatLow = value;
+                    heat = combineWords(heatLow, heatHigh);
+                }
+                case IDX_HEAT_HIGH -> {
+                    heatHigh = value;
+                    heat = combineWords(heatLow, heatHigh);
+                }
+                case IDX_MAX_HEAT_LOW -> maxHeatLow = value;
+                case IDX_MAX_HEAT_HIGH -> maxHeatHigh = value;
                 case IDX_REDSTONE_MODE -> {
                     if (value >= 0 && value < RedstoneMode.values().length) {
                         redstoneMode = RedstoneMode.values()[value];
@@ -427,5 +457,17 @@ public class NuclearReactorBlockEntity extends BlockEntity
     @Override
     public AbstractContainerMenu createMenu(int syncId, Inventory playerInventory, Player player) {
         return new NuclearReactorScreenHandler(syncId, playerInventory, this.getBlockPos());
+    }
+
+    public static int getLowWord(int val) {
+        return val & 0xFFFF;
+    }
+
+    public static int getHighWord(int val) {
+        return (val >> 16) & 0xFFFF;
+    }
+
+    public static int combineWords(int low, int high) {
+        return ((high & 0xFFFF) << 16) | (low & 0xFFFF);
     }
 }

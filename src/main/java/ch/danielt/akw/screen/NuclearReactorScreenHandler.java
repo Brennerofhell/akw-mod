@@ -86,11 +86,17 @@ public class NuclearReactorScreenHandler extends AbstractContainerMenu {
     }
 
     public int getEnergy() {
-        return propertyDelegate.get(NuclearReactorBlockEntity.IDX_ENERGY);
+        return NuclearReactorBlockEntity.combineWords(
+            propertyDelegate.get(NuclearReactorBlockEntity.IDX_ENERGY_LOW),
+            propertyDelegate.get(NuclearReactorBlockEntity.IDX_ENERGY_HIGH)
+        );
     }
 
     public int getCapacity() {
-        return propertyDelegate.get(NuclearReactorBlockEntity.IDX_CAPACITY);
+        return NuclearReactorBlockEntity.combineWords(
+            propertyDelegate.get(NuclearReactorBlockEntity.IDX_CAPACITY_LOW),
+            propertyDelegate.get(NuclearReactorBlockEntity.IDX_CAPACITY_HIGH)
+        );
     }
 
     public boolean isBurning() {
@@ -103,11 +109,17 @@ public class NuclearReactorScreenHandler extends AbstractContainerMenu {
     }
 
     public int getHeat() {
-        return propertyDelegate.get(NuclearReactorBlockEntity.IDX_HEAT);
+        return NuclearReactorBlockEntity.combineWords(
+            propertyDelegate.get(NuclearReactorBlockEntity.IDX_HEAT_LOW),
+            propertyDelegate.get(NuclearReactorBlockEntity.IDX_HEAT_HIGH)
+        );
     }
 
     public int getMaxHeat() {
-        return propertyDelegate.get(NuclearReactorBlockEntity.IDX_MAX_HEAT);
+        return NuclearReactorBlockEntity.combineWords(
+            propertyDelegate.get(NuclearReactorBlockEntity.IDX_MAX_HEAT_LOW),
+            propertyDelegate.get(NuclearReactorBlockEntity.IDX_MAX_HEAT_HIGH)
+        );
     }
 
     public float getHeatFraction() {

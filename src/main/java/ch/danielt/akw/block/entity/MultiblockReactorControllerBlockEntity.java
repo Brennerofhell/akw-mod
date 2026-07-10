@@ -55,29 +55,35 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
     public static final int WASTE_SLOT = 1;
     private static final int[] NO_SLOTS = {};
 
-    private static final int IDX_ENERGY = NuclearReactorBlockEntity.IDX_ENERGY;
-    private static final int IDX_CAPACITY = NuclearReactorBlockEntity.IDX_CAPACITY;
+    private static final int IDX_ENERGY_LOW = NuclearReactorBlockEntity.IDX_ENERGY_LOW;
+    private static final int IDX_ENERGY_HIGH = NuclearReactorBlockEntity.IDX_ENERGY_HIGH;
+    private static final int IDX_CAPACITY_LOW = NuclearReactorBlockEntity.IDX_CAPACITY_LOW;
+    private static final int IDX_CAPACITY_HIGH = NuclearReactorBlockEntity.IDX_CAPACITY_HIGH;
     private static final int IDX_BURN_TIME = NuclearReactorBlockEntity.IDX_BURN_TIME;
     private static final int IDX_BURN_TOTAL = NuclearReactorBlockEntity.IDX_BURN_TOTAL;
-    private static final int IDX_HEAT = NuclearReactorBlockEntity.IDX_HEAT;
-    private static final int IDX_MAX_HEAT = NuclearReactorBlockEntity.IDX_MAX_HEAT;
+    private static final int IDX_HEAT_LOW = NuclearReactorBlockEntity.IDX_HEAT_LOW;
+    private static final int IDX_HEAT_HIGH = NuclearReactorBlockEntity.IDX_HEAT_HIGH;
+    private static final int IDX_MAX_HEAT_LOW = NuclearReactorBlockEntity.IDX_MAX_HEAT_LOW;
+    private static final int IDX_MAX_HEAT_HIGH = NuclearReactorBlockEntity.IDX_MAX_HEAT_HIGH;
     private static final int IDX_REDSTONE_MODE = NuclearReactorBlockEntity.IDX_REDSTONE_MODE;
     private static final int IDX_COMPARATOR_MODE = NuclearReactorBlockEntity.IDX_COMPARATOR_MODE;
 
-    // Multiblock-spezifische Zusatz-Properties (schließen an die geerbten 0–7 an).
-    public static final int IDX_CORE_COUNT = 8;
-    public static final int IDX_PRODUCTION = 9;
-    public static final int IDX_COOLING = 10;
-    public static final int IDX_CONTROL_ROD = 11;
-    public static final int IDX_ENABLED = 12;
-    public static final int IDX_SHUTDOWN_TEMP = 13;
-    public static final int IDX_ERROR_COUNT = 14;
-    public static final int IDX_SIZE_X = 15;
-    public static final int IDX_SIZE_Y = 16;
-    public static final int IDX_SIZE_Z = 17;
-    public static final int IDX_STATUS = 18;
-    public static final int IDX_SAFETY = 19;
-    public static final int MB_PROPERTY_COUNT = 20;
+    // Multiblock-spezifische Zusatz-Properties (schließen an die geerbten 0–11 an).
+    public static final int IDX_CORE_COUNT = 12;
+    public static final int IDX_PRODUCTION_LOW = 13;
+    public static final int IDX_PRODUCTION_HIGH = 14;
+    public static final int IDX_COOLING_LOW = 15;
+    public static final int IDX_COOLING_HIGH = 16;
+    public static final int IDX_CONTROL_ROD = 17;
+    public static final int IDX_ENABLED = 18;
+    public static final int IDX_SHUTDOWN_TEMP = 19;
+    public static final int IDX_ERROR_COUNT = 20;
+    public static final int IDX_SIZE_X = 21;
+    public static final int IDX_SIZE_Y = 22;
+    public static final int IDX_SIZE_Z = 23;
+    public static final int IDX_STATUS = 24;
+    public static final int IDX_SAFETY = 25;
+    public static final int MB_PROPERTY_COUNT = 26;
 
     /** Anlaufzeit vor dem Zünden (Ticks). */
     private static final int STARTUP_TICKS = 40;
@@ -133,25 +139,37 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
     // Zurückschreiben. Diese Felder dienen als Ablage für genau diesen Sync-Pfad; get()
     // liefert sie auf dem Client statt neu zu berechnen (der Client hat ohnehin kein
     // aktuelles layout, solange kein Update-Tag eintrifft).
-    private int clientCapacity, clientMaxHeat, clientCoreCount, clientProduction,
-            clientCooling, clientErrorCount, clientSizeX, clientSizeY, clientSizeZ;
+    private int clientCapacityLow, clientCapacityHigh;
+    private int clientMaxHeatLow, clientMaxHeatHigh;
+    private int clientProductionLow, clientProductionHigh;
+    private int clientCoolingLow, clientCoolingHigh;
+    private int clientCoreCount, clientErrorCount, clientSizeX, clientSizeY, clientSizeZ;
+
+    private int energyLow, energyHigh;
+    private int heatLow, heatHigh;
 
     private final ContainerData propertyDelegate = new ContainerData() {
         @Override
         public int get(int index) {
             boolean client = level != null && level.isClientSide();
             return switch (index) {
-                case IDX_ENERGY -> energyStorage.getEnergyStored();
-                case IDX_CAPACITY -> client ? clientCapacity : effectiveCapacity();
+                case IDX_ENERGY_LOW -> NuclearReactorBlockEntity.getLowWord(energyStorage.getEnergyStored());
+                case IDX_ENERGY_HIGH -> NuclearReactorBlockEntity.getHighWord(energyStorage.getEnergyStored());
+                case IDX_CAPACITY_LOW -> client ? clientCapacityLow : NuclearReactorBlockEntity.getLowWord(effectiveCapacity());
+                case IDX_CAPACITY_HIGH -> client ? clientCapacityHigh : NuclearReactorBlockEntity.getHighWord(effectiveCapacity());
                 case IDX_BURN_TIME -> burnTime;
                 case IDX_BURN_TOTAL -> burnTimeTotal;
-                case IDX_HEAT -> heat;
-                case IDX_MAX_HEAT -> client ? clientMaxHeat : effectiveMaxHeat();
+                case IDX_HEAT_LOW -> NuclearReactorBlockEntity.getLowWord(heat);
+                case IDX_HEAT_HIGH -> NuclearReactorBlockEntity.getHighWord(heat);
+                case IDX_MAX_HEAT_LOW -> client ? clientMaxHeatLow : NuclearReactorBlockEntity.getLowWord(effectiveMaxHeat());
+                case IDX_MAX_HEAT_HIGH -> client ? clientMaxHeatHigh : NuclearReactorBlockEntity.getHighWord(effectiveMaxHeat());
                 case IDX_REDSTONE_MODE -> redstoneMode.ordinal();
                 case IDX_COMPARATOR_MODE -> comparatorMode.ordinal();
                 case IDX_CORE_COUNT -> client ? clientCoreCount : layout.coreCount();
-                case IDX_PRODUCTION -> client ? clientProduction : currentStats().generationPerTick();
-                case IDX_COOLING -> client ? clientCooling : currentStats().coolingPerTick();
+                case IDX_PRODUCTION_LOW -> client ? clientProductionLow : NuclearReactorBlockEntity.getLowWord(currentStats().generationPerTick());
+                case IDX_PRODUCTION_HIGH -> client ? clientProductionHigh : NuclearReactorBlockEntity.getHighWord(currentStats().generationPerTick());
+                case IDX_COOLING_LOW -> client ? clientCoolingLow : NuclearReactorBlockEntity.getLowWord(currentStats().coolingPerTick());
+                case IDX_COOLING_HIGH -> client ? clientCoolingHigh : NuclearReactorBlockEntity.getHighWord(currentStats().coolingPerTick());
                 case IDX_CONTROL_ROD -> controlRodInsertion;
                 case IDX_ENABLED -> enabled ? 1 : 0;
                 case IDX_SHUTDOWN_TEMP -> shutdownTempPercent;
@@ -168,10 +186,24 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
         @Override
         public void set(int index, int value) {
             switch (index) {
-                case IDX_ENERGY -> energyStorage.setEnergy(value);
+                case IDX_ENERGY_LOW -> {
+                    energyLow = value;
+                    energyStorage.setEnergy(NuclearReactorBlockEntity.combineWords(energyLow, energyHigh));
+                }
+                case IDX_ENERGY_HIGH -> {
+                    energyHigh = value;
+                    energyStorage.setEnergy(NuclearReactorBlockEntity.combineWords(energyLow, energyHigh));
+                }
                 case IDX_BURN_TIME -> burnTime = value;
                 case IDX_BURN_TOTAL -> burnTimeTotal = value;
-                case IDX_HEAT -> heat = value;
+                case IDX_HEAT_LOW -> {
+                    heatLow = value;
+                    heat = NuclearReactorBlockEntity.combineWords(heatLow, heatHigh);
+                }
+                case IDX_HEAT_HIGH -> {
+                    heatHigh = value;
+                    heat = NuclearReactorBlockEntity.combineWords(heatLow, heatHigh);
+                }
                 case IDX_REDSTONE_MODE -> {
                     if (value >= 0 && value < RedstoneMode.values().length) {
                         redstoneMode = RedstoneMode.values()[value];
@@ -200,14 +232,15 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
                     safetyOverride = value != 0;
                     setChanged();
                 }
-                // Rein abgeleitete Anzeigewerte: nur über den Client-DataSlot-Sync gesetzt
-                // (siehe die Client-Spiegelfelder oben) — nie per Button-Klick, daher kein
-                // setChanged() nötig.
-                case IDX_CAPACITY -> clientCapacity = value;
-                case IDX_MAX_HEAT -> clientMaxHeat = value;
+                case IDX_CAPACITY_LOW -> clientCapacityLow = value;
+                case IDX_CAPACITY_HIGH -> clientCapacityHigh = value;
+                case IDX_MAX_HEAT_LOW -> clientMaxHeatLow = value;
+                case IDX_MAX_HEAT_HIGH -> clientMaxHeatHigh = value;
+                case IDX_PRODUCTION_LOW -> clientProductionLow = value;
+                case IDX_PRODUCTION_HIGH -> clientProductionHigh = value;
+                case IDX_COOLING_LOW -> clientCoolingLow = value;
+                case IDX_COOLING_HIGH -> clientCoolingHigh = value;
                 case IDX_CORE_COUNT -> clientCoreCount = value;
-                case IDX_PRODUCTION -> clientProduction = value;
-                case IDX_COOLING -> clientCooling = value;
                 case IDX_ERROR_COUNT -> clientErrorCount = value;
                 case IDX_SIZE_X -> clientSizeX = value;
                 case IDX_SIZE_Y -> clientSizeY = value;

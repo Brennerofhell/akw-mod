@@ -106,11 +106,17 @@ public class ModularReactorScreenHandler extends AbstractContainerMenu {
     // --- Property-Getter ---
 
     public int getEnergy() {
-        return propertyDelegate.get(NuclearReactorBlockEntity.IDX_ENERGY);
+        return NuclearReactorBlockEntity.combineWords(
+            propertyDelegate.get(NuclearReactorBlockEntity.IDX_ENERGY_LOW),
+            propertyDelegate.get(NuclearReactorBlockEntity.IDX_ENERGY_HIGH)
+        );
     }
 
     public int getCapacity() {
-        return propertyDelegate.get(NuclearReactorBlockEntity.IDX_CAPACITY);
+        return NuclearReactorBlockEntity.combineWords(
+            propertyDelegate.get(NuclearReactorBlockEntity.IDX_CAPACITY_LOW),
+            propertyDelegate.get(NuclearReactorBlockEntity.IDX_CAPACITY_HIGH)
+        );
     }
 
     public boolean isBurning() {
@@ -123,11 +129,17 @@ public class ModularReactorScreenHandler extends AbstractContainerMenu {
     }
 
     public int getHeat() {
-        return propertyDelegate.get(NuclearReactorBlockEntity.IDX_HEAT);
+        return NuclearReactorBlockEntity.combineWords(
+            propertyDelegate.get(NuclearReactorBlockEntity.IDX_HEAT_LOW),
+            propertyDelegate.get(NuclearReactorBlockEntity.IDX_HEAT_HIGH)
+        );
     }
 
     public int getMaxHeat() {
-        return propertyDelegate.get(NuclearReactorBlockEntity.IDX_MAX_HEAT);
+        return NuclearReactorBlockEntity.combineWords(
+            propertyDelegate.get(NuclearReactorBlockEntity.IDX_MAX_HEAT_LOW),
+            propertyDelegate.get(NuclearReactorBlockEntity.IDX_MAX_HEAT_HIGH)
+        );
     }
 
     public float getHeatFraction() {
@@ -158,11 +170,17 @@ public class ModularReactorScreenHandler extends AbstractContainerMenu {
     }
 
     public int getProductionPerTick() {
-        return propertyDelegate.get(MultiblockReactorControllerBlockEntity.IDX_PRODUCTION);
+        return NuclearReactorBlockEntity.combineWords(
+            propertyDelegate.get(MultiblockReactorControllerBlockEntity.IDX_PRODUCTION_LOW),
+            propertyDelegate.get(MultiblockReactorControllerBlockEntity.IDX_PRODUCTION_HIGH)
+        );
     }
 
     public int getCoolingPerTick() {
-        return propertyDelegate.get(MultiblockReactorControllerBlockEntity.IDX_COOLING);
+        return NuclearReactorBlockEntity.combineWords(
+            propertyDelegate.get(MultiblockReactorControllerBlockEntity.IDX_COOLING_LOW),
+            propertyDelegate.get(MultiblockReactorControllerBlockEntity.IDX_COOLING_HIGH)
+        );
     }
 
     public int getControlRodInsertion() {
