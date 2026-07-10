@@ -12,6 +12,8 @@ import ch.danielt.akw.screen.NuclearReactorScreenHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.NonNullList;
+import ch.danielt.akw.registry.ModSounds;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -297,6 +299,14 @@ public class NuclearReactorBlockEntity extends BlockEntity
                     3, 0.2, 0.2, 0.2, 0.01);
         }
 
+        // Sound-Wiedergabe
+        if (wasBurning && level.getGameTime() % 80 == 0) {
+            level.playSound(null, pos, ModSounds.REACTOR_AMBIENT.get(), SoundSource.BLOCKS, 0.4f, 1.0f);
+        }
+        if (be.heat >= be.maxHeat * 80 / 100 && level.getGameTime() % 20 == 0) {
+            level.playSound(null, pos, ModSounds.REACTOR_ALERT.get(), SoundSource.BLOCKS, 0.8f, 1.0f);
+        }
+
         boolean nowBurning = be.burnTime > 0;
         if (nowBurning != wasBurning) {
             level.setBlock(pos, state.setValue(NuclearReactorBlock.LIT, nowBurning), Block.UPDATE_ALL);
@@ -390,6 +400,7 @@ public class NuclearReactorBlockEntity extends BlockEntity
 
     /** Reaktor entfernen (Inhalt wird ausgeworfen) und Explosion ausloesen. */
     private void explode(Level level, BlockPos pos) {
+        level.playSound(null, pos, ModSounds.REACTOR_MELTDOWN.get(), SoundSource.BLOCKS, 1.2f, 1.0f);
         level.removeBlock(pos, false);
         level.explode(null, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
                 explosionPower, true, Level.ExplosionInteraction.BLOCK);

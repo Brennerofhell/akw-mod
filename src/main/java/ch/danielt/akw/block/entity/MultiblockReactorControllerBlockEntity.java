@@ -13,6 +13,8 @@ import ch.danielt.akw.registry.ModBlocks;
 import ch.danielt.akw.registry.ModEffects;
 import ch.danielt.akw.registry.ModItems;
 import ch.danielt.akw.screen.ModularReactorScreenHandler;
+import ch.danielt.akw.registry.ModSounds;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -550,6 +552,14 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
                     Math.min(12, 2 + be.activeCores), 0.3, 0.3, 0.3, 0.01);
         }
 
+        // Sound-Wiedergabe
+        if ((be.status == ReactorStatus.RUNNING || be.status == ReactorStatus.STARTING) && level.getGameTime() % 80 == 0) {
+            level.playSound(null, pos, ModSounds.REACTOR_AMBIENT.get(), SoundSource.BLOCKS, 0.5f, 1.0f);
+        }
+        if ((be.heat >= be.effectiveMaxHeat() * 85 / 100 || (be.status == ReactorStatus.DAMAGED && be.isTooHotForRepair())) && level.getGameTime() % 20 == 0) {
+            level.playSound(null, pos, ModSounds.REACTOR_ALERT.get(), SoundSource.BLOCKS, 0.8f, 1.0f);
+        }
+
         boolean lit = be.status == ReactorStatus.RUNNING;
         if (state.getValue(MultiblockReactorControllerBlock.LIT) != lit) {
             level.setBlock(pos,
@@ -707,6 +717,7 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
     }
 
     private void explode(Level level, BlockPos pos, BlockState state) {
+        level.playSound(null, pos, ModSounds.REACTOR_MELTDOWN.get(), SoundSource.BLOCKS, 1.2f, 1.0f);
         int size = layout.maxDimension();
         disassemble(level, pos, state);
         level.explode(null, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,

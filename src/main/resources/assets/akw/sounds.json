@@ -1,5 +1,5 @@
 {
-  "reactor_ambient":  { "sounds": [], "subtitle": "subtitles.akw.reactor_ambient" },
-  "reactor_alert":    { "sounds": [], "subtitle": "subtitles.akw.reactor_alert" },
-  "reactor_meltdown": { "sounds": [], "subtitle": "subtitles.akw.reactor_meltdown" }
+  "reactor_ambient":  { "sounds": ["akw:reactor_ambient"], "subtitle": "subtitles.akw.reactor_ambient" },
+  "reactor_alert":    { "sounds": ["akw:reactor_alert"], "subtitle": "subtitles.akw.reactor_alert" },
+  "reactor_meltdown": { "sounds": ["akw:reactor_meltdown"], "subtitle": "subtitles.akw.reactor_meltdown" }
 }
