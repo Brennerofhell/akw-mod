@@ -4,7 +4,14 @@ Baue dein eigenes Atomkraftwerk: Uran abbauen, anreichern, Brennstäbe herstelle
 Reaktor betreiben und FE-kompatiblen Strom erzeugen. Mit Radioaktivitätsmechanik,
 Automation über Hopper und Redstone sowie einem Multiblock-Reaktorsystem.
 
-[![Download Mod JAR](https://img.shields.io/badge/Download-Mod--JAR-brightgreen?style=for-the-badge&logo=minecraft)](https://github.com/Brennerofhell/akw-mod/raw/neoforge_main/build/libs/neoforge/akw-1.3.0.jar)
+<div align="center">
+  <br>
+  <a href="https://github.com/Brennerofhell/akw-mod/raw/neoforge_main/build/libs/neoforge/akw-1.3.0.jar">
+    <img src="https://img.shields.io/badge/DOWNLOAD-akw--1.3.0.jar-brightgreen?style=for-the-badge&logo=minecraft&logoColor=white" width="320" alt="Download Mod JAR" />
+  </a>
+  <br>
+  <br>
+</div>
 
 | | |
 |---|---|
