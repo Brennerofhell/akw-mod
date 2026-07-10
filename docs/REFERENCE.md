@@ -109,6 +109,8 @@ BlockItems werden über `ITEMS.registerSimpleBlockItem(name, block)` erzeugt (so
 | `WASTE_CONTAINER` | `akw:waste_container` | `WasteContainerBlock` | 9-Slot-Speicher |
 | `ENRICHED_URANIUM_BLOCK` | `akw:enriched_uranium_block` | `Block` | `lightLevel 5` |
 | `REACTOR_CASING` | `akw:reactor_casing` | `ReactorCasingBlock` | `strength(5, 1200)` |
+| `REACTOR_GLASS` | `akw:reactor_glass` | `Block` | `strength(5, 1200)`; transparenter Hüllenblock |
+| `GRAPHITE_MODERATOR` | `akw:graphite_moderator` | `Block` | moderiert Neutronen (Innenraum-Block) |
 | `MULTIBLOCK_REACTOR_CONTROLLER` | `akw:multiblock_reactor_controller` | `MultiblockReactorControllerBlock` | `lightLevel 13` bei `LIT` |
 | `REACTOR_BUILDER_CONTROLLER` | `akw:reactor_builder_controller` | `ReactorBuilderControllerBlock` | `lightLevel 7` bei `ACTIVE` |
 | `REACTOR_ENERGY_PORT` | `akw:reactor_energy_port` | `ReactorEnergyPortBlock` | `strength(5, 1200)`; einziger FE-Abgabepunkt des Multiblocks |
@@ -223,11 +225,11 @@ BFS-Obergrenze besuchter Hüllenblöcke), `MAX_ERRORS = 8` (max. gesammelte Fehl
   vollständig; wird auch von der Tick-Revalidierung mit den **gespeicherten Grenzen**
   genutzt (kein `facing`-Parameter mehr). Kanten < 3 → `GAP`; > 9 → `TOO_LARGE`. Dann:
   - **Oberfläche:** erlaubt sind genau ein Controller (an `controllerPos`; jeder weitere →
-    `FOREIGN_BLOCK`), `REACTOR_CASING`, `REACTOR_ENERGY_PORT`, `REACTOR_ITEM_PORT`
+    `FOREIGN_BLOCK`), `REACTOR_CASING`, `REACTOR_GLASS`, `REACTOR_ENERGY_PORT`, `REACTOR_ITEM_PORT`
     (Ports werden gezählt); Luft → `GAP`, alles andere → `FOREIGN_BLOCK`.
   - **Innenraum:** Luft/`LEAD_BLOCK`/`DAMAGED_REACTOR_CORE` erlaubt (zählt nichts — ein
     beschädigter Kern ist ein gültiger, aber inerter Innenraumblock, kein Kern); `REACTOR_CORE`/
-    `CONTROL_ROD_BLOCK`/`COOLING_PIPE` werden gezählt; alles andere → `FOREIGN_BLOCK`.
+    `CONTROL_ROD_BLOCK`/`COOLING_PIPE`/`GRAPHITE_MODERATOR` werden gezählt; alles andere → `FOREIGN_BLOCK`.
   - Kein Kern → `NO_CORE`; kein Energie-Port → `NO_ENERGY_PORT`.
   - Nicht mit der Hülle verbundene Rohre → `DISCONNECTED_PIPE` je Rohrposition
     (**Warnung**, blockiert nicht).
@@ -290,9 +292,10 @@ heatFactor         = max(0.50, 1.0 - 0.25 * controlRodsPerCore)        // 0.50 �
 ```
 Output-Formeln:
 ```
-generation = max(0, round(n * 80 * reactivity))
-heat       = max(0, round(n * 12 * reactivity² * heatFactor))   // reactivity geht QUADRATISCH ein
+generation = max(0, round(n * 80 * reactivity * (1.0 + 0.20 * graphiteContactsPerCore)))
+heat       = max(0, round(n * 12 * reactivity² * heatFactor * graphiteFactor))   // reactivity geht QUADRATISCH ein
 ```
+wobei `graphiteFactor = 0.75^graphiteContactsPerCore`.
 Bei **100 % Steuerstab-Einschub** ist `reactivity=0` → `generation=heat=0` (der Reaktor läuft
 weiter, produziert aber nichts). Vor Phase B lag der Bodenwert bei `max(1, …)` (kein Regler
 existierte); seither kann die Erzeugung/Wärme echt auf 0 fallen.
@@ -831,6 +834,8 @@ Ausgabe → `src/main/generated/` (committet). Texturen werden in `src/main/reso
 |---|---|---|--:|
 | `reactor_wrench` | ` I`/`IS` | I=Eisen, S=Stock | 1 |
 | `reactor_casing` | `ILI`/`LIL`/`ILI` | I=Eisen, L=Blei-Block | 4 |
+| `reactor_glass` | `GCG`/`C C`/`GCG` | G=Glas, C=Reaktor-Gehäuse | 4 |
+| `graphite_moderator` | `CCC`/`CUC`/`CCC` | C=Kohleblock, U=Uran-Barren | 1 |
 | `multiblock_reactor_controller` | `CRC`/`RNR`/`CRC` | C=Reaktor-Gehäuse, R=Redstone-Block, N=Reaktor | 1 |
 | `reactor_energy_port` | `E`/`C` | E=Energie-Kabel, C=Reaktor-Gehäuse | 1 |
 | `reactor_item_port` | `H`/`C` | H=Trichter, C=Reaktor-Gehäuse | 1 |

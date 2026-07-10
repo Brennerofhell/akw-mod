@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": "minecraft:coal_block",
+    "U": "akw:uranium_ingot"
+  },
+  "pattern": [
+    "CCC",
+    "CUC",
+    "CCC"
+  ],
+  "result": {
+    "count": 1,
+    "id": "akw:graphite_moderator"
+  }
+}

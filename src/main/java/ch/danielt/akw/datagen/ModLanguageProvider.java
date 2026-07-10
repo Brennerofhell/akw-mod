@@ -72,6 +72,8 @@ public class ModLanguageProvider {
             addBlock(ModBlocks.REACTOR_ENERGY_PORT, "Reaktor-Energie-Port");
             addBlock(ModBlocks.REACTOR_ITEM_PORT, "Reaktor-Item-Port");
             addBlock(ModBlocks.DAMAGED_REACTOR_CORE, "Beschädigter Reaktorkern");
+            addBlock(ModBlocks.REACTOR_GLASS, "Reaktorglas");
+            addBlock(ModBlocks.GRAPHITE_MODERATOR, "Graphitmoderator");
             add("akw.item_port.mode.fuel_input", "Modus: Brennstoff-Eingang");
             add("akw.item_port.mode.waste_output", "Modus: Abfall-Ausgang");
             add("akw.item_port.mode.disabled", "Modus: Deaktiviert");
@@ -217,6 +219,8 @@ public class ModLanguageProvider {
             addBlock(ModBlocks.REACTOR_ENERGY_PORT, "Reactor Energy Port");
             addBlock(ModBlocks.REACTOR_ITEM_PORT, "Reactor Item Port");
             addBlock(ModBlocks.DAMAGED_REACTOR_CORE, "Damaged Reactor Core");
+            addBlock(ModBlocks.REACTOR_GLASS, "Reactor Glass");
+            addBlock(ModBlocks.GRAPHITE_MODERATOR, "Graphite Moderator");
             add("akw.item_port.mode.fuel_input", "Mode: Fuel input");
             add("akw.item_port.mode.waste_output", "Mode: Waste output");
             add("akw.item_port.mode.disabled", "Mode: Disabled");

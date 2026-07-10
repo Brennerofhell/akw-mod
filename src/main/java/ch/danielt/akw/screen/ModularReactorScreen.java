@@ -34,6 +34,7 @@ public class ModularReactorScreen extends AbstractContainerScreen<ModularReactor
             0xFFFFD83D,   // Kern
             0xFF4C7BFF,   // Steuerstab
             0xFF3DDCFF,   // Kühlrohr
+            0xFF2E7D32,   // Graphitmoderator (dark green)
             0xFFE03030,   // Fremdblock
     };
     private static final int GRID_X = 8;
@@ -284,7 +285,7 @@ public class ModularReactorScreen extends AbstractContainerScreen<ModularReactor
         for (int z = 0; z < innerZ; z++) {
             for (int x = 0; x < innerX; x++) {
                 int cell = grid[((layerIndex * innerZ) + z) * innerX + x];
-                int color = cell >= 0 && cell < CELL_COLORS.length ? CELL_COLORS[cell] : CELL_COLORS[5];
+                int color = cell >= 0 && cell < CELL_COLORS.length ? CELL_COLORS[cell] : CELL_COLORS[6];
                 int px = GRID_X + x * CELL_SIZE;
                 int py = GRID_Y + z * CELL_SIZE;
                 graphics.fill(px, py, px + CELL_SIZE - 1, py + CELL_SIZE - 1, color);

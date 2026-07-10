@@ -769,6 +769,7 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
         output.putInt("CoreNeighborContacts", layout.coreNeighborContacts());
         output.putInt("CoreControlRodContacts", layout.coreControlRodContacts());
         output.putInt("CoreCoolingContacts", layout.coreCoolingContacts());
+        output.putInt("CoreGraphiteContacts", layout.coreGraphiteContacts());
         output.putInt("EnergyPortCount", layout.energyPortCount());
         output.putInt("ItemPortCount", layout.itemPortCount());
         output.putInt("RedstoneMode", redstoneMode.ordinal());
@@ -854,6 +855,7 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
         int neighborContacts = input.getIntOr("CoreNeighborContacts", 0);
         int rodContacts = input.getIntOr("CoreControlRodContacts", 0);
         int coolingContacts = input.getIntOr("CoreCoolingContacts", 0);
+        int graphiteContacts = input.getIntOr("CoreGraphiteContacts", 0);
 
         int sizeX = input.getIntOr("SizeX", -1);
         if (sizeX >= 0) {
@@ -865,7 +867,7 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
                     input.getIntOr("SizeY", 0),
                     input.getIntOr("SizeZ", 0),
                     coreCount, rodCount, pipeCount, connectedPipes,
-                    neighborContacts, rodContacts, coolingContacts,
+                    neighborContacts, rodContacts, coolingContacts, graphiteContacts,
                     input.getIntOr("EnergyPortCount", 0),
                     input.getIntOr("ItemPortCount", 0));
         }
@@ -887,7 +889,7 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
                 relMinX, -half, relMinZ,
                 legacySize, legacySize, legacySize,
                 coreCount, rodCount, pipeCount, connectedPipes,
-                neighborContacts, rodContacts, coolingContacts,
+                neighborContacts, rodContacts, coolingContacts, 0,
                 0, 0);
     }
 
@@ -899,7 +901,8 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
     public static final int CELL_CORE = 2;
     public static final int CELL_ROD = 3;
     public static final int CELL_PIPE = 4;
-    public static final int CELL_OTHER = 5;
+    public static final int CELL_GRAPHITE = 5;
+    public static final int CELL_OTHER = 6;
 
     @Override
     public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
@@ -944,6 +947,7 @@ public class MultiblockReactorControllerBlockEntity extends BlockEntity
                             : state.is(ModBlocks.REACTOR_CORE.get()) ? CELL_CORE
                             : state.is(ModBlocks.CONTROL_ROD_BLOCK.get()) ? CELL_ROD
                             : state.is(ModBlocks.COOLING_PIPE.get()) ? CELL_PIPE
+                            : state.is(ModBlocks.GRAPHITE_MODERATOR.get()) ? CELL_GRAPHITE
                             : CELL_OTHER;
                 }
             }

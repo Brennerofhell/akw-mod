@@ -40,12 +40,14 @@ public final class ReactorSimulation {
         double reactivity = baseReactivity * (1.0 - insertion);
         double controlRodsPerCore = Math.min(2.0, (double) layout.coreControlRodContacts() / cores);
         double heatFactor = Math.max(0.50, 1.0 - 0.25 * controlRodsPerCore);
+        double graphiteContactsPerCore = (double) layout.coreGraphiteContacts() / cores;
+        double graphiteFactor = Math.pow(0.75, graphiteContactsPerCore);
 
         int generation = Math.max(0,
-                (int) Math.round(boundedActiveCores * FE_PER_CORE * reactivity));
+                (int) Math.round(boundedActiveCores * FE_PER_CORE * reactivity * (1.0 + 0.20 * graphiteContactsPerCore)));
         int generatedHeat = Math.max(0,
                 (int) Math.round(boundedActiveCores * HEAT_PER_CORE
-                        * reactivity * reactivity * heatFactor));
+                        * reactivity * reactivity * heatFactor * graphiteFactor));
 
         return new ReactorStats(generation, generatedHeat, cooling, capacity(layout), maxHeat(layout));
     }

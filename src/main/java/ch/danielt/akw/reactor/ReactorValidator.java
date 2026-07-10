@@ -97,6 +97,7 @@ public final class ReactorValidator {
 
         Set<BlockPos> pipes = new HashSet<>();
         Set<BlockPos> cores = new HashSet<>();
+        Set<BlockPos> graphite = new HashSet<>();
         int rods = 0;
         int controllers = 0;
         int energyPorts = 0;
@@ -117,7 +118,7 @@ public final class ReactorValidator {
                             if (!current.equals(controllerPos)) {
                                 addError(errors, ValidationError.Type.FOREIGN_BLOCK, current);
                             }
-                        } else if (state.is(ModBlocks.REACTOR_CASING.get())) {
+                        } else if (state.is(ModBlocks.REACTOR_CASING.get()) || state.is(ModBlocks.REACTOR_GLASS.get())) {
                             // gültiger Hüllenblock
                         } else if (state.is(ModBlocks.REACTOR_ENERGY_PORT.get())) {
                             energyPorts++;
@@ -142,6 +143,8 @@ public final class ReactorValidator {
                         rods++;
                     } else if (state.is(ModBlocks.COOLING_PIPE.get())) {
                         pipes.add(current);
+                    } else if (state.is(ModBlocks.GRAPHITE_MODERATOR.get())) {
+                        graphite.add(current);
                     } else {
                         addError(errors, ValidationError.Type.FOREIGN_BLOCK, current);
                     }
@@ -174,6 +177,7 @@ public final class ReactorValidator {
         int coreNeighbors = 0;
         int coreRodContacts = 0;
         int coreCoolingContacts = 0;
+        int coreGraphiteContacts = 0;
         for (BlockPos core : cores) {
             for (Direction direction : Direction.values()) {
                 BlockPos neighbor = core.relative(direction);
@@ -183,6 +187,8 @@ public final class ReactorValidator {
                     coreRodContacts++;
                 } else if (connectedPipes.contains(neighbor)) {
                     coreCoolingContacts++;
+                } else if (graphite.contains(neighbor)) {
+                    coreGraphiteContacts++;
                 }
             }
         }
@@ -193,7 +199,7 @@ public final class ReactorValidator {
                 min.getZ() - controllerPos.getZ(),
                 sizeX, sizeY, sizeZ,
                 cores.size(), rods, pipes.size(), connectedPipes.size(),
-                coreNeighbors, coreRodContacts, coreCoolingContacts,
+                coreNeighbors, coreRodContacts, coreCoolingContacts, coreGraphiteContacts,
                 energyPorts, itemPorts);
         return new Result(layout, List.copyOf(errors));
     }
@@ -201,6 +207,7 @@ public final class ReactorValidator {
     /** Gültige Hüllenblöcke für BFS-Suche und Rohr-Anbindung. */
     private static boolean isShellBlock(BlockState state) {
         return state.is(ModBlocks.REACTOR_CASING.get())
+                || state.is(ModBlocks.REACTOR_GLASS.get())
                 || state.is(ModBlocks.MULTIBLOCK_REACTOR_CONTROLLER.get())
                 || state.is(ModBlocks.REACTOR_ENERGY_PORT.get())
                 || state.is(ModBlocks.REACTOR_ITEM_PORT.get());

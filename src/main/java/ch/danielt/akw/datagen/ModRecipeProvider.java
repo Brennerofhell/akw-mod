@@ -155,6 +155,20 @@ public class ModRecipeProvider extends RecipeProvider.Runner {
                         .unlockedBy(getHasName(ModItems.URANIUM_INGOT), has(ModItems.URANIUM_INGOT))
                         .save(output, key("enriched_uranium_block"));
 
+                shaped(RecipeCategory.MISC, ModBlocks.REACTOR_GLASS, 4)
+                        .pattern("GCG").pattern("C C").pattern("GCG")
+                        .define('G', Items.GLASS)
+                        .define('C', ModBlocks.REACTOR_CASING)
+                        .unlockedBy(getHasName(ModBlocks.REACTOR_CASING), has(ModBlocks.REACTOR_CASING))
+                        .save(output, key("reactor_glass"));
+
+                shaped(RecipeCategory.MISC, ModBlocks.GRAPHITE_MODERATOR)
+                        .pattern("CCC").pattern("CUC").pattern("CCC")
+                        .define('C', Items.COAL_BLOCK)
+                        .define('U', ModItems.URANIUM_INGOT)
+                        .unlockedBy(getHasName(ModItems.URANIUM_INGOT), has(ModItems.URANIUM_INGOT))
+                        .save(output, key("graphite_moderator"));
+
                 // Multiblock-Reaktor-System
                 shaped(RecipeCategory.MISC, ModItems.REACTOR_WRENCH)
                         .pattern(" I").pattern("IS")

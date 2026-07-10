@@ -16,7 +16,7 @@ class ReactorLayoutTest {
                 -1, -1, -1,
                 sizeX, sizeY, sizeZ,
                 coreCount,
-                0, 0, 0, 0, 0, 0, 0, 0);
+                0, 0, 0, 0, 0, 0, 0, 0, 0);
     }
 
     @Test
@@ -61,7 +61,7 @@ class ReactorLayoutTest {
         ReactorLayout layout = new ReactorLayout(
                 -2, -1, -3,
                 5, 4, 6,
-                1, 0, 0, 0, 0, 0, 0, 0, 0);
+                1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         BlockPos controller = new BlockPos(10, 64, 20);
 
         BlockPos min = layout.boundsMin(controller);
@@ -75,7 +75,7 @@ class ReactorLayoutTest {
         ReactorLayout layout = new ReactorLayout(
                 -2, -1, -3,
                 5, 4, 6,
-                1, 0, 0, 0, 0, 0, 0, 0, 0);
+                1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         BlockPos controller = new BlockPos(10, 64, 20);
 
         BlockPos max = layout.boundsMax(controller);

@@ -22,11 +22,12 @@ public record ReactorLayout(
         int coreNeighborContacts,
         int coreControlRodContacts,
         int coreCoolingContacts,
+        int coreGraphiteContacts,
         int energyPortCount,
         int itemPortCount) {
 
     public static final ReactorLayout EMPTY =
-            new ReactorLayout(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+            new ReactorLayout(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
     public boolean isAssembled() {
         return sizeX >= 3 && sizeY >= 3 && sizeZ >= 3 && coreCount > 0;

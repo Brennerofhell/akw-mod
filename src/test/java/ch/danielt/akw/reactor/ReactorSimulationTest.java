@@ -23,9 +23,34 @@ class ReactorSimulationTest {
                 coreNeighborContacts,
                 coreControlRodContacts,
                 coreCoolingContacts,
+                0, // coreGraphiteContacts
                 1, // energyPortCount
                 0  // itemPortCount
         );
+    }
+
+    @Test
+    @DisplayName("Graphitmoderator-Kontakte: erhoehen Generation und senken Waerme")
+    void graphitmoderatorErhoehtGenerationUndSenktWaerme() {
+        ReactorLayout ohneGraphit = new ReactorLayout(0, 0, 0, 3, 3, 3, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0);
+        ReactorLayout einGraphit = new ReactorLayout(0, 0, 0, 3, 3, 3, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0);
+        ReactorLayout zweiGraphite = new ReactorLayout(0, 0, 0, 3, 3, 3, 1, 0, 0, 0, 0, 0, 0, 2, 1, 0);
+
+        ReactorStats statsOhne = ReactorSimulation.calculate(ohneGraphit, 1, 0);
+        ReactorStats statsEin = ReactorSimulation.calculate(einGraphit, 1, 0);
+        ReactorStats statsZwei = ReactorSimulation.calculate(zweiGraphite, 1, 0);
+
+        // Ohne Graphit: gen = 48, heat = 4
+        assertEquals(48, statsOhne.generationPerTick());
+        assertEquals(4, statsOhne.heatPerTick());
+
+        // Ein Graphit: gen = 48 * 1.2 = 58, heat = 4 * 0.75 = 3
+        assertEquals(58, statsEin.generationPerTick());
+        assertEquals(3, statsEin.heatPerTick());
+
+        // Zwei Graphite: gen = 48 * 1.4 = 67, heat = 4 * 0.5625 = 2
+        assertEquals(67, statsZwei.generationPerTick());
+        assertEquals(2, statsZwei.heatPerTick());
     }
 
     @Test

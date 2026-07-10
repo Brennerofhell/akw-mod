@@ -11,6 +11,9 @@ Multiblock-Phasen A–C: Energie- und Item-Ports, rechteckige Hüllen 3–9 je A
 Fehlerliste, Tab-GUI mit Steuerstab-Regler und Schichtansicht, Zustandsautomat mit
 Nachzerfallswärme und reparierbaren beschädigten Kernen.
 
+- **Reaktorglas (`akw:reactor_glass`)**: Transparentes Hüllenglas, durch das man in den Reaktor blicken kann. Wird als regulärer Hüllenblock gewertet.
+- **Graphitmoderator (`akw:graphite_moderator`)**: Innenraum-Block, der die Energieerzeugung benachbarter Kerne um +20% erhöht und deren Hitzeentwicklung um -25% (multiplikativ) senkt.
+
 ### ⚠️ Breaking Changes
 - **FE-Abgabe nur noch über Energie-Ports:** Der Multiblock-Controller besitzt **keine
   Energie-Capability mehr** und gibt selbst kein FE mehr ab. Jede Hülle braucht mindestens

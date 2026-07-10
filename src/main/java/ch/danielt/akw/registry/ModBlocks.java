@@ -68,6 +68,11 @@ public class ModBlocks {
             registerDecor("enriched_uranium_block", Block::new, metal().lightLevel(s -> 5));
 
     // --- Multiblock-System ---
+    public static final DeferredBlock<Block> REACTOR_GLASS =
+            registerDecor("reactor_glass", Block::new,
+                    BlockBehaviour.Properties.ofFullCopy(Blocks.GLASS).strength(5f, 1200f).noOcclusion());
+    public static final DeferredBlock<Block> GRAPHITE_MODERATOR =
+            registerDecor("graphite_moderator", Block::new, metal());
     public static final DeferredBlock<ReactorCasingBlock> REACTOR_CASING =
             registerDecor("reactor_casing", ReactorCasingBlock::new,
                     BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).strength(5f, 1200f));

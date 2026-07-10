@@ -119,13 +119,13 @@ Reaktor. Seine Leistung hängt von den wirklich eingebauten Modulen ab.
 
 1. Baue einen hohlen **rechteckigen Quader** mit **3 bis 9 Blöcken je Achse** —
    vom klassischen 3×3×3-Würfel bis z. B. 5×4×7 oder maximal 9×9×9.
-2. Die Außenwand besteht aus **Reaktor-Gehäusen**, **Energie-Ports** und **Item-Ports**.
+2. Die Außenwand besteht aus **Reaktor-Gehäusen**, **Reaktorglas** (für freien Blick in den Innenraum), **Energie-Ports** und **Item-Ports**.
 3. Ersetze **genau einen** Wandblock durch den **Multiblock-Controller** — er darf an
    **beliebiger Stelle** der Hülle sitzen (Wand, Kante oder Ecke).
 4. Setze **mindestens einen Reaktor-Energie-Port** in die Hülle — ohne ihn lässt sich
    der Reaktor nicht assemblieren (Meldung „Kein Energie-Port in der Hülle.").
 5. Setze mindestens einen **Reaktorkern** in den Innenraum.
-6. Erlaubt sind innen Luft, Reaktorkerne, Steuerstäbe, Kühlrohre, Blei-Blöcke und
+6. Erlaubt sind innen Luft, Reaktorkerne, Steuerstäbe, Kühlrohre, Blei-Blöcke, Graphitmoderatoren und
    beschädigte Kerne (siehe „Reaktorsicherheit" weiter unten).
 7. Rechtsklicke den Controller mit dem **Reaktor-Schraubenschlüssel**.
 
@@ -174,6 +174,7 @@ Blei, dunkel = Luft, rot = Fremdblock), mit Pfeiltasten zwischen den Y-Schichten
 - Direkt benachbarte Kerne erhöhen ihre Reaktivität und damit die Leistung, erzeugen
   aber konzentrierte Wärme.
 - Bis zu zwei angrenzende **Steuerstäbe** senken die Wärme eines Kerns.
+- Ein **Graphitmoderator** erhöht die Stromerzeugung angrenzender Kerne um +20% und senkt deren Wärmeentwicklung um -25% (multiplikativ) pro Kontakt.
 - Ein **Kühlrohr** wirkt nur, wenn sein zusammenhängendes Rohrnetz die Außenhülle
   berührt. Der Kern muss direkt an ein solches Netz angrenzen.
 - Nicht mit der Hülle verbundene Kühlrohre werden beim Assemblieren angezeigt, kühlen
